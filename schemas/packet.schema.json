@@ -1,0 +1,293 @@
+{
+  "$id": "https://opencode.local/schemas/packet.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExecutionPacket",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "packetClass": {
+      "type": "string",
+      "enum": [
+        "generic_packet",
+        "failing_test_repair"
+      ]
+    },
+    "parallelMode": {
+      "type": "string",
+      "enum": [
+        "off",
+        "read_only"
+      ]
+    },
+    "successCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        }
+      },
+      "required": [
+        "type",
+        "target",
+        "metric"
+      ]
+    },
+    "retryStrategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 3,
+          "default": 2
+        },
+        "observed_vs_expected": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "next_probe": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "verifier_feedback": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        }
+      },
+      "required": [
+        "max_attempts",
+        "observed_vs_expected",
+        "next_probe",
+        "verifier_feedback"
+      ]
+    },
+    "fastPathAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "eligible": {
+          "type": "boolean"
+        },
+        "allowed_files_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "budget_exempt": {
+          "const": true,
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_attempted",
+            "pass",
+            "fail",
+            "ineligible"
+          ]
+        },
+        "verifier_result": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "na"
+          ]
+        },
+        "validation_proof": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        }
+      },
+      "required": [
+        "eligible",
+        "allowed_files_count",
+        "budget_exempt",
+        "status",
+        "verifier_result",
+        "validation_proof"
+      ]
+    },
+    "verifierOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "reasons": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 220
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "validation_proof": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280,
+          "not": {
+            "pattern": "(?i)(stdout|stderr|payload|stack[ _-]?trace|traceback|full[ _-]?log|raw log|tool output)"
+          }
+        }
+      },
+      "required": [
+        "verdict",
+        "reasons",
+        "retryable",
+        "validation_proof"
+      ]
+    }
+  },
+  "properties": {
+    "packet_class": {
+      "$ref": "#/$defs/packetClass"
+    },
+    "phase_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 40
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 180
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "allowed_files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "forbidden_files": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "success_check": {
+      "$ref": "#/$defs/successCheck"
+    },
+    "parallel_mode": {
+      "$ref": "#/$defs/parallelMode"
+    },
+    "retry_strategy": {
+      "$ref": "#/$defs/retryStrategy"
+    },
+    "fast_path_attempt": {
+      "$ref": "#/$defs/fastPathAttempt"
+    },
+    "verifier": {
+      "$ref": "#/$defs/verifierOutput"
+    },
+    "next_if_pass": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 40
+    },
+    "packet_exhaustion": {
+      "type": "string",
+      "enum": [
+        "none",
+        "retry_pending",
+        "exhausted"
+      ]
+    }
+  },
+  "required": [
+    "packet_class",
+    "phase_name",
+    "goal",
+    "scope",
+    "allowed_files",
+    "forbidden_files",
+    "success_check",
+    "parallel_mode",
+    "retry_strategy",
+    "fast_path_attempt",
+    "verifier",
+    "next_if_pass",
+    "packet_exhaustion"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "packet_class": {
+            "const": "generic_packet"
+          }
+        },
+        "required": [
+          "packet_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_strategy": {
+            "properties": {
+              "max_attempts": {
+                "const": 2
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_class": {
+            "const": "failing_test_repair"
+          }
+        },
+        "required": [
+          "packet_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_strategy": {
+            "properties": {
+              "max_attempts": {
+                "enum": [
+                  2,
+                  3
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

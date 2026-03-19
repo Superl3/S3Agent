@@ -1,0 +1,131 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/hunter-alpha",
+  "default_agent": "S3Agent",
+  "mcp": {
+    "serena": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "uvx",
+        "--from", "git+https://github.com/superl3/serena-mcp",
+        "serena",
+        "start-mcp-server",
+        "--context", "ide-assistant"
+      ],
+      "timeout": 30000
+    },
+    "context7": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
+      "timeout": 15000
+    }
+  },
+  "agent": {
+    
+    "default": {
+      "mode": "subagent",
+      "variant": "auto",          
+      "reasoningEffort": "auto", 
+      "textVerbosity": "low"
+    },
+    "build": {
+      "disable": true
+    },
+    "plan": {
+      "disable": true
+    },
+    
+    "S3Agent": {
+      "mode": "primary",
+      "reasoningEffort": "low",
+      "description": "Default higher-quality intake entry",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny",
+          "orchestrator": "allow"
+        }
+      }
+    },
+    "harness_review": {
+      "mode": "primary",
+      "description": "Harness diagnosis entry",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "harness_improve": {
+      "hidden": true,
+      "description": "Harness improvement planning entry",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "orchestrator": {
+      "hidden": true,
+      "description": "Internal orchestrator",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny",
+          "implementer": "allow",
+          "debugger": "allow",
+          "tester": "allow",
+          "reviewer": "allow"
+        }
+      }
+    },
+    "implementer": {
+      "hidden": true,
+      "description": "Internal implementer",
+      "permission": {
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "debugger": {
+      "hidden": true,
+      "description": "Internal debugger",
+      "permission": {
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "tester": {
+      "hidden": true,
+      "description": "Internal tester",
+      "permission": {
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "reviewer": {
+      "hidden": true,
+      "description": "Internal reviewer",
+      "permission": {
+        "task": {
+          "*": "deny"
+        }
+      }
+    }
+  },
+  "plugin": [
+    "@tarquinen/opencode-dcp@3.0.2",
+    "@superl3/discord-notifier@0.1.1"
+  ]
+}

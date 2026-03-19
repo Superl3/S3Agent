@@ -1,0 +1,152 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openai/gpt-5.3-codex",
+  "default_agent": "prompt_high",
+  "agent": {
+    "build": {
+      "disable": true
+    },
+    "plan": {
+      "disable": true
+    },
+    "prompt_high": {
+      "mode": "primary",
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+      "reasoningEffort": "medium",
+      "textVerbosity": "low",
+      "description": "Default higher-quality intake entry",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny",
+          "orchestrator": "allow"
+        }
+      }
+    },
+    "prompt": {
+      "mode": "subagent",
+      "hidden": true,
+      "model": "openai/gpt-5.3-codex-spark",
+      "variant": "low",
+      "reasoningEffort": "low",
+      "textVerbosity": "low",
+      "description": "Lightweight intake override",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny",
+          "orchestrator": "allow"
+        }
+      }
+    },
+    "harness_review": {
+      "mode": "primary",
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+      "reasoningEffort": "medium",
+      "textVerbosity": "low",
+      "description": "Harness diagnosis entry",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "harness_improve": {
+      "mode": "subagent",
+      "hidden": true,
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+      "reasoningEffort": "medium",
+      "textVerbosity": "low",
+      "description": "Harness improvement planning entry",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "orchestrator": {
+      "mode": "subagent",
+      "hidden": true,
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+      "reasoningEffort": "medium",
+      "textVerbosity": "low",
+      "description": "Internal orchestrator",
+      "permission": {
+        "*": "deny",
+        "task": {
+          "*": "deny",
+          "implementer": "allow",
+          "debugger": "allow",
+          "tester": "allow",
+          "reviewer": "allow"
+        }
+      }
+    },
+    "implementer": {
+      "mode": "subagent",
+      "hidden": true,
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+      "reasoningEffort": "medium",
+      "textVerbosity": "low",
+      "description": "Internal implementer",
+      "permission": {
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "debugger": {
+      "mode": "subagent",
+      "hidden": true,
+      "model": "openai/gpt-5.3-codex",
+      "variant": "high",
+      "reasoningEffort": "high",
+      "textVerbosity": "low",
+      "description": "Internal debugger",
+      "permission": {
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "tester": {
+      "mode": "subagent",
+      "hidden": true,
+      "model": "openai/gpt-5.3-codex-spark",
+      "variant": "low",
+      "reasoningEffort": "low",
+      "textVerbosity": "low",
+      "description": "Internal tester",
+      "permission": {
+        "task": {
+          "*": "deny"
+        }
+      }
+    },
+    "reviewer": {
+      "mode": "subagent",
+      "hidden": true,
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+      "reasoningEffort": "medium",
+      "textVerbosity": "low",
+      "description": "Internal reviewer",
+      "permission": {
+        "task": {
+          "*": "deny"
+        }
+      }
+    }
+  },
+  "plugin": [
+    "@tarquinen/opencode-dcp@3.0.2",
+    "@superl3/discord-notifier@0.1.1"
+  ]
+}

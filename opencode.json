@@ -1,0 +1,6 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "@superl3/discord-notifier@0.1.0"
+  ]
+}

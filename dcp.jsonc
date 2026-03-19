@@ -1,0 +1,57 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+  "enabled": true,
+  "commands": {
+    "enabled": true
+  },
+  "manualMode": {
+    "enabled": true,
+    "automaticStrategies": true
+  },
+  "turnProtection": {
+    "enabled": true,
+    "turns": 10
+  },
+  "experimental": {
+    "allowSubAgents": true,
+    "customPrompts": true
+  },
+  "protectedFilePatterns": [
+    "**/opencode.jsonc",
+    "**/AGENTS.md",
+    "**/SKILLS.md",
+    "**/runtime/execution_trace_latest.md",
+    "**/runtime/execution_notepad_template.md",
+    "**/memory/failure_rules.md",
+    "**/instructions/lazy_context.md",
+    "**/instructions/task_intake.md",
+    "**/instructions/planning_modes.md",
+    "**/instructions/patch_first.md",
+    "**/instructions/bug_localization.md",
+    "**/instructions/failure_memory.md",
+    "**/instructions/testing_rules.md",
+    "**/instructions/search_policy.md",
+    "**/instructions/exploration_policy.md",
+    "**/instructions/output_contracts.md",
+    "**/instructions/phase_gates.md"
+  ],
+  "compress": {
+    "permission": "allow",
+    "showCompression": false,
+    "nudgeForce": "soft",
+    "nudgeFrequency": 5,
+    "protectUserMessages": true
+  },
+  "strategies": {
+    "deduplication": {
+      "enabled": true
+    },
+    "supersedeWrites": {
+      "enabled": true
+    },
+    "purgeErrors": {
+      "enabled": true,
+      "turns": 6
+    }
+  }
+}

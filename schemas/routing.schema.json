@@ -1,0 +1,471 @@
+{
+  "$comment": "Orchestrator decision artifact with preflight checks. Fingerprints are observational only and must not gate behavior.",
+  "$defs": {
+    "forbiddenRoutingLiteral": {
+      "enum": [
+        "noop",
+        "bad",
+        "read1",
+        "read2",
+        "switch",
+        "ignore",
+        "n/a",
+        "na",
+        "accidental",
+        "h",
+        "stop",
+        "implement input-priority mode",
+        "show changed files",
+        "run syntax checks"
+      ],
+      "type": "string"
+    },
+    "preflightArtifact": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "risk": {
+                "const": "high"
+              }
+            },
+            "required": [
+              "risk"
+            ]
+          },
+          "then": {
+            "required": [
+              "rollback_plan"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "broad"
+              }
+            },
+            "required": [
+              "scope"
+            ]
+          },
+          "then": {
+            "required": [
+              "rollback_plan"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "fast_path_eligible"
+            ]
+          },
+          "then": {
+            "required": [
+              "success_check_present"
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "allowed_files": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "allowed_files_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "change_type": {
+          "enum": [
+            "logic",
+            "ui",
+            "configuration",
+            "mixed/cross-module",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        "fast_path_eligible": {
+          "type": "boolean"
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "success_check_present": {
+          "type": "boolean"
+        },
+        "rollback_plan": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "narrow",
+            "moderate",
+            "broad"
+          ],
+          "type": "string"
+        },
+        "test_plan": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "scope",
+        "allowed_files",
+        "risk",
+        "test_plan"
+      ],
+      "type": "object"
+    },
+    "terminationReason": {
+      "enum": [
+        "none",
+        "invalid_task",
+        "no_op",
+        "review_only",
+        "improve_only"
+      ],
+      "type": "string"
+    },
+    "terminationStatus": {
+      "enum": [
+        "delegated",
+        "terminated"
+      ],
+      "type": "string"
+    }
+  },
+  "$id": "https://opencode.local/schemas/routing.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "termination_status": {
+            "const": "delegated"
+          }
+        },
+        "required": [
+          "termination_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "handoff_sequence": {
+            "minLength": 1
+          },
+          "selected_agent": {
+            "type": "string"
+          },
+          "selected_path": {
+            "type": "array"
+          },
+          "selected_skill": {
+            "type": "string"
+          },
+          "termination_reason": {
+            "const": "none"
+          }
+        },
+        "required": [
+          "selected_skill",
+          "selected_agent",
+          "selected_path"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "termination_status": {
+            "const": "terminated"
+          }
+        },
+        "required": [
+          "termination_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "handoff_sequence": {
+            "maxLength": 0
+          },
+          "selected_agent": {
+            "type": "null"
+          },
+          "selected_path": {
+            "type": "null"
+          },
+          "selected_skill": {
+            "type": "null"
+          },
+          "termination_reason": {
+            "not": {
+              "const": "none"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "agent": {
+      "enum": [
+        "prompt",
+        "prompt_high",
+        "orchestrator",
+        "implementer",
+        "debugger",
+        "tester",
+        "reviewer",
+        "harness_review",
+        "harness_improve"
+      ],
+      "not": {
+        "enum": [
+          "noop",
+          "bad",
+          "read1",
+          "read2",
+          "switch",
+          "ignore"
+        ]
+      },
+      "type": "string"
+    },
+    "escalation": {
+      "enum": [
+        "none",
+        "targeted",
+        "architectural"
+      ],
+      "type": "string"
+    },
+    "failure_class": {
+      "enum": [
+        "none",
+        "syntax/import",
+        "type/signature",
+        "assertion failure",
+        "runtime logic failure",
+        "integration mismatch",
+        "environment_blocker"
+      ],
+      "type": "string"
+    },
+    "handoff_sequence": {
+      "type": "string"
+    },
+    "max_orchestrator_invocations": {
+      "type": "integer",
+      "maximum": 2
+    },
+    "mode": {
+      "enum": [
+        "MICRO",
+        "STANDARD",
+        "DEEP"
+      ],
+      "type": "string"
+    },
+    "packet_gate_status": {
+      "enum": [
+        "not_required",
+        "pending",
+        "passed",
+        "failed"
+      ],
+      "type": "string"
+    },
+    "packet_required": {
+      "type": "boolean"
+    },
+    "parallel": {
+      "type": "boolean"
+    },
+    "patch_target": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "preflight": {
+      "$ref": "#/$defs/preflightArtifact"
+    },
+    "reason_codes": {
+      "items": {
+        "enum": [
+          "LOW_RISK",
+          "HIGH_RISK",
+          "TINY_SCOPE",
+          "BROAD_SCOPE",
+          "PATCH_FIRST_REQUIRED",
+          "BUG_LOCALIZATION_REQUIRED",
+          "PARALLEL_NOT_JUSTIFIED",
+          "CONTRACT_REQUIRED",
+          "WORKTREE_REQUIRED",
+          "SINGLE_AGENT_DEFAULT"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "selected_agent": {
+      "enum": [
+        null,
+        "prompt",
+        "prompt_high",
+        "orchestrator",
+        "implementer",
+        "debugger",
+        "tester",
+        "reviewer",
+        "harness_review",
+        "harness_improve"
+      ],
+      "not": {
+        "$ref": "#/$defs/forbiddenRoutingLiteral"
+      },
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selected_mode": {
+      "enum": [
+        "MICRO",
+        "STANDARD",
+        "DEEP"
+      ],
+      "type": "string"
+    },
+    "selected_path": {
+      "items": false,
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "enum": [
+            "prompt",
+            "prompt_high"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "orchestrator"
+        },
+        {
+          "enum": [
+            "implementer",
+            "debugger",
+            "tester",
+            "reviewer"
+          ],
+          "type": "string"
+        }
+      ],
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "selected_skill": {
+      "enum": [
+        "task_intake_normalization",
+        "feature_implementation",
+        "bug_fix",
+        "test_generation",
+        "regression_repair",
+        "refactoring",
+        "review",
+        "documentation",
+        "task_decomposition",
+        "harness_review",
+        "harness_improve"
+      ],
+      "not": {
+        "$ref": "#/$defs/forbiddenRoutingLiteral"
+      },
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "skill": {
+      "enum": [
+        null,
+        "task_intake_normalization",
+        "feature_implementation",
+        "bug_fix",
+        "test_generation",
+        "regression_repair",
+        "refactoring",
+        "investigation",
+        "review",
+        "documentation",
+        "task_decomposition",
+        "harness_review",
+        "harness_improve"
+      ],
+      "not": {
+        "enum": [
+          "noop",
+          "bad",
+          "read1",
+          "read2",
+          "switch",
+          "ignore"
+        ]
+      },
+      "type": "string"
+    },
+    "termination_reason": {
+      "$ref": "#/$defs/terminationReason"
+    },
+    "termination_status": {
+      "$ref": "#/$defs/terminationStatus"
+    }
+  },
+  "required": [
+    "selected_skill",
+    "selected_agent",
+    "selected_path",
+    "selected_mode",
+    "packet_required",
+    "packet_gate_status",
+    "patch_target",
+    "failure_class",
+    "preflight",
+    "skill",
+    "agent",
+    "mode",
+    "parallel",
+    "escalation",
+    "reason_codes",
+    "handoff_sequence",
+    "termination_status",
+    "termination_reason"
+  ],
+  "title": "RoutingDecision",
+  "type": "object"
+}

@@ -1,0 +1,78 @@
+{
+  "$comment": "Entry/task normalization only. Routing and preflight requirements belong to orchestrator decision artifacts.",
+  "$id": "https://opencode.local/schemas/task.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "enum": [
+        "feature_implementation",
+        "bug_fix",
+        "failing_test_repair",
+        "integration_hardening",
+        "harness_review",
+        "harness_improve",
+        "investigation",
+        "refactor"
+      ],
+      "type": "string"
+    },
+    "goal": {
+      "minLength": 3,
+      "type": "string"
+    },
+    "observed_problem": {
+      "minLength": 3,
+      "type": "string"
+    },
+    "parallelism_need": {
+      "enum": [
+        "no",
+        "yes"
+      ],
+      "type": "string"
+    },
+    "related_test": {
+      "type": "string"
+    },
+    "risk": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "narrow",
+        "moderate",
+        "broad"
+      ],
+      "type": "string"
+    },
+    "success_condition": {
+      "minLength": 3,
+      "type": "string"
+    },
+    "suspect_file": {
+      "type": "string"
+    },
+    "suspect_function": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "goal",
+    "observed_problem",
+    "scope",
+    "suspect_file",
+    "suspect_function",
+    "related_test",
+    "success_condition",
+    "risk",
+    "parallelism_need"
+  ],
+  "title": "NormalizedTask",
+  "type": "object"
+}

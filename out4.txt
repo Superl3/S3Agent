@@ -1,0 +1,87 @@
+VALIDATION: FAIL
+HEALTH_PRECEDENCE: evidence > tests > docs
+missing_files:
+  - none
+budget_issues:
+  - agents/prompt.md:6 <-> agents/tester.md:6
+evidence_issues:
+  - none
+policy_issues:
+  - entry_agents: debugger.md: header keys must start with: name, mode, user_facing, hidden, purpose, preferred_model, preferred_reasoning_effort, fallback_model, fallback_reasoning_effort
+  - entry_agents: agent set mismatch: no new agents/layers are allowed
+  - entry_agents: prompt_high preferred_model mismatch
+  - entry_agents: prompt_high preferred_reasoning_effort must be medium
+  - entry_agents: prompt_high fallback_model mismatch
+  - entry_agents: prompt_high fallback_reasoning_effort must be medium
+  - entry_agents: harness_review preferred_reasoning_effort must be medium
+  - entry_agents: harness_review fallback_reasoning_effort must be medium
+  - entry_agents: harness_improve preferred_reasoning_effort must be medium
+  - entry_agents: harness_improve fallback_reasoning_effort must be medium
+  - entry_agents: prompt_high missing handoff marker: always build one canonical internal handoff state for `orchestrator`.
+  - entry_agents: prompt_high missing handoff marker: they must always normalize and immediately hand off to orchestrator.
+  - entry_agents: prompt_high wrapper must stay thin
+  - entry_agents: orchestrator policy marker missing: packet_required
+  - entry_agents: orchestrator policy marker missing: patch_target
+  - entry_agents: orchestrator policy marker missing: failure_class
+  - entry_agents: orchestrator policy marker missing: preflight checks are required in orchestrator decision artifacts
+  - entry_agents: orchestrator policy marker missing: rollback_plan
+  - entry_agents: orchestrator policy marker missing: sorted json keys and normalized paths
+  - routing: routing output contract missing phrase: selected_skill
+  - routing: routing output contract missing phrase: selected_agent
+  - routing: routing output contract missing phrase: selected_path
+  - routing: routing output contract missing phrase: selected_mode
+  - routing: routing output contract missing phrase: packet_required
+  - routing: routing output contract missing phrase: packet_gate_status
+  - routing: routing output contract missing phrase: patch_target
+  - routing: routing output contract missing phrase: failure_class
+  - routing: routing output contract missing phrase: preflight
+  - routing: routing output contract missing phrase: handoff_sequence
+  - routing: routing output contract missing phrase: termination_status
+  - routing: routing output contract missing phrase: termination_reason
+  - routing: routing output contract missing phrase: selected_path must be an ordered structured path
+  - routing: routing output contract missing phrase: forbidden placeholder routing tokens: noop, bad, read1, read2, switch, ignore.
+  - routing: routing output contract missing phrase: forbidden meaningless delegation content: implement input-priority mode, show changed files, run syntax checks, n/a, accidental, h, stop.
+  - routing: routing output contract missing phrase: pre-dispatch gate priority is fixed: invalid_task > no_op > review_only > improve_only.
+  - routing: routing output contract missing phrase: for delegated routing (`termination_status=delegated`), selected_skill, selected_agent, and selected_path are required.
+  - routing: routing output contract missing phrase: for pre-dispatch gate hits (`termination_status=terminated`), selected_agent must be unset and handoff_sequence must be empty.
+  - routing: routing output contract missing phrase: preflight artifact is required in routing output with `scope`, `allowed_files`, `risk`, and `test_plan`.
+  - routing: routing output contract missing phrase: preflight fast-path eligibility must be exactly: scope == narrow and risk != high and allowed_files_count <= 3 (unique normalized paths) and success_check present.
+  - routing: routing output contract missing phrase: `rollback_plan` is conditionally required only when `risk=high` or `scope=broad`.
+  - routing: routing output contract missing phrase: missing or invalid preflight artifact must terminate routing with `invalid_task` or `review_only`.
+  - routing: routing output contract missing phrase: canonicalization is required for preflight artifacts: sorted json keys and normalized paths.
+  - routing: routing output contract missing phrase: must trigger immediate harness failure
+  - routing: routing output contract missing phrase: empty/invalid task input must not produce delegation calls.
+  - routing: routing output contract missing phrase: empty/invalid task input must not emit user-facing chatter.
+  - routing: routing output contract missing phrase: stop/termination on invalid input must leave one normal final report only.
+  - search_policy: search policy must define deterministic stop states including: location_unclear, missing_expected_file, search_budget_exceeded
+  - search_policy: orchestrator missing search gating phrase: stage0 exact-path probe is mandatory before stage1/2 search
+  - search_policy: orchestrator missing search gating phrase: stage0 exact match success is a short-circuit and skips stage1 and stage2
+  - search_policy: orchestrator missing search gating phrase: index-first then lsp-first
+  - search_policy: orchestrator missing search gating phrase: wildcard and pattern-only search are forbidden when concrete target exists
+  - search_policy: orchestrator missing search gating phrase: stop states must remain deterministic
+  - phase_gate_policy: phase gate policy missing phrase: logic -> unit
+  - phase_gate_policy: phase gate policy missing phrase: ui -> smoke
+  - phase_gate_policy: phase gate policy missing phrase: configuration -> lint/typecheck
+  - phase_gate_policy: phase gate policy missing phrase: mixed/cross-module -> at least two validation steps
+  - phase_gate_policy: phase gate policy missing phrase: unknown -> at least one validation step or standardized skip code
+  - structured_input_preservation: prompt_high missing structured-input marker: always build one canonical internal handoff state for `orchestrator`.
+smoke_tests:
+  - structure: PASS
+  - runtime_evidence: PASS
+  - skills: PASS
+  - entry_agents: FAIL
+  - routing: FAIL
+  - parallel_policy: PASS
+  - search_policy: FAIL
+  - execution_notepad_policy: PASS
+  - phase_gate_policy: FAIL
+  - patch_policy: PASS
+  - bug_localization_policy: PASS
+  - failure_memory: PASS
+  - structured_input_preservation: FAIL
+  - execution_trace_policy: PASS
+  - execution_trace_scenario_policy: PASS
+  - budgets: PASS
+  - duplicate_blocks: FAIL
+warnings:
+  - none

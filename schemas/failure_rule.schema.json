@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opencode.local/schemas/failure_rule.schema.json",
+  "title": "FailureRule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ID",
+    "TRIGGER",
+    "RULE",
+    "CHECK",
+    "EXAMPLE"
+  ],
+  "properties": {
+    "ID": {
+      "type": "string",
+      "pattern": "^FR-[0-9]{3}$"
+    },
+    "TRIGGER": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 180
+    },
+    "RULE": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 220
+    },
+    "CHECK": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 220
+    },
+    "EXAMPLE": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 260
+    }
+  }
+}

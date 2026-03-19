@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opencode.local/schemas/handoff_state.schema.json",
+  "title": "EntryHandoffState",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal",
+    "observed_problem",
+    "scope",
+    "success_condition",
+    "risk",
+    "parallelism_need",
+    "suspect_file",
+    "suspect_function",
+    "related_test",
+    "source_input_type",
+    "source_input_preserved",
+    "structured_context",
+    "selected_entry_agent"
+  ],
+  "properties": {
+    "goal": {
+      "type": "string",
+      "minLength": 3
+    },
+    "observed_problem": {
+      "type": "string",
+      "minLength": 3
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "narrow",
+        "moderate",
+        "broad"
+      ]
+    },
+    "success_condition": {
+      "type": "string",
+      "minLength": 3
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "parallelism_need": {
+      "type": "string",
+      "enum": [
+        "no",
+        "yes"
+      ]
+    },
+    "suspect_file": {
+      "type": "string"
+    },
+    "suspect_function": {
+      "type": "string"
+    },
+    "related_test": {
+      "type": "string"
+    },
+    "source_input_type": {
+      "type": "string",
+      "enum": [
+        "simple_nl",
+        "normalized_9line",
+        "structured_passthrough"
+      ]
+    },
+    "source_input_preserved": {
+      "type": "boolean"
+    },
+    "structured_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "line_count",
+        "content"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "none",
+            "bounded_text"
+          ]
+        },
+        "line_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      }
+    },
+    "selected_entry_agent": {
+      "type": "string",
+      "enum": [
+        "prompt_high",
+        "prompt"
+      ]
+    }
+  }
+}
