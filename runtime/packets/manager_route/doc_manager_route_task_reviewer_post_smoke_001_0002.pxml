@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_manager_route_task_reviewer_post_smoke_001_0002</doc_id>
+    <doc_class>manager_route</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_reviewer_post_smoke_001</task_id>
+    <run_id>run_batch4_examples_001</run_id>
+    <sequence>2</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T03:00:01Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_task_intake_reviewer_post_001</doc_id>
+      <doc_class>task_intake</doc_class>
+      <relation>intake</relation>
+    </ref>
+  </refs>
+  <payload>
+    <selected_path>reviewer_post</selected_path>
+    <lane_flags>
+      <planner>false</planner>
+      <reviewer>true</reviewer>
+      <verifier>false</verifier>
+    </lane_flags>
+    <route_reason>High risk task requests reviewer post-lane.</route_reason>
+    <risk_level>high</risk_level>
+    <acceptance_lock>
+      <lock_id>lock_task_reviewer_post_smoke_001_0002</lock_id>
+      <lock_sha256>7994348a46305fb9f15ba34ccb16a2506761f8c3e33ba44d5d54e789c38295eb</lock_sha256>
+      <locked_at>2026-03-22T03:00:01Z</locked_at>
+    </acceptance_lock>
+  </payload>
+  <integrity>
+    <content_sha256>33f207c9228b6c4ab5a405c35804cf23f52dc63bcbefadf92549d5cd0e147feb</content_sha256>
+    <parent_sha256>cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd</parent_sha256>
+  </integrity>
+</pxml>

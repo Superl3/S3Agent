@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_artifact_pruning_policy_b9_1_001</doc_id>
+    <doc_class>artifact_pruning_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch9_1_pruning_hardening</task_id>
+    <run_id>run_batch9_1_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T13:00:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_runtime_retention_policy_b7_001</doc_id>
+      <doc_class>runtime_retention_policy</doc_class>
+      <relation>retention_reference</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_operator_runbook_policy_b9_001</doc_id>
+      <doc_class>operator_runbook_policy</doc_class>
+      <relation>runbook_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>runtime_artifact_pruning_hardening_policy</policy_name>
+    <rules>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>dry_run_default</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+        </applies_to>
+        <candidate_condition>pruning command runs without explicit apply override</candidate_condition>
+        <action>report_only</action>
+        <rationale>Pruning must default to non-destructive planning output.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>quarantine_first_for_ssot</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+          <item>ssot_artifacts</item>
+        </applies_to>
+        <candidate_condition>ssot candidate is non-latest or suspicious</candidate_condition>
+        <action>quarantine</action>
+        <rationale>SSOT artifacts are never direct-delete targets during pruning.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>delete_derived_safe_only</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+          <item>derived_artifacts</item>
+        </applies_to>
+        <candidate_condition>candidate is derived and non-latest with replacement proof</candidate_condition>
+        <action>delete_derived_safe</action>
+        <rationale>Only derived artifacts may be deleted, and only when safety is proven.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>never_prune_current_latest</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+          <item>latest_pointers</item>
+        </applies_to>
+        <candidate_condition>candidate doc_id equals current latest pointer target</candidate_condition>
+        <action>deny</action>
+        <rationale>Current latest runtime pointers are immutable pruning protection boundaries.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>never_prune_referenced_by_latest</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+          <item>latest_dependencies</item>
+        </applies_to>
+        <candidate_condition>candidate is referenced by any current latest artifact</candidate_condition>
+        <action>deny</action>
+        <rationale>Latest dependency closure must remain intact after pruning.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>replacement_proof_required</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+        </applies_to>
+        <candidate_condition>candidate action is quarantine or delete_derived_safe</candidate_condition>
+        <action>require_override</action>
+        <rationale>Non-report actions require explicit replacement proof for safety traceability.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>task_scoped_first</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+        </applies_to>
+        <candidate_condition>operator provides task_id scope</candidate_condition>
+        <action>report_only</action>
+        <rationale>Task-scoped pruning is the preferred deterministic first step.</rationale>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>global_prune_requires_explicit_flag</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+          <item>global_scope</item>
+        </applies_to>
+        <candidate_condition>operator requests all-task pruning apply mode</candidate_condition>
+        <action>require_override</action>
+        <rationale>Global apply requires explicit operator intent to avoid broad unintended impact.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>lineage_mismatch_prefers_quarantine</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+          <item>lineage_mismatch_candidates</item>
+        </applies_to>
+        <candidate_condition>candidate lineage lock differs from latest lineage lock</candidate_condition>
+        <action>quarantine</action>
+        <rationale>Lineage mismatch artifacts are isolated for forensics before any deletion path.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>PRUNE-B9.1-001</policy_id>
+        <rule_name>operator_override_logging_required</rule_name>
+        <applies_to>
+          <item>runtime_prune</item>
+          <item>pruning_report</item>
+        </applies_to>
+        <candidate_condition>operator uses apply mode or global override</candidate_condition>
+        <action>require_override</action>
+        <rationale>Apply paths must leave explicit audit trail in pruning reports/manifests.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9</content_sha256>
+  </integrity>
+</pxml>

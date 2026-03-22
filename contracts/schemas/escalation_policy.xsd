@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="EscalationRuleType">
+    <xs:sequence>
+      <xs:element name="policy_id" type="NonEmptyStringType"/>
+      <xs:element name="escalation_rule_id" type="NonEmptyStringType"/>
+      <xs:element name="applies_to" type="StringListType"/>
+      <xs:element name="trigger_condition" type="NonEmptyStringType"/>
+      <xs:element name="threshold" type="xs:positiveInteger"/>
+      <xs:element name="escalation_target" type="NonEmptyStringType"/>
+      <xs:element name="effect" type="EscalationEffectType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EscalationRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="EscalationRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EscalationPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="repeated_failure_threshold" type="xs:positiveInteger"/>
+      <xs:element name="blocker_threshold" type="xs:positiveInteger"/>
+      <xs:element name="inconclusive_threshold" type="xs:positiveInteger"/>
+      <xs:element name="human_escalation_condition" type="StringListType"/>
+      <xs:element name="stop_after_escalation" type="xs:boolean"/>
+      <xs:element name="rules" type="EscalationRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EscalationPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="EscalationPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="EscalationPolicyDocumentType"/>
+
+</xs:schema>

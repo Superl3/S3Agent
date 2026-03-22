@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="RetryRuleType">
+    <xs:sequence>
+      <xs:element name="policy_id" type="NonEmptyStringType"/>
+      <xs:element name="retry_rule_id" type="NonEmptyStringType"/>
+      <xs:element name="applies_to" type="StringListType"/>
+      <xs:element name="retry_condition" type="NonEmptyStringType"/>
+      <xs:element name="max_attempts" type="xs:positiveInteger"/>
+      <xs:element name="reset_condition" type="NonEmptyStringType"/>
+      <xs:element name="next_effect" type="RetryNextEffectType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RetryRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="RetryRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RetryPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="same_cause_fast_escalation_threshold" type="xs:positiveInteger"/>
+      <xs:element name="rules" type="RetryRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RetryPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="RetryPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="RetryPolicyDocumentType"/>
+
+</xs:schema>

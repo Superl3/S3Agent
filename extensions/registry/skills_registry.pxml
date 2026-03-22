@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_skills_registry_batch1</doc_id>
+    <doc_class>skills_registry</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch1_registry_bootstrap</task_id>
+    <run_id>run_batch1_20260322</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T00:00:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <source_root>C:\Users\bug95\.config\opencode-build\everything-claude-code</source_root>
+    <entries>
+      <skill>
+        <skill_id>skill_ecc_placeholder_planner_support</skill_id>
+        <source>imported/ecc/skills/placeholder_planner.md</source>
+        <name>ECC Placeholder Planner Skill</name>
+        <purpose>Optional planner assistance placeholder with no active wiring.</purpose>
+        <recommended_lane>planner_pre</recommended_lane>
+        <write_permission>false</write_permission>
+        <capability_scope>
+          <item>planning</item>
+        </capability_scope>
+        <enabled_by_default>false</enabled_by_default>
+        <registry_status>imported</registry_status>
+        <notes>Batch 1 dormant entry. Not injected into agent contracts.</notes>
+      </skill>
+    </entries>
+  </payload>
+  <integrity>
+    <content_sha256>2222222222222222222222222222222222222222222222222222222222222222</content_sha256>
+  </integrity>
+</pxml>

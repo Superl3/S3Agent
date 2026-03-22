@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "artifact_ref": {
+        "doc_class": "implementer_result",
+        "doc_id": "doc_implres_task_impl_blocked__0003_20260322043751_16f9af99",
+        "relation": "latest_implementer_result"
+      },
+      "doc_id": "doc_implres_task_impl_blocked__0003_20260322043751_16f9af99",
+      "escalation_requested": false,
+      "reason_code": "implementer_modify_target_missing",
+      "retry_count": 1,
+      "status": "blocked",
+      "time": "2026-03-22T04:37:51Z",
+      "timestamp": "2026-03-22T04:37:51Z"
+    }
+  ],
+  "task_id": "task_impl_blocked_smoke_001"
+}

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ReleaseGateProfilePayloadType">
+    <xs:sequence>
+      <xs:element name="profile_id" type="NonEmptyStringType"/>
+      <xs:element name="profile_name" type="NonEmptyStringType"/>
+      <xs:element name="profile_version" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="profile_owner" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="last_change_reason" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="approval_ref" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="override_reason" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="coverage_task_ids" type="StringListType"/>
+      <xs:element name="candidate_gate_task_ids" type="StringListType"/>
+      <xs:element name="allow_caution_rc" type="xs:boolean"/>
+      <xs:element name="required_lane_coverage" type="RoutePathListType"/>
+      <xs:element name="required_ready_cases" type="xs:positiveInteger"/>
+      <xs:element name="required_pruning_branches" type="StringListType"/>
+      <xs:element name="required_release_artifacts" type="StringListType" minOccurs="0"/>
+      <xs:element name="required_entrypoints" type="StringListType"/>
+      <xs:element name="notes" type="StringListType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseGateProfileDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ReleaseGateProfilePayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ReleaseGateProfileDocumentType"/>
+
+</xs:schema>

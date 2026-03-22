@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ManagerRouteRefsType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="LaneFlagsType">
+    <xs:sequence>
+      <xs:element name="planner" type="xs:boolean"/>
+      <xs:element name="reviewer" type="xs:boolean"/>
+      <xs:element name="verifier" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="AcceptanceLockType">
+    <xs:sequence>
+      <xs:element name="lock_id" type="NonEmptyStringType"/>
+      <xs:element name="lock_sha256" type="Sha256Type"/>
+      <xs:element name="locked_at" type="xs:dateTime"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ManagerRoutePayloadType">
+    <xs:sequence>
+      <xs:element name="selected_path" type="RoutePathType"/>
+      <xs:element name="lane_flags" type="LaneFlagsType"/>
+      <xs:element name="route_reason" type="NonEmptyStringType"/>
+      <xs:element name="risk_level" type="RiskLevelType"/>
+      <xs:element name="acceptance_lock" type="AcceptanceLockType"/>
+      <xs:element name="defer_reason" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="human_escalation_note" type="NonEmptyStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ManagerRouteDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="ManagerRouteRefsType"/>
+      <xs:element name="payload" type="ManagerRoutePayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ManagerRouteDocumentType"/>
+
+</xs:schema>

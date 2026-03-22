@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="CoverageClassificationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="blocker"/>
+      <xs:enumeration value="warning"/>
+      <xs:enumeration value="info"/>
+      <xs:enumeration value="excluded"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="CoverageOutcomePolicyRuleType">
+    <xs:sequence>
+      <xs:element name="rule_name" type="NonEmptyStringType"/>
+      <xs:element name="source_kind" type="NonEmptyStringType"/>
+      <xs:element name="source_value" type="NonEmptyStringType"/>
+      <xs:element name="classification" type="CoverageClassificationType"/>
+      <xs:element name="affects_gate" type="xs:boolean"/>
+      <xs:element name="rationale" type="NonEmptyStringType"/>
+      <xs:element name="recommended_operator_action" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CoverageOutcomePolicyRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="CoverageOutcomePolicyRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CoverageOutcomePolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policy_name" type="NonEmptyStringType"/>
+      <xs:element name="rules" type="CoverageOutcomePolicyRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CoverageOutcomePolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="CoverageOutcomePolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="CoverageOutcomePolicyDocumentType"/>
+
+</xs:schema>

@@ -1,0 +1,12 @@
+{
+  "note": "coordinator completed conditional lane orchestration",
+  "packet_doc_id": "doc_execution_packet_task_planner_candidate_001_0003",
+  "planner_artifact": "C:\\Users\\bug95\\.config\\opencode\\runtime\\sidecars\\planner\\doc_plan_sidecar_task_planner_candi_0004_043724_84a5f3.pxml",
+  "reviewer_artifact": null,
+  "route_doc_id": "doc_manager_route_task_planner_candidate_001_0002",
+  "selected_path": "planner_pre",
+  "status": "completed",
+  "task_id": "task_planner_candidate_001",
+  "time": "2026-03-22T04:37:24Z",
+  "verification_artifact": null
+}

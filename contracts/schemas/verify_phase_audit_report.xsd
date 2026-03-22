@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="VerifyPhaseAuditResultType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="pass"/>
+      <xs:enumeration value="caution"/>
+      <xs:enumeration value="fail"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="AuditEvidenceRefListType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VerifyPhaseAuditReportPayloadType">
+    <xs:sequence>
+      <xs:element name="audit_report_id" type="NonEmptyStringType"/>
+      <xs:element name="generated_at" type="xs:dateTime"/>
+      <xs:element name="audited_task_ids" type="StringListType"/>
+      <xs:element name="policy_ref" type="ReferenceItemType"/>
+      <xs:element name="lane_phase_evidence_refs" type="AuditEvidenceRefListType"/>
+      <xs:element name="post_implement_phase_evidence_refs" type="AuditEvidenceRefListType"/>
+      <xs:element name="unknown_legacy_refs" type="AuditEvidenceRefListType"/>
+      <xs:element name="missing_phase_requirements" type="StringListType"/>
+      <xs:element name="warnings" type="StringListType"/>
+      <xs:element name="blockers" type="StringListType"/>
+      <xs:element name="result" type="VerifyPhaseAuditResultType"/>
+      <xs:element name="next_action" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VerifyPhaseAuditReportDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="VerifyPhaseAuditReportPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="VerifyPhaseAuditReportDocumentType"/>
+
+</xs:schema>

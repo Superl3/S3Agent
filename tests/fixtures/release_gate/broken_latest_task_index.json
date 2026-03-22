@@ -1,0 +1,10 @@
+{
+  "latest_execution_packet": "packets/execution_packet/missing_packet_for_batch13.pxml",
+  "latest_execution_trace": "traces/by_task/missing_trace_for_batch13.pxml",
+  "latest_final_render_report": "rendered/reports/missing_render_for_batch13.pxml",
+  "latest_manager_route": "packets/manager_route/missing_route_for_batch13.pxml",
+  "latest_operator_preflight_report": "preflight/reports/missing_preflight_for_batch13.pxml",
+  "latest_task_status_report": "status/reports/missing_status_for_batch13.pxml",
+  "task_id": "__TASK_ID__",
+  "updated_at": "2026-03-23T00:00:00Z"
+}

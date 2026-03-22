@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_trace_event_semantics_b7_001</doc_id>
+    <doc_class>trace_event_semantics</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch7_stability_hardening</task_id>
+    <run_id>run_batch7_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T07:02:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_post_impl_verify_policy_b6_001</doc_id>
+      <doc_class>post_implement_verification_policy</doc_class>
+      <relation>post_implement_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <semantics_id>TRACE-SEM-B7-001</semantics_id>
+    <lane_verifier_semantics>Lane verifier is coordinator-triggered verification tied to verifier lane requirements and usually appears before implement_start in verifier_post/full_lane.</lane_verifier_semantics>
+    <post_implement_verifier_semantics>Post-implement verifier is task_executor policy-driven verification and appears after implementer patch_applied for applied/no_op outcomes.</post_implement_verifier_semantics>
+    <events>
+      <event>
+        <event_type>route</event_type>
+        <semantic_meaning>Manager route decision became active for orchestration.</semantic_meaning>
+        <ordering_expectation>Must be first flow event before packet_issued.</ordering_expectation>
+        <required_artifact_refs>
+          <item>manager_route</item>
+        </required_artifact_refs>
+        <optional_metadata_fields/>
+      </event>
+      <event>
+        <event_type>packet_issued</event_type>
+        <semantic_meaning>Execution packet was issued and accepted as implementer target.</semantic_meaning>
+        <ordering_expectation>Must occur after route and before implement_start.</ordering_expectation>
+        <required_artifact_refs>
+          <item>execution_packet</item>
+        </required_artifact_refs>
+        <optional_metadata_fields/>
+      </event>
+      <event>
+        <event_type>review_done</event_type>
+        <semantic_meaning>Reviewer lane produced review_sidecar outcome for gated path.</semantic_meaning>
+        <ordering_expectation>Occurs when reviewer lane is active and must include lineage lock.</ordering_expectation>
+        <required_artifact_refs>
+          <item>review_sidecar</item>
+        </required_artifact_refs>
+        <optional_metadata_fields>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+      <event>
+        <event_type>verify_done</event_type>
+        <semantic_meaning>Verification result was recorded either as lane verifier or post-implement verifier.</semantic_meaning>
+        <ordering_expectation>Lane verify_done can appear before implement_start while post-implement verify_done should appear after patch_applied.</ordering_expectation>
+        <required_artifact_refs>
+          <item>verification_result</item>
+        </required_artifact_refs>
+        <optional_metadata_fields>
+          <item>verify_phase</item>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+        <verify_phase_hint>either</verify_phase_hint>
+      </event>
+      <event>
+        <event_type>implement_start</event_type>
+        <semantic_meaning>Implementer execution began using execution_packet contract.</semantic_meaning>
+        <ordering_expectation>Must occur after packet_issued and before patch_applied or blocked.</ordering_expectation>
+        <required_artifact_refs>
+          <item>execution_packet</item>
+        </required_artifact_refs>
+        <optional_metadata_fields>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+      <event>
+        <event_type>patch_applied</event_type>
+        <semantic_meaning>Implementer completed applied/no_op result and emitted evidence.</semantic_meaning>
+        <ordering_expectation>Occurs after implement_start and references implementer_result.</ordering_expectation>
+        <required_artifact_refs>
+          <item>implementer_result</item>
+        </required_artifact_refs>
+        <optional_metadata_fields>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+      <event>
+        <event_type>blocked</event_type>
+        <semantic_meaning>Implementer could not safely proceed and emitted blocked reason.</semantic_meaning>
+        <ordering_expectation>Occurs after implement_start and before retry_failed/escalation if repeated.</ordering_expectation>
+        <required_artifact_refs>
+          <item>implementer_result</item>
+        </required_artifact_refs>
+        <optional_metadata_fields>
+          <item>reason_code</item>
+          <item>attempt</item>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+      <event>
+        <event_type>retry_failed</event_type>
+        <semantic_meaning>Implementer reached retry threshold for repeated blocked cause.</semantic_meaning>
+        <ordering_expectation>Must be preceded by blocked event(s) for same cause.</ordering_expectation>
+        <required_artifact_refs>
+          <item>implementer_result</item>
+        </required_artifact_refs>
+        <optional_metadata_fields>
+          <item>reason_code</item>
+          <item>attempt</item>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+      <event>
+        <event_type>escalation</event_type>
+        <semantic_meaning>Execution requires manager or human escalation decision.</semantic_meaning>
+        <ordering_expectation>Typically follows retry_failed or policy-level blocking condition.</ordering_expectation>
+        <required_artifact_refs/>
+        <optional_metadata_fields>
+          <item>reason_code</item>
+          <item>attempt</item>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+      <event>
+        <event_type>stop</event_type>
+        <semantic_meaning>Pipeline intentionally halted after escalation or hard-stop policy.</semantic_meaning>
+        <ordering_expectation>Appears only after escalation when stop_after_escalation is active.</ordering_expectation>
+        <required_artifact_refs/>
+        <optional_metadata_fields>
+          <item>reason_code</item>
+          <item>attempt</item>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+    </events>
+    <notes>
+      <item>verify_done event names remain unchanged and are disambiguated by ordering and optional verify_phase metadata.</item>
+      <item>Semantics are additive and do not alter append-only trace hashing contract.</item>
+    </notes>
+  </payload>
+  <integrity>
+    <content_sha256>9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c</content_sha256>
+  </integrity>
+</pxml>

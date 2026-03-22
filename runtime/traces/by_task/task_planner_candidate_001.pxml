@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_execution_trace_task_planner_candidate_001</doc_id>
+    <doc_class>execution_trace</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_planner_candidate_001</task_id>
+    <run_id>run_trace_task_planner_candidate_001</run_id>
+    <sequence>4</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T04:37:23Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <events>
+      <event>
+        <event_seq>1</event_seq>
+        <event_type>route</event_type>
+        <event_time>2026-03-22T04:37:23Z</event_time>
+        <actor>manager</actor>
+        <message>Route selected by manager and observed by coordinator.</message>
+        <artifact_refs>
+          <ref>
+            <doc_id>doc_manager_route_task_planner_candidate_001_0002</doc_id>
+            <doc_class>manager_route</doc_class>
+            <relation>evidence</relation>
+          </ref>
+        </artifact_refs>
+        <event_sha256>5c94a5f1987cf92d75e58ee4873b5b617b3c0dfec330127b1b473f7f4f7643e6</event_sha256>
+      </event>
+    <event><event_seq>2</event_seq><event_type>packet_issued</event_type><event_time>2026-03-22T04:37:24Z</event_time><actor>manager</actor><message>Execution packet issued and accepted for orchestration.</message><artifact_refs><ref><doc_id>doc_execution_packet_task_planner_candidate_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>c4b0ce459a9f830586eb7f545d589ac681c67ef9d691acccdc508d4e619cfab7</event_sha256><prev_event_sha256>5c94a5f1987cf92d75e58ee4873b5b617b3c0dfec330127b1b473f7f4f7643e6</prev_event_sha256></event><event><event_seq>3</event_seq><event_type>implement_start</event_type><event_time>2026-03-22T04:37:24Z</event_time><actor>implementer</actor><message>Implementer started execution from execution_packet contract.</message><lineage_lock_sha256>7959bc1ff76d6995c23e1080f466824401b125095de7772553f4effd1d96d203</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_execution_packet_task_planner_candidate_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>8f3b47d95ee8c982b9724a495889f643dde23437aca5ef3a791c4ece854a9921</event_sha256><prev_event_sha256>c4b0ce459a9f830586eb7f545d589ac681c67ef9d691acccdc508d4e619cfab7</prev_event_sha256></event><event><event_seq>4</event_seq><event_type>blocked</event_type><event_time>2026-03-22T04:37:25Z</event_time><actor>implementer</actor><message>Implementer blocked: implementer_modify_target_missing</message><reason_code>implementer_modify_target_missing</reason_code><attempt>1</attempt><lineage_lock_sha256>7959bc1ff76d6995c23e1080f466824401b125095de7772553f4effd1d96d203</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_implres_task_planner_candi_0003_20260322043725_6a6319f6</doc_id><doc_class>implementer_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>99e5ed278538a5d3e822964fc0426255b75c4e3e6eb62694fa2b00fc6ac68066</event_sha256><prev_event_sha256>8f3b47d95ee8c982b9724a495889f643dde23437aca5ef3a791c4ece854a9921</prev_event_sha256></event></events>
+  </payload>
+  <integrity>
+    <content_sha256>7cd4950423622f877ac20a7eec122057cee12dc2034113b0833a5e8029c2fcf8</content_sha256>
+    <parent_sha256>3b41d240a1722fd332d4d777f591422a64be4c66b329edbe0cf165a8456b3cc6</parent_sha256>
+  </integrity>
+</pxml>

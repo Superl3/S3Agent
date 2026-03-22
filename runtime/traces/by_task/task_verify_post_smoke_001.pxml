@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_execution_trace_task_verify_post_smoke_001</doc_id>
+    <doc_class>execution_trace</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_verify_post_smoke_001</task_id>
+    <run_id>run_trace_task_verify_post_smoke_001</run_id>
+    <sequence>7</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T04:37:41Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <events>
+      <event>
+        <event_seq>1</event_seq>
+        <event_type>route</event_type>
+        <event_time>2026-03-22T04:37:41Z</event_time>
+        <actor>manager</actor>
+        <message>Route selected by manager and observed by coordinator.</message>
+        <artifact_refs>
+          <ref>
+            <doc_id>doc_manager_route_task_verify_post_smoke_001_0002</doc_id>
+            <doc_class>manager_route</doc_class>
+            <relation>evidence</relation>
+          </ref>
+        </artifact_refs>
+        <event_sha256>9063261f42ecca6bfae43edb051b8c0d03da6168f9bd310cd9d788adf1f38d0a</event_sha256>
+      </event>
+    <event><event_seq>2</event_seq><event_type>packet_issued</event_type><event_time>2026-03-22T04:37:42Z</event_time><actor>manager</actor><message>Execution packet issued and accepted for orchestration.</message><artifact_refs><ref><doc_id>doc_execution_packet_task_verify_post_smoke_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>770830e04b2e2b08bf59bb3c389889afc69bb39d08aa3bbaa66a5ecd8434c897</event_sha256><prev_event_sha256>9063261f42ecca6bfae43edb051b8c0d03da6168f9bd310cd9d788adf1f38d0a</prev_event_sha256></event><event><event_seq>3</event_seq><event_type>verify_done</event_type><event_time>2026-03-22T04:37:42Z</event_time><actor>verifier</actor><message>Verifier produced verdict pass.</message><lineage_lock_sha256>7994348a46305fb9f15ba34ccb16a2506761f8c3e33ba44d5d54e789c38295eb</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_verifres_task_verify_post_smo_0003_20260322043742_f213356d</doc_id><doc_class>verification_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>27b055086db5131b55da762ad52b474048e2b575ff6a3b6985b8af8a9d5c3ede</event_sha256><prev_event_sha256>770830e04b2e2b08bf59bb3c389889afc69bb39d08aa3bbaa66a5ecd8434c897</prev_event_sha256></event><event><event_seq>4</event_seq><event_type>implement_start</event_type><event_time>2026-03-22T04:37:43Z</event_time><actor>implementer</actor><message>Implementer started execution from execution_packet contract.</message><lineage_lock_sha256>7994348a46305fb9f15ba34ccb16a2506761f8c3e33ba44d5d54e789c38295eb</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_execution_packet_task_verify_post_smoke_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>54849bf8964cde05a6a1af2215b796c5ac46c916aad6c2e11def56d927387650</event_sha256><prev_event_sha256>27b055086db5131b55da762ad52b474048e2b575ff6a3b6985b8af8a9d5c3ede</prev_event_sha256></event><event><event_seq>5</event_seq><event_type>patch_applied</event_type><event_time>2026-03-22T04:37:43Z</event_time><actor>implementer</actor><message>Implementer finished with status applied.</message><lineage_lock_sha256>7994348a46305fb9f15ba34ccb16a2506761f8c3e33ba44d5d54e789c38295eb</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_implres_task_verify_post_s_0003_20260322043743_119776a6</doc_id><doc_class>implementer_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>30ba90a8e400650c0b48cf6ae39727ccb97425823aa4f4f9ad035f9893699bb8</event_sha256><prev_event_sha256>54849bf8964cde05a6a1af2215b796c5ac46c916aad6c2e11def56d927387650</prev_event_sha256></event><event><event_seq>6</event_seq><event_type>verify_done</event_type><event_time>2026-03-22T04:37:44Z</event_time><actor>verifier</actor><message>Verification completed with verdict pass.</message><lineage_lock_sha256>7994348a46305fb9f15ba34ccb16a2506761f8c3e33ba44d5d54e789c38295eb</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_verifres_task_verify_post_smo_0003_20260322043744_9cd3b42a</doc_id><doc_class>verification_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>0b99ae1eab6bdadf3748ee8b41b4e93c0595ab261c1688cd4077b23261b9a925</event_sha256><prev_event_sha256>30ba90a8e400650c0b48cf6ae39727ccb97425823aa4f4f9ad035f9893699bb8</prev_event_sha256></event><event><event_seq>7</event_seq><event_type>verify_done</event_type><event_time>2026-03-22T13:41:20Z</event_time><actor>verifier</actor><message>Verification completed with verdict pass.</message><lineage_lock_sha256>7994348a46305fb9f15ba34ccb16a2506761f8c3e33ba44d5d54e789c38295eb</lineage_lock_sha256><verify_phase>lane</verify_phase><artifact_refs><ref><doc_id>doc_verifres_task_verify_post_smo_0003_20260322134119_88141f78</doc_id><doc_class>verification_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>0091b13163cc1e213aec838a57d37d4f638bcb029707736325c279716aea6a9f</event_sha256><prev_event_sha256>0b99ae1eab6bdadf3748ee8b41b4e93c0595ab261c1688cd4077b23261b9a925</prev_event_sha256></event></events>
+  </payload>
+  <integrity>
+    <content_sha256>e2abbbddd7ed40b3a221f870e8aff5e8f4f18177d612233ac0742037411b1d6d</content_sha256>
+    <parent_sha256>bc49314219dc7803dc56f294570391d6b387e3a475a3a9b1d88b9e3b7bc875a8</parent_sha256>
+  </integrity>
+</pxml>

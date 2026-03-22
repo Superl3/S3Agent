@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ActivationPolicyEntryType">
+    <xs:sequence>
+      <xs:element name="extension_ref" type="NonEmptyStringType"/>
+      <xs:element name="activation_mode" type="ActivationModeType"/>
+      <xs:element name="allowed_lanes" type="RoutePathListType"/>
+      <xs:element name="approval_required" type="xs:boolean"/>
+      <xs:element name="write_access" type="xs:boolean"/>
+      <xs:element name="default_state" type="ActivationDefaultStateType"/>
+      <xs:element name="activation_notes" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ActivationPolicyEntriesType">
+    <xs:sequence>
+      <xs:element name="policy" type="ActivationPolicyEntryType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExtensionActivationPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policies" type="ActivationPolicyEntriesType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExtensionActivationPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ExtensionActivationPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ExtensionActivationPolicyDocumentType"/>
+
+</xs:schema>

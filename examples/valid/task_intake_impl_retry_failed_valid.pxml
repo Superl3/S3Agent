@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_task_intake_impl_retry_failed_001</doc_id>
+    <doc_class>task_intake</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_impl_retry_failed_smoke_001</task_id>
+    <run_id>run_batch5_examples_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T05:12:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <request_text>Perform constrained ops update with retry tracking on repeated blocked cause.</request_text>
+    <task_type>ops</task_type>
+    <requested_outcome>Repeated blocked attempts transition to retry_failed and escalate deterministically.</requested_outcome>
+    <constraints>
+      <item>Do not bypass expected_files guard.</item>
+      <item>Preserve packet patch constraints.</item>
+    </constraints>
+    <risk_hint>medium</risk_hint>
+    <acceptance_hint>retry_failed and escalation traces should appear after retry threshold.</acceptance_hint>
+  </payload>
+  <integrity>
+    <content_sha256>cececececececececececececececececececececececececececececececece</content_sha256>
+  </integrity>
+</pxml>

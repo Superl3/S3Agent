@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_mcp_registry_batch1</doc_id>
+    <doc_class>mcp_registry</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch1_registry_bootstrap</task_id>
+    <run_id>run_batch1_20260322</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T00:00:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <source_root>C:\Users\bug95\.config\opencode-build\everything-claude-code</source_root>
+    <entries>
+      <mcp>
+        <mcp_id>mcp_ecc_placeholder_context</mcp_id>
+        <source>imported/ecc/mcp/placeholder_context.json</source>
+        <name>ECC Placeholder MCP</name>
+        <category>external_context</category>
+        <recommended_lane>reviewer_post</recommended_lane>
+        <capabilities>
+          <item>read_metadata</item>
+          <item>list_resources</item>
+        </capabilities>
+        <risk_notes>No runtime connection in Batch 1. Registry-only provenance record.</risk_notes>
+        <enabled_by_default>false</enabled_by_default>
+        <registry_status>imported</registry_status>
+        <notes>Batch 1 dormant entry. MCP activation prohibited by default policy.</notes>
+      </mcp>
+    </entries>
+  </payload>
+  <integrity>
+    <content_sha256>3333333333333333333333333333333333333333333333333333333333333333</content_sha256>
+  </integrity>
+</pxml>

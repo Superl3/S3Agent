@@ -1,0 +1,12 @@
+{
+  "note": "coordinator completed conditional lane orchestration",
+  "packet_doc_id": "doc_execution_packet_task_bugfix_login_001_0003",
+  "planner_artifact": null,
+  "reviewer_artifact": null,
+  "route_doc_id": "doc_manager_route_task_bugfix_login_001_0002",
+  "selected_path": "direct",
+  "status": "completed",
+  "task_id": "task_bugfix_login_001",
+  "time": "2026-03-22T02:57:24Z",
+  "verification_artifact": null
+}

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="RoutePolicyItemType">
+    <xs:sequence>
+      <xs:element name="path_id" type="RoutePathType"/>
+      <xs:element name="entry_condition" type="StringListType"/>
+      <xs:element name="reject_condition" type="StringListType"/>
+      <xs:element name="escalation_condition" type="StringListType"/>
+      <xs:element name="stop_condition" type="StringListType"/>
+      <xs:element name="required_artifacts" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RoutePolicyListType">
+    <xs:sequence>
+      <xs:element name="path" type="RoutePolicyItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RoutingPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="default_path" type="RoutePathType"/>
+      <xs:element name="minimal_complexity_first" type="xs:boolean"/>
+      <xs:element name="decision_basis" type="StringListType"/>
+      <xs:element name="paths" type="RoutePolicyListType"/>
+      <xs:element name="sidecar_execution_mode" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RoutingPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="RoutingPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="RoutingPolicyDocumentType"/>
+
+</xs:schema>

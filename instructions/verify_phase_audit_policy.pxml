@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_verify_phase_audit_policy_b12_001</doc_id>
+    <doc_class>verify_phase_audit_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch12_release_governance</task_id>
+    <run_id>run_batch12_verify_phase_policy_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T16:24:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_trace_event_semantics_b7_001</doc_id>
+      <doc_class>trace_event_semantics</doc_class>
+      <relation>trace_semantics_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>verify_phase_evidence_audit_policy</policy_name>
+    <rules>
+      <rule>
+        <policy_id>VPA-B12-001</policy_id>
+        <rule_name>require_lane_phase_evidence</rule_name>
+        <applies_to>
+          <item>verify_phase_audit_report</item>
+          <item>verification_result</item>
+          <item>execution_trace</item>
+        </applies_to>
+        <trigger_condition>verify_phase audit executes for smoke evidence set</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>At least one lane verify_phase evidence item is required.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>VPA-B12-001</policy_id>
+        <rule_name>require_post_implement_phase_evidence</rule_name>
+        <applies_to>
+          <item>verify_phase_audit_report</item>
+          <item>verification_result</item>
+          <item>execution_trace</item>
+        </applies_to>
+        <trigger_condition>verify_phase audit executes for smoke evidence set</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>At least one post_implement verify_phase evidence item is required.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>VPA-B12-001</policy_id>
+        <rule_name>classify_unknown_legacy_for_fresh_smoke</rule_name>
+        <applies_to>
+          <item>verify_phase_audit_report</item>
+        </applies_to>
+        <trigger_condition>fresh smoke tasks provide unknown_legacy-only verify evidence</trigger_condition>
+        <decision>fail_requirement</decision>
+        <rationale>Fresh smoke tasks should emit explicit lane/post_implement phases.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>VPA-B12-001</policy_id>
+        <rule_name>allow_unknown_legacy_for_legacy_artifacts</rule_name>
+        <applies_to>
+          <item>verify_phase_audit_report</item>
+        </applies_to>
+        <trigger_condition>legacy tasks retain unknown_legacy evidence only</trigger_condition>
+        <decision>warning_allowed</decision>
+        <rationale>Legacy evidence may remain with warning while rollout completes.</rationale>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>VPA-B12-001</policy_id>
+        <rule_name>candidate_subset_phase_coverage_required</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+          <item>verify_phase_audit_report</item>
+        </applies_to>
+        <trigger_condition>candidate subset tasks are included in verify_phase audit scope</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>Candidate gate tasks must retain phase-evidence visibility.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>VPA-B12-001</policy_id>
+        <rule_name>audit_report_required</rule_name>
+        <applies_to>
+          <item>verify_phase_audit</item>
+          <item>release_ops_gate</item>
+        </applies_to>
+        <trigger_condition>release ops gate runs with verify-phase audit enabled</trigger_condition>
+        <decision>require_documentation</decision>
+        <rationale>Audit output must be preserved as a derived runtime artifact.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>VPA-B12-001</policy_id>
+        <rule_name>override_logging_required</rule_name>
+        <applies_to>
+          <item>verify_phase_audit_report</item>
+          <item>release_ops_gate</item>
+        </applies_to>
+        <trigger_condition>manual override accepts caution evidence</trigger_condition>
+        <decision>require_documentation</decision>
+        <rationale>Any override from audit caution or fail must be explicitly logged.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>55ee55ee55ee55ee55ee55ee55ee55ee55ee55ee55ee55ee55ee55ee55ee55ee</content_sha256>
+  </integrity>
+</pxml>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ExecutionPolicyRuleType">
+    <xs:sequence>
+      <xs:element name="policy_id" type="NonEmptyStringType"/>
+      <xs:element name="rule_name" type="NonEmptyStringType"/>
+      <xs:element name="applies_to" type="StringListType"/>
+      <xs:element name="description" type="NonEmptyStringType"/>
+      <xs:element name="enforcement_level" type="EnforcementLevelType"/>
+      <xs:element name="violation_effect" type="ViolationEffectType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExecutionPolicyRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="ExecutionPolicyRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExecutionPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policy_name" type="NonEmptyStringType"/>
+      <xs:element name="rules" type="ExecutionPolicyRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExecutionPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ExecutionPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ExecutionPolicyDocumentType"/>
+
+</xs:schema>

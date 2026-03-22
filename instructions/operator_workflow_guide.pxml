@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_operator_workflow_guide_b7_001</doc_id>
+    <doc_class>operator_workflow_guide</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch7_stability_hardening</task_id>
+    <run_id>run_batch7_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T07:03:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_runtime_retention_policy_b7_001</doc_id>
+      <doc_class>runtime_retention_policy</doc_class>
+      <relation>retention_reference</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_compaction_policy_batch7_001</doc_id>
+      <doc_class>compaction_policy</doc_class>
+      <relation>compaction_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <workflow_name>batch7_operator_daily_workflow</workflow_name>
+    <phases>
+      <phase>
+        <phase_id>WF-001</phase_id>
+        <phase_name>clean_start</phase_name>
+        <command_examples>
+          <item>python scripts/cleanup_task_runtime.py --task-id &lt;task_id&gt; --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Task-scoped runtime artifacts are removed for deterministic rerun.</expected_output>
+        <failure_branch>If cleanup fails, verify runtime path permissions and task_id format.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-002</phase_id>
+        <phase_name>normal_execution</phase_name>
+        <command_examples>
+          <item>python scripts/task_executor.py --intake &lt;intake.pxml&gt; --clean --run-harness --verify-policy auto</item>
+        </command_examples>
+        <expected_output>Manager route, packet, implementer result, trace, status report, and optional verifier evidence are produced.</expected_output>
+        <failure_branch>If task_executor exits non-zero, inspect implementer_result status and trace reason_code.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-003</phase_id>
+        <phase_name>blocked_retry_failed_response</phase_name>
+        <command_examples>
+          <item>python scripts/harness_validator.py --task-id &lt;task_id&gt; --runtime-root runtime</item>
+          <item>python scripts/task_status_report.py --task-id &lt;task_id&gt; --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Blocked cause and retry state are explicitly visible in status report and trace.</expected_output>
+        <failure_branch>If retry_failed or escalation appears, regenerate packet scope or escalate to manager decision.</failure_branch>
+        <escalation_branch>For repeated same reason_code, escalate and stop further retries until packet correction.</escalation_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-004</phase_id>
+        <phase_name>stale_suspicion_handling</phase_name>
+        <command_examples>
+          <item>python scripts/runtime_quarantine.py --task-id &lt;task_id&gt; --dry-run</item>
+          <item>python scripts/runtime_quarantine.py --task-id &lt;task_id&gt;</item>
+        </command_examples>
+        <expected_output>Suspicious stale artifacts are listed or moved into quarantine with manifest evidence.</expected_output>
+        <failure_branch>If quarantine cannot move files, run dry-run and resolve locking permissions first.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-005</phase_id>
+        <phase_name>compaction_checkpoint</phase_name>
+        <command_examples>
+          <item>python scripts/trace_compaction_checkpoint.py --task-id &lt;task_id&gt; --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Compaction checkpoint artifact is generated without mutating execution_trace source events.</expected_output>
+        <failure_branch>If checkpoint validation fails, refresh latest status report then rerun checkpoint script.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-006</phase_id>
+        <phase_name>renderer_preflight</phase_name>
+        <command_examples>
+          <item>python scripts/operator_preflight.py --task-id &lt;task_id&gt; --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Operator preflight report returns render_readiness ready/caution/not_ready with next action.</expected_output>
+        <failure_branch>If not_ready, resolve lineage or unresolved failures before any renderer handoff.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-012</phase_id>
+        <phase_name>release_profile_governance_change_control</phase_name>
+        <command_examples>
+          <item>python scripts/pxml_validator.py instructions/release_gate_profile.pxml --context-dir instructions</item>
+          <item>python scripts/pxml_validator.py instructions/release_profile_governance_policy.pxml --context-dir instructions</item>
+        </command_examples>
+        <expected_output>Release gate profile change metadata and governance policy references validate with approval lineage.</expected_output>
+        <failure_branch>If governance or profile metadata checks fail, update profile_version/profile_owner/change_reason/approval_ref and rerun validation.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-013</phase_id>
+        <phase_name>coverage_outcome_classification_review</phase_name>
+        <command_examples>
+          <item>python scripts/pxml_validator.py instructions/coverage_outcome_policy.pxml --context-dir instructions</item>
+          <item>python scripts/release_candidate_check.py --use-default-smoke-set --runtime-root runtime --allow-caution-rc</item>
+        </command_examples>
+        <expected_output>Coverage outcome classes and gate effects are visible and aligned with candidate subset decisions.</expected_output>
+        <failure_branch>If coverage blockers or classification drift appears, update coverage_outcome_policy and rerun release_candidate_check.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-014</phase_id>
+        <phase_name>ci_release_ops_gate_execution</phase_name>
+        <command_examples>
+          <item>python scripts/release_ops_gate.py --runtime-root runtime --ci-policy instructions/ci_exit_code_policy.pxml --allow-caution-rc</item>
+        </command_examples>
+        <expected_output>CI wrapper emits release_ops_gate_result, rc_result, ci_label, and ci_exit_code per policy mapping.</expected_output>
+        <failure_branch>If CI exit mapping is incorrect or stage execution fails, fix ci_exit_code_policy or stage inputs and rerun.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-015</phase_id>
+        <phase_name>verify_phase_audit_execution</phase_name>
+        <command_examples>
+          <item>python scripts/verify_phase_audit.py --release-task-id task_release_candidate_batch10 --runtime-root runtime --policy instructions/verify_phase_audit_policy.pxml</item>
+          <item>python scripts/release_ops_gate.py --runtime-root runtime --ci-policy instructions/ci_exit_code_policy.pxml --run-verify-phase-audit --allow-caution-rc</item>
+        </command_examples>
+        <expected_output>verify_phase_audit_report is generated with lane/post evidence counts and consumed by release_ops_gate when enabled.</expected_output>
+        <failure_branch>If audit result is fail, resolve missing phase coverage or ordering blockers before release handoff.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-016</phase_id>
+        <phase_name>ci_quick_smoke_regression</phase_name>
+        <command_examples>
+          <item>python scripts/ci_release_check.py --profile instructions/ci_test_profile.pxml --mode quick --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Quick smoke regression runs release gate failure-path tests and returns CI-friendly summary counts.</expected_output>
+        <failure_branch>If quick smoke fails, inspect selected_targets and blocker outputs before promoting any release candidate.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-017</phase_id>
+        <phase_name>ci_full_regression</phase_name>
+        <command_examples>
+          <item>python scripts/ci_release_check.py --profile instructions/ci_test_profile.pxml --mode full --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Full regression executes all maintained release-gate tests including latest safety and catalog drift checks.</expected_output>
+        <failure_branch>If full regression fails, triage by failing test file then rerun quick smoke after minimal patch.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-018</phase_id>
+        <phase_name>ci_release_critical_regression</phase_name>
+        <command_examples>
+          <item>python scripts/ci_release_check.py --profile instructions/ci_test_profile.pxml --mode release-critical --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Release-critical regression verifies healthy pass missing candidate broken latest strict readiness and latest pointer guard paths.</expected_output>
+        <failure_branch>If release-critical regression fails, block release handoff and resolve critical failures before retry.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-019</phase_id>
+        <phase_name>reason_code_catalog_maintenance</phase_name>
+        <command_examples>
+          <item>python scripts/pxml_validator.py instructions/reason_code_catalog.pxml --context-dir instructions</item>
+          <item>python -m pytest tests/test_reason_code_catalog_consistency.py -q</item>
+        </command_examples>
+        <expected_output>Reason-code catalog remains aligned with RC and harness vocabulary without drift.</expected_output>
+        <failure_branch>If catalog consistency fails, register new reason code entries and rerun validator plus pytest.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-020</phase_id>
+        <phase_name>latest_pointer_guard_response</phase_name>
+        <command_examples>
+          <item>python -m pytest tests/test_latest_pointer_guard.py -q</item>
+          <item>python scripts/ci_release_check.py --profile instructions/ci_test_profile.pxml --mode release-critical --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Validation-fail branches are confirmed to prevent latest pointer promotion for invalid derived artifacts.</expected_output>
+        <failure_branch>If latest pointer guard fails, treat as release blocker and patch failing derived artifact writer before rerun.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-007</phase_id>
+        <phase_name>operator_standard_runbook</phase_name>
+        <command_examples>
+          <item>python scripts/operator_runbook.py --intake &lt;intake.pxml&gt; --clean --run-harness --runtime-root runtime</item>
+          <item>python scripts/harness_validator.py --task-id &lt;task_id&gt; --runtime-root runtime --release-readiness</item>
+        </command_examples>
+        <expected_output>Runbook executes cleanup -&gt; task_executor -&gt; preflight -&gt; renderer in order and emits session_report.</expected_output>
+        <failure_branch>If runbook_result is blocked or failed, inspect session_report warnings and fix upstream task/runtime issues.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-008</phase_id>
+        <phase_name>operator_caution_override_run</phase_name>
+        <command_examples>
+          <item>python scripts/operator_runbook.py --intake &lt;intake.pxml&gt; --clean --allow-caution-render --runtime-root runtime</item>
+          <item>python scripts/harness_validator.py --task-id &lt;task_id&gt; --runtime-root runtime --release-readiness</item>
+        </command_examples>
+        <expected_output>Caution preflight can render as rendered_with_warning when override is explicit and logged in session_report.</expected_output>
+        <failure_branch>If caution render remains denied, verify allow-caution flag, policy decision, and preflight readiness content.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-009</phase_id>
+        <phase_name>operator_not_ready_denied_flow</phase_name>
+        <command_examples>
+          <item>python scripts/operator_runbook.py --intake &lt;intake.pxml&gt; --clean --runtime-root runtime</item>
+          <item>python scripts/final_renderer.py --task-id &lt;task_id&gt; --runtime-root runtime</item>
+        </command_examples>
+        <expected_output>Not-ready preflight denies render by default and session_report records render_decision=denied.</expected_output>
+        <failure_branch>If not_ready renders without explicit override policy, treat as hard policy break and stop release handoff.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-010</phase_id>
+        <phase_name>session_report_review_and_handoff</phase_name>
+        <command_examples>
+          <item>python scripts/pxml_validator.py runtime/ops/session_reports --context-dir runtime</item>
+          <item>python scripts/harness_validator.py --task-id &lt;task_id&gt; --runtime-root runtime --release-readiness</item>
+        </command_examples>
+        <expected_output>Operator confirms release_readiness_result, render_decision, override usage, and latest artifact references before handoff.</expected_output>
+        <failure_branch>If session_report references drift from latest runtime artifacts, regenerate runbook session and revalidate.</failure_branch>
+      </phase>
+      <phase>
+        <phase_id>WF-011</phase_id>
+        <phase_name>release_candidate_handoff_bundle</phase_name>
+        <command_examples>
+          <item>python scripts/release_candidate_check.py --use-default-smoke-set --runtime-root runtime --allow-caution-rc</item>
+          <item>python scripts/pxml_validator.py runtime/release/reports --context-dir runtime</item>
+          <item>python scripts/pxml_validator.py runtime/release/manifests --context-dir runtime</item>
+        </command_examples>
+        <expected_output>Release candidate report and release bundle manifest are generated for operator handoff package review.</expected_output>
+        <failure_branch>If RC report fails or manifest is incomplete, resolve blockers and rerun release_candidate_check.</failure_branch>
+      </phase>
+    </phases>
+    <guardrails>
+      <item>Do not merge coordinator and implementer runner responsibilities.</item>
+      <item>Do not activate ECC hooks skills or MCP in runtime decisions.</item>
+      <item>Do not rewrite acceptance criteria after packet issuance.</item>
+      <item>Do not mutate existing execution_trace events.</item>
+    </guardrails>
+    <release_handoff_appendix>
+      <release_candidate_check_procedure>
+        <item>Run release candidate aggregation with default smoke set or explicit task list.</item>
+        <item>Confirm release_candidate_report rc_result and blocker list before handoff.</item>
+      </release_candidate_check_procedure>
+      <handoff_bundle_validation>
+        <item>Validate runtime/release/reports and runtime/release/manifests with pxml_validator.</item>
+        <item>Confirm source_release_candidate_report_ref matches latest release report doc_id.</item>
+      </handoff_bundle_validation>
+      <known_warning_review>
+        <item>Review known_warnings from release_bundle_manifest prior to operator sign-off.</item>
+        <item>Ensure caution and override warnings are documented, not hidden.</item>
+      </known_warning_review>
+      <rc_outcome_actions>
+        <item>rc_result=pass: continue standard operator handoff.</item>
+        <item>rc_result=caution: handoff allowed with explicit warning acknowledgment.</item>
+        <item>rc_result=fail: block handoff and resolve hard blockers first.</item>
+      </rc_outcome_actions>
+      <operator_entrypoints>
+        <item>cleanup_task_runtime</item>
+        <item>task_executor</item>
+        <item>operator_preflight</item>
+        <item>final_renderer</item>
+        <item>operator_runbook</item>
+        <item>runtime_prune</item>
+        <item>session_report_refresh</item>
+        <item>release_candidate_check</item>
+        <item>release_ops_gate</item>
+      </operator_entrypoints>
+    </release_handoff_appendix>
+    <release_ops_appendix>
+      <profile_and_policy_sources>
+        <item>Load release gate defaults from instructions/release_gate_profile.pxml.</item>
+        <item>Load coverage classification defaults from instructions/coverage_outcome_policy.pxml.</item>
+        <item>Load profile governance controls from instructions/release_profile_governance_policy.pxml.</item>
+        <item>Load CI exit-code mappings from instructions/ci_exit_code_policy.pxml.</item>
+        <item>Load verify-phase audit requirements from instructions/verify_phase_audit_policy.pxml.</item>
+        <item>Load CI regression selection profile from instructions/ci_test_profile.pxml.</item>
+        <item>Load standardized reason-code vocabulary from instructions/reason_code_catalog.pxml.</item>
+      </profile_and_policy_sources>
+      <session_refresh_procedure>
+        <item>Run python scripts/session_report_refresh.py --profile instructions/release_gate_profile.pxml --runtime-root runtime.</item>
+        <item>Confirm runtime/index/tasks latest_session_report pointers are updated for refreshed tasks.</item>
+      </session_refresh_procedure>
+      <ci_gate_wrapper>
+        <item>Use python scripts/release_ops_gate.py as the default CI/ops wrapper for refresh plus RC generation.</item>
+        <item>Always provide --ci-policy instructions/ci_exit_code_policy.pxml for deterministic CI exit mapping.</item>
+        <item>Pass explicit coverage or candidate selectors only when overriding profile defaults.</item>
+        <item>Use --run-verify-phase-audit to include verify-phase audit result in release_ops_gate_result.</item>
+      </ci_gate_wrapper>
+      <verification_commands>
+        <item>python scripts/pxml_validator.py instructions/release_gate_profile.pxml --context-dir instructions</item>
+        <item>python scripts/pxml_validator.py instructions/coverage_outcome_policy.pxml --context-dir instructions</item>
+        <item>python scripts/pxml_validator.py instructions/release_profile_governance_policy.pxml --context-dir instructions</item>
+        <item>python scripts/pxml_validator.py instructions/ci_exit_code_policy.pxml --context-dir instructions</item>
+        <item>python scripts/pxml_validator.py instructions/verify_phase_audit_policy.pxml --context-dir instructions</item>
+        <item>python scripts/pxml_validator.py instructions/ci_test_profile.pxml --context-dir instructions</item>
+        <item>python scripts/pxml_validator.py instructions/reason_code_catalog.pxml --context-dir instructions</item>
+        <item>python scripts/verify_phase_audit.py --release-task-id task_release_candidate_batch10 --runtime-root runtime --policy instructions/verify_phase_audit_policy.pxml</item>
+        <item>python scripts/release_ops_gate.py --runtime-root runtime --ci-policy instructions/ci_exit_code_policy.pxml --run-verify-phase-audit --allow-caution-rc</item>
+        <item>python scripts/ci_release_check.py --profile instructions/ci_test_profile.pxml --mode quick --runtime-root runtime</item>
+        <item>python scripts/ci_release_check.py --profile instructions/ci_test_profile.pxml --mode full --runtime-root runtime</item>
+        <item>python scripts/ci_release_check.py --profile instructions/ci_test_profile.pxml --mode release-critical --runtime-root runtime</item>
+        <item>python -m pytest tests/test_latest_pointer_guard.py -q</item>
+        <item>python -m pytest tests/test_reason_code_catalog_consistency.py -q</item>
+      </verification_commands>
+    </release_ops_appendix>
+  </payload>
+  <integrity>
+    <content_sha256>adadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadad</content_sha256>
+  </integrity>
+</pxml>

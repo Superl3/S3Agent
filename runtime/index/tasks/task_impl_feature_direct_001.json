@@ -1,0 +1,16 @@
+{
+  "latest_execution_packet": "packets\\execution_packet\\doc_execution_packet_task_impl_feature_direct_001_0003.pxml",
+  "latest_execution_trace": "traces\\by_task\\task_impl_feature_direct_001.pxml",
+  "latest_final_render_markdown": "rendered/exports/doc_final_render_task_impl_feature_di_0015.md",
+  "latest_final_render_report": "rendered/reports/doc_final_render_task_impl_feature_di_0015.pxml",
+  "latest_implementer_result": "implementer\\results\\doc_implres_task_impl_feature__0003_20260322123450_9afa367e.pxml",
+  "latest_manager_route": "packets\\manager_route\\doc_manager_route_task_impl_feature_direct_001_0002.pxml",
+  "latest_operator_preflight_report": "preflight\\reports\\doc_preflight_task_impl_feature_di_0014.pxml",
+  "latest_pruning_report": "pruning/reports/doc_pruning_report_task_impl_feature_di_0012.pxml",
+  "latest_session_report": "ops/session_reports/doc_session_report_task_impl_feature_di_0026.pxml",
+  "latest_task_status_report": "status\\reports\\doc_task_status_task_impl_feature_di_0013.pxml",
+  "latest_verification_result": "verification\\results\\doc_verifres_task_impl_feature_di_0003_20260322134120_d44b02b9.pxml",
+  "latest_verify_phase_audit_report": "release/audits/doc_verify_phase_audit_task_release_candida_0030.pxml",
+  "task_id": "task_impl_feature_direct_001",
+  "updated_at": "2026-03-22T15:26:16Z"
+}

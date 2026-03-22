@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_extension_activation_policy_batch1</doc_id>
+    <doc_class>extension_activation_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch1_registry_bootstrap</task_id>
+    <run_id>run_batch1_20260322</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T00:00:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <policies>
+      <policy>
+        <extension_ref>hook_ecc_placeholder_pre_route</extension_ref>
+        <activation_mode>disabled</activation_mode>
+        <allowed_lanes>
+          <item>direct</item>
+          <item>planner_pre</item>
+        </allowed_lanes>
+        <approval_required>true</approval_required>
+        <write_access>false</write_access>
+        <default_state>disabled</default_state>
+        <activation_notes>Batch 1 default dormant mode for ECC hook provenance entries.</activation_notes>
+      </policy>
+      <policy>
+        <extension_ref>skill_ecc_placeholder_planner_support</extension_ref>
+        <activation_mode>advisory</activation_mode>
+        <allowed_lanes>
+          <item>planner_pre</item>
+        </allowed_lanes>
+        <approval_required>true</approval_required>
+        <write_access>false</write_access>
+        <default_state>disabled</default_state>
+        <activation_notes>Advisory metadata only; no runtime lane injection in Batch 1.</activation_notes>
+      </policy>
+      <policy>
+        <extension_ref>mcp_ecc_placeholder_context</extension_ref>
+        <activation_mode>read_only</activation_mode>
+        <allowed_lanes>
+          <item>reviewer_post</item>
+          <item>verifier_post</item>
+        </allowed_lanes>
+        <approval_required>true</approval_required>
+        <write_access>false</write_access>
+        <default_state>disabled</default_state>
+        <activation_notes>MCP remains dormant unless explicitly approved in a later batch.</activation_notes>
+      </policy>
+    </policies>
+  </payload>
+  <integrity>
+    <content_sha256>4444444444444444444444444444444444444444444444444444444444444444</content_sha256>
+  </integrity>
+</pxml>

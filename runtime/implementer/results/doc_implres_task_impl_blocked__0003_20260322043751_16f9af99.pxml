@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_implres_task_impl_blocked__0003_20260322043751_16f9af99</doc_id>
+    <doc_class>implementer_result</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_impl_blocked_smoke_001</task_id>
+    <run_id>run_batch5_examples_001</run_id>
+    <sequence>5</sequence>
+    <writer_agent>implementer</writer_agent>
+    <created_at>2026-03-22T04:37:51Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_execution_packet_task_impl_blocked_smoke_001_0003</doc_id>
+      <doc_class>execution_packet</doc_class>
+      <relation>implementation_target</relation>
+    </ref>
+  </refs>
+  <payload>
+    <packet_ref>
+      <doc_id>doc_execution_packet_task_impl_blocked_smoke_001_0003</doc_id>
+      <doc_class>execution_packet</doc_class>
+      <relation>implementation_target</relation>
+    </packet_ref>
+    <task_id>task_impl_blocked_smoke_001</task_id>
+    <modified_files/>
+    <created_files/>
+    <patch_mode_used>patch_first</patch_mode_used>
+    <patch_evidence_refs>
+      <item>implementer/logs/task_impl_blocked_smoke_001_attempt1_20260322T043751Z_evidence.json</item>
+      <item>implementer/logs/task_impl_blocked_smoke_001_attempt1_20260322T043751Z_patch.diff</item>
+    </patch_evidence_refs>
+    <result_status>blocked</result_status>
+    <blocked_reason>implementer_modify_target_missing</blocked_reason>
+    <retry_count>1</retry_count>
+    <escalation_requested>false</escalation_requested>
+    <notes>
+      <item>modify target does not exist: src/refactor_target.py</item>
+    </notes>
+  </payload>
+  <integrity>
+    <content_sha256>039443b4d279afb53b82487603888371350a28e9456c7204350170bb2edf20b0</content_sha256>
+    <parent_sha256>cc7da62cae81f4161c19175482aef20c92ebdb42410fae17af5869a2239d4563</parent_sha256>
+  </integrity>
+</pxml>

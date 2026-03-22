@@ -1,0 +1,12 @@
+{
+  "note": "coordinator completed conditional lane orchestration",
+  "packet_doc_id": "doc_execution_packet_task_reviewer_post_smoke_001_0003",
+  "planner_artifact": null,
+  "reviewer_artifact": "C:\\Users\\bug95\\.config\\opencode\\runtime\\sidecars\\reviewer\\doc_review_sidecar_task_reviewer_post_0004_043732_292da6.pxml",
+  "route_doc_id": "doc_manager_route_task_reviewer_post_smoke_001_0002",
+  "selected_path": "reviewer_post",
+  "status": "completed",
+  "task_id": "task_reviewer_post_smoke_001",
+  "time": "2026-03-22T04:37:32Z",
+  "verification_artifact": null
+}

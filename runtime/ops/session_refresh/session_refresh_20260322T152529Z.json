@@ -1,0 +1,10 @@
+{
+  "failed_count": 1,
+  "failures": [
+    "task_missing_coverage_only_001:missing_required_runtime_artifacts"
+  ],
+  "generated_at": "2026-03-22T15:25:29Z",
+  "refreshed_count": 0,
+  "task_count": 1,
+  "tasks": []
+}

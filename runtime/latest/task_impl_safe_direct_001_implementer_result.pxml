@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_implres_task_impl_safe_dir_0003_20260322123546_9bcbf451</doc_id>
+    <doc_class>implementer_result</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_impl_safe_direct_001</task_id>
+    <run_id>run_batch5_examples_001</run_id>
+    <sequence>4</sequence>
+    <writer_agent>implementer</writer_agent>
+    <created_at>2026-03-22T12:35:46Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_execution_packet_task_impl_safe_direct_001_0003</doc_id>
+      <doc_class>execution_packet</doc_class>
+      <relation>implementation_target</relation>
+    </ref>
+  </refs>
+  <payload>
+    <packet_ref>
+      <doc_id>doc_execution_packet_task_impl_safe_direct_001_0003</doc_id>
+      <doc_class>execution_packet</doc_class>
+      <relation>implementation_target</relation>
+    </packet_ref>
+    <task_id>task_impl_safe_direct_001</task_id>
+    <modified_files/>
+    <created_files/>
+    <patch_mode_used>patch_first</patch_mode_used>
+    <patch_evidence_refs>
+      <item>implementer/logs/task_impl_safe_direct_001_attempt0_20260322T123546Z_evidence.json</item>
+      <item>implementer/logs/task_impl_safe_direct_001_attempt0_20260322T123546Z_patch.diff</item>
+    </patch_evidence_refs>
+    <result_status>no_op</result_status>
+    <retry_count>0</retry_count>
+    <escalation_requested>false</escalation_requested>
+    <notes>
+      <item>patch marker already present: src/target_bugfix.py</item>
+    </notes>
+  </payload>
+  <integrity>
+    <content_sha256>ecc4065806d280c5b07baf0e140761f246d82eccf3b4ddee5e808a08ced8d6cd</content_sha256>
+    <parent_sha256>b86625ceb1ba72d5b82f0a34ddc5e8edd28038b1c554d6e9957e73573b513266</parent_sha256>
+  </integrity>
+</pxml>

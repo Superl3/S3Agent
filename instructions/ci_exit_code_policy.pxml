@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_ci_exit_code_policy_b12_001</doc_id>
+    <doc_class>ci_exit_code_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch12_release_governance</task_id>
+    <run_id>run_batch12_ci_exit_policy_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T16:22:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_release_candidate_policy_b10_001</doc_id>
+      <doc_class>release_candidate_policy</doc_class>
+      <relation>rc_baseline_policy</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>release_ops_ci_exit_code_policy</policy_name>
+    <rules>
+      <rule>
+        <policy_id>CI-B12-001</policy_id>
+        <rule_name>rc_pass_exit_code</rule_name>
+        <input_condition>rc_result=pass</input_condition>
+        <output_exit_code>0</output_exit_code>
+        <ci_label>success</ci_label>
+        <rationale>Release candidate pass should signal CI success.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>CI-B12-001</policy_id>
+        <rule_name>rc_fail_exit_code</rule_name>
+        <input_condition>rc_result=fail</input_condition>
+        <output_exit_code>1</output_exit_code>
+        <ci_label>failure</ci_label>
+        <rationale>Release candidate fail must stop promotion pipelines.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>CI-B12-001</policy_id>
+        <rule_name>rc_caution_exit_code</rule_name>
+        <input_condition>rc_result=caution</input_condition>
+        <output_exit_code>2</output_exit_code>
+        <ci_label>caution</ci_label>
+        <rationale>Caution requires explicit acknowledgment and must be non-success in CI.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>CI-B12-001</policy_id>
+        <rule_name>validation_usage_error_exit_code</rule_name>
+        <input_condition>error_kind=validation_usage</input_condition>
+        <output_exit_code>3</output_exit_code>
+        <ci_label>usage_error</ci_label>
+        <rationale>Invalid usage or validation setup failures should have a dedicated CI code.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>CI-B12-001</policy_id>
+        <rule_name>hard_execution_error_exit_code</rule_name>
+        <input_condition>error_kind=hard_execution</input_condition>
+        <output_exit_code>4</output_exit_code>
+        <ci_label>infra_error</ci_label>
+        <rationale>Infrastructure or runtime execution failures need separate triage path.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>44dd44dd44dd44dd44dd44dd44dd44dd44dd44dd44dd44dd44dd44dd44dd44dd</content_sha256>
+  </integrity>
+</pxml>

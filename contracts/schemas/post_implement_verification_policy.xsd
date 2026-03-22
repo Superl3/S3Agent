@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="VerifyDecisionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="run_verifier"/>
+      <xs:enumeration value="skip_verifier"/>
+      <xs:enumeration value="defer_verifier"/>
+      <xs:enumeration value="require_human_decision"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="PostVerifyRuleType">
+    <xs:sequence>
+      <xs:element name="policy_id" type="NonEmptyStringType"/>
+      <xs:element name="rule_name" type="NonEmptyStringType"/>
+      <xs:element name="applies_to" type="StringListType"/>
+      <xs:element name="trigger_condition" type="NonEmptyStringType"/>
+      <xs:element name="decision" type="VerifyDecisionType"/>
+      <xs:element name="rationale" type="NonEmptyStringType"/>
+      <xs:element name="enforcement_level" type="EnforcementLevelType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PostVerifyRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="PostVerifyRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PostImplementVerificationPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="rules" type="PostVerifyRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PostImplementVerificationPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="PostImplementVerificationPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="PostImplementVerificationPolicyDocumentType"/>
+
+</xs:schema>

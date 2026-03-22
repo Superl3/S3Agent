@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="IncludedEventRangeType">
+    <xs:sequence>
+      <xs:element name="from_event_seq" type="xs:positiveInteger"/>
+      <xs:element name="to_event_seq" type="xs:positiveInteger"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CompactionCheckpointPayloadType">
+    <xs:sequence>
+      <xs:element name="checkpoint_id" type="NonEmptyStringType"/>
+      <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="source_trace_ref" type="ReferenceItemType"/>
+      <xs:element name="source_trace_last_sequence" type="xs:positiveInteger"/>
+      <xs:element name="final_goal" type="NonEmptyStringType"/>
+      <xs:element name="hard_constraints" type="StringListType"/>
+      <xs:element name="done_condition" type="NonEmptyStringType"/>
+      <xs:element name="established_facts" type="StringListType"/>
+      <xs:element name="failed_attempts_and_causes" type="StringListType"/>
+      <xs:element name="next_recommended_action" type="NonEmptyStringType"/>
+      <xs:element name="lineage_lock_sha256" type="Sha256Type"/>
+      <xs:element name="included_event_range" type="IncludedEventRangeType"/>
+      <xs:element name="checkpoint_reason" type="NonEmptyStringType"/>
+      <xs:element name="created_from_status_report_ref" type="ReferenceItemType"/>
+      <xs:element name="created_from_latest_packet_ref" type="ReferenceItemType"/>
+      <xs:element name="created_from_latest_route_ref" type="ReferenceItemType"/>
+      <xs:element name="created_from_latest_verification_ref" type="ReferenceItemType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CompactionCheckpointDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="CompactionCheckpointPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="CompactionCheckpointDocumentType"/>
+
+</xs:schema>

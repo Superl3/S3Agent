@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_manager_contract_batch2_001</doc_id>
+    <doc_class>manager_contract</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_harness_batch2_contracts</task_id>
+    <run_id>run_batch2_contracts_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T00:10:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_routing_policy_batch2_001</doc_id>
+      <doc_class>routing_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_execution_policy_batch2_001</doc_id>
+      <doc_class>execution_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_escalation_policy_batch4_001</doc_id>
+      <doc_class>escalation_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_retry_policy_batch4_001</doc_id>
+      <doc_class>retry_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_implementer_runtime_policy_b5_001</doc_id>
+      <doc_class>implementer_runtime_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+  </refs>
+  <payload>
+    <role>Contract manager that receives task_intake, selects route, locks acceptance, and issues execution_packet.</role>
+    <inputs>
+      <item>task_intake artifact</item>
+      <item>routing_policy artifact</item>
+      <item>execution_policy artifact</item>
+    </inputs>
+    <outputs>
+      <item>manager_route artifact</item>
+      <item>execution_packet artifact</item>
+      <item>execution_trace events route and packet_issued</item>
+    </outputs>
+    <must_do>
+      <item>Create only Batch-compatible artifacts that pass validator checks.</item>
+      <item>Use minimal-complexity path with direct as default when safe and clear.</item>
+      <item>Fix acceptance checks at packet creation time and derive acceptance lock hash.</item>
+      <item>Record route rationale and include stop and escalation conditions in execution_packet.</item>
+      <item>Decide sidecar need and trigger conditional sidecar artifact generation only when lane flags require it.</item>
+    </must_do>
+    <must_not_do>
+      <item>Do not modify source code or apply patches.</item>
+      <item>Do not delegate acceptance definition authority to Implementer.</item>
+      <item>Do not force planner or reviewer or verifier lanes when conditions do not require them.</item>
+      <item>Do not edit or delete existing execution_trace events.</item>
+      <item>Do not use ECC registry entries as direct runtime routing inputs.</item>
+    </must_not_do>
+    <failure_handoff>
+      <item>Emit escalation event with deterministic reason code when route or packet generation fails.</item>
+      <item>Emit reject event when schema or rule validation fails.</item>
+      <item>Stop publishing invalid artifacts and request corrected task intake or policy input.</item>
+    </failure_handoff>
+    <artifact_responsibilities>
+      <item>Persist manager_route under runtime/packets/manager_route.</item>
+      <item>Persist execution_packet under runtime/packets/execution_packet.</item>
+      <item>Append route and packet_issued events to runtime/traces/by_task trace artifact.</item>
+      <item>Update runtime/latest pointers for route, packet, and trace artifacts.</item>
+    </artifact_responsibilities>
+    <dormant_registry_note>ECC hooks skills MCP registries are reference-only and remain disabled in Batch 3 runtime flow.</dormant_registry_note>
+  </payload>
+  <integrity>
+    <content_sha256>9d38c9ca5a4b89b27c3b83e6db6b7412d54164cbf2d1fe152894f3dad8e3e5db</content_sha256>
+  </integrity>
+</pxml>

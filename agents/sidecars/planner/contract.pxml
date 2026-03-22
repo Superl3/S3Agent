@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_planner_contract_batch3_001</doc_id>
+    <doc_class>planner_contract</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_harness_batch3_sidecars</task_id>
+    <run_id>run_batch3_contracts_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T01:00:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_routing_policy_batch2_001</doc_id>
+      <doc_class>routing_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_execution_policy_batch2_001</doc_id>
+      <doc_class>execution_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+  </refs>
+  <payload>
+    <role>Conditional planner sidecar that resolves ambiguity for manager decisions and emits plan_sidecar artifacts only when planner lane is selected.</role>
+    <inputs>
+      <item>task_intake artifact</item>
+      <item>manager_route artifact with planner lane flag</item>
+      <item>execution_policy guardrails</item>
+    </inputs>
+    <outputs>
+      <item>plan_sidecar artifact with ambiguities assumptions proposed_steps risk_map plan_status</item>
+      <item>execution_trace event evidence via manager trace appender flow</item>
+    </outputs>
+    <must_do>
+      <item>Identify unresolved ambiguity and record it as structured ambiguities entries.</item>
+      <item>Provide explicit assumptions and concrete proposed execution steps.</item>
+      <item>Provide risk_map entries with target and risk_level.</item>
+      <item>Emit plan_status ready or needs_escalation deterministically.</item>
+      <item>Preserve direct path benefit by running only when planner lane is selected.</item>
+    </must_do>
+    <must_not_do>
+      <item>Do not edit execution_packet directly.</item>
+      <item>Do not force routing changes outside manager authority.</item>
+      <item>Do not modify source code or patch files.</item>
+      <item>Do not modify acceptance criteria or acceptance lock state.</item>
+      <item>Do not activate or invoke ECC registry assets.</item>
+    </must_not_do>
+    <failure_handoff>
+      <item>Set plan_status to needs_escalation and include unresolved questions.</item>
+      <item>Emit escalation-ready evidence for manager without mutating route artifacts.</item>
+    </failure_handoff>
+    <artifact_responsibilities>
+      <item>Write plan_sidecar artifacts to runtime/sidecars/planner.</item>
+      <item>Reference task_intake and manager_route artifacts in refs.</item>
+      <item>Do not write execution_packet or code artifacts.</item>
+    </artifact_responsibilities>
+    <dormant_registry_note>ECC registries remain dormant metadata and are not planner execution inputs in Batch 3.</dormant_registry_note>
+  </payload>
+  <integrity>
+    <content_sha256>0a18f2a028d6235f8f5f72f54f757ae682f69f00f086ce26dc23f5ca9d9852d0</content_sha256>
+  </integrity>
+</pxml>

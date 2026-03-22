@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_reason_code_catalog_b14_001</doc_id>
+    <doc_class>reason_code_catalog</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch14_ci_integration</task_id>
+    <run_id>run_batch14_reason_code_catalog_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-23T02:35:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_failure_reason_taxonomy_b6_001</doc_id>
+      <doc_class>failure_reason_taxonomy</doc_class>
+      <relation>taxonomy_baseline</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_release_gate_profile_b12_001</doc_id>
+      <doc_class>release_gate_profile</doc_class>
+      <relation>release_gate_context</relation>
+    </ref>
+  </refs>
+  <payload>
+    <catalog_id>REASON-CATALOG-B14-001</catalog_id>
+    <catalog_name>batch14_reason_code_catalog_standard</catalog_name>
+    <reasons>
+      <reason>
+        <code>rc_candidate_task_missing</code>
+        <category>rc</category>
+        <severity>blocker</severity>
+        <description>Candidate gate task is missing from runtime index or snapshot resolution.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Restore candidate task runtime chain or update candidate subset inputs.</recommended_operator_action>
+        <source_layer>release_candidate_check</source_layer>
+      </reason>
+      <reason>
+        <code>rc_candidate_latest_missing</code>
+        <category>rc</category>
+        <severity>blocker</severity>
+        <description>Candidate latest pointer key is missing or resolves to a missing artifact.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Regenerate missing candidate latest artifacts and rerun release candidate check.</recommended_operator_action>
+        <source_layer>release_candidate_check</source_layer>
+      </reason>
+      <reason>
+        <code>rc_candidate_required_artifact_missing</code>
+        <category>rc</category>
+        <severity>blocker</severity>
+        <description>Candidate required release artifact is missing for gate evaluation.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Produce required release artifact and rerun candidate subset gate.</recommended_operator_action>
+        <source_layer>release_candidate_check</source_layer>
+      </reason>
+      <reason>
+        <code>rc_candidate_ref_broken</code>
+        <category>rc</category>
+        <severity>blocker</severity>
+        <description>Candidate latest reference exists but cannot be parsed or has doc_class mismatch.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Repair broken candidate reference artifacts and rerun release candidate check.</recommended_operator_action>
+        <source_layer>release_candidate_check</source_layer>
+      </reason>
+      <reason>
+        <code>rc_coverage_task_missing</code>
+        <category>rc</category>
+        <severity>major</severity>
+        <description>Coverage-only task snapshot is missing in runtime index.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>false</affects_gate_default>
+        <recommended_operator_action>Investigate missing coverage task evidence and decide whether to refresh coverage set.</recommended_operator_action>
+        <source_layer>release_candidate_check</source_layer>
+      </reason>
+      <reason>
+        <code>rc_coverage_ref_broken</code>
+        <category>rc</category>
+        <severity>major</severity>
+        <description>Coverage-only latest reference is missing unreadable or inconsistent.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>false</affects_gate_default>
+        <recommended_operator_action>Repair or refresh coverage references without widening candidate gate blockers by default.</recommended_operator_action>
+        <source_layer>release_candidate_check</source_layer>
+      </reason>
+
+      <reason>
+        <code>implementer_modify_target_missing</code>
+        <category>implementer</category>
+        <severity>major</severity>
+        <description>Implementer expected modify target path does not exist.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Adjust expected file mode or create approved packet update.</recommended_operator_action>
+        <source_layer>implementer_runner</source_layer>
+      </reason>
+      <reason>
+        <code>implementer_create_target_exists</code>
+        <category>implementer</category>
+        <severity>major</severity>
+        <description>Implementer create target already exists and violates expected mode.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Switch expected file mode to modify or clean stale target before rerun.</recommended_operator_action>
+        <source_layer>implementer_runner</source_layer>
+      </reason>
+      <reason>
+        <code>implementer_retry_limit_reached</code>
+        <category>implementer</category>
+        <severity>blocker</severity>
+        <description>Implementer retries exceeded policy threshold for same reason.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Escalate to manager and update packet scope or constraints.</recommended_operator_action>
+        <source_layer>implementer_runner</source_layer>
+      </reason>
+      <reason>
+        <code>implementer_expected_outside_scope</code>
+        <category>implementer</category>
+        <severity>blocker</severity>
+        <description>Expected file path is outside packet in_scope boundary.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Regenerate packet with corrected scope before retry.</recommended_operator_action>
+        <source_layer>implementer_runner</source_layer>
+      </reason>
+      <reason>
+        <code>implementer_out_of_scope_violation</code>
+        <category>implementer</category>
+        <severity>blocker</severity>
+        <description>Expected file collides with packet out_of_scope restriction.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Update packet scope restrictions or expected file declarations.</recommended_operator_action>
+        <source_layer>implementer_runner</source_layer>
+      </reason>
+
+      <reason>
+        <code>verifier_inconclusive</code>
+        <category>verifier</category>
+        <severity>major</severity>
+        <description>Verifier returned inconclusive verdict.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Resolve skipped or errored checks and rerun verifier.</recommended_operator_action>
+        <source_layer>harness_validator</source_layer>
+      </reason>
+      <reason>
+        <code>verifier_fail</code>
+        <category>verifier</category>
+        <severity>blocker</severity>
+        <description>Verifier returned fail verdict against acceptance checks.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Fix failed checks and rerun verification before promotion.</recommended_operator_action>
+        <source_layer>harness_validator</source_layer>
+      </reason>
+
+      <reason>
+        <code>acceptance_lineage_mismatch</code>
+        <category>coordinator</category>
+        <severity>blocker</severity>
+        <description>Route and packet acceptance lock mismatch detected.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Re-issue route and packet with aligned acceptance lock hash.</recommended_operator_action>
+        <source_layer>orchestration_coordinator</source_layer>
+      </reason>
+      <reason>
+        <code>verification_runner_error</code>
+        <category>coordinator</category>
+        <severity>major</severity>
+        <description>verification_runner returned non-zero during coordinator lane execution.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Inspect verifier logs and rerun within retry policy limits.</recommended_operator_action>
+        <source_layer>orchestration_coordinator</source_layer>
+      </reason>
+      <reason>
+        <code>verification_lineage_mismatch</code>
+        <category>coordinator</category>
+        <severity>blocker</severity>
+        <description>verification_result acceptance lock does not match packet lock.</description>
+        <default_classification>blocker</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Regenerate verification result from latest packet lineage.</recommended_operator_action>
+        <source_layer>orchestration_coordinator</source_layer>
+      </reason>
+      <reason>
+        <code>coordinator_artifact_flow_incomplete</code>
+        <category>coordinator</category>
+        <severity>major</severity>
+        <description>Coordinator derived artifact flow is incomplete for selected lane.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Rebuild coordinator lane outputs and rerun harness validation.</recommended_operator_action>
+        <source_layer>harness_validator</source_layer>
+      </reason>
+
+      <reason>
+        <code>planner_artifact_generation_failed</code>
+        <category>planner</category>
+        <severity>major</severity>
+        <description>Planner sidecar artifact generation failed.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Fix planner inputs and rerun planner lane execution.</recommended_operator_action>
+        <source_layer>orchestration_coordinator</source_layer>
+      </reason>
+
+      <reason>
+        <code>review_sidecar_generation_failed</code>
+        <category>reviewer</category>
+        <severity>major</severity>
+        <description>Reviewer sidecar artifact generation failed.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Fix reviewer generation failure and rerun reviewer lane.</recommended_operator_action>
+        <source_layer>orchestration_coordinator</source_layer>
+      </reason>
+      <reason>
+        <code>reviewer_decision_requires_escalation</code>
+        <category>reviewer</category>
+        <severity>major</severity>
+        <description>Reviewer decision remained non-approvable and required escalation.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Address reviewer findings or escalate for packet correction.</recommended_operator_action>
+        <source_layer>orchestration_coordinator</source_layer>
+      </reason>
+      <reason>
+        <code>reviewer_revise</code>
+        <category>reviewer</category>
+        <severity>minor</severity>
+        <description>Reviewer requested revision on the current lane attempt.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>false</affects_gate_default>
+        <recommended_operator_action>Apply reviewer revisions and rerun reviewer lane.</recommended_operator_action>
+        <source_layer>orchestration_coordinator</source_layer>
+      </reason>
+
+      <reason>
+        <code>system_runtime_error</code>
+        <category>system</category>
+        <severity>major</severity>
+        <description>Unexpected process-level runtime error during harness execution.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Inspect stderr logs repair environment and rerun with same task inputs.</recommended_operator_action>
+        <source_layer>release_ops_gate</source_layer>
+      </reason>
+      <reason>
+        <code>system_missing_required_runtime_artifacts</code>
+        <category>system</category>
+        <severity>major</severity>
+        <description>Session refresh or downstream checks found missing required runtime artifacts.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>false</affects_gate_default>
+        <recommended_operator_action>Rebuild missing runtime artifact chain and rerun refresh plus gate checks.</recommended_operator_action>
+        <source_layer>session_report_refresh</source_layer>
+      </reason>
+    </reasons>
+    <notes>
+      <item>This catalog standardizes reason-code vocabulary used across RC gate harness and coordinator outputs.</item>
+      <item>Legacy coordinator codes without coordinator_ prefix remain listed for backward compatibility.</item>
+      <item>Update this catalog when new reason codes appear in production outputs or policy artifacts.</item>
+    </notes>
+  </payload>
+  <integrity>
+    <content_sha256>2424242424242424242424242424242424242424242424242424242424242424</content_sha256>
+  </integrity>
+</pxml>

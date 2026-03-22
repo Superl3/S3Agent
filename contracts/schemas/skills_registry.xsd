@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="SkillEntryType">
+    <xs:sequence>
+      <xs:element name="skill_id" type="NonEmptyStringType"/>
+      <xs:element name="source" type="NonEmptyStringType"/>
+      <xs:element name="name" type="NonEmptyStringType"/>
+      <xs:element name="purpose" type="NonEmptyStringType"/>
+      <xs:element name="recommended_lane" type="RoutePathType"/>
+      <xs:element name="write_permission" type="xs:boolean"/>
+      <xs:element name="capability_scope" type="CapabilityScopeListType"/>
+      <xs:element name="enabled_by_default" type="xs:boolean"/>
+      <xs:element name="registry_status" type="RegistryStatusType"/>
+      <xs:element name="notes" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkillEntriesType">
+    <xs:sequence>
+      <xs:element name="skill" type="SkillEntryType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkillsRegistryPayloadType">
+    <xs:sequence>
+      <xs:element name="source_root" type="NonEmptyStringType"/>
+      <xs:element name="entries" type="SkillEntriesType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkillsRegistryDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="SkillsRegistryPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="SkillsRegistryDocumentType"/>
+
+</xs:schema>

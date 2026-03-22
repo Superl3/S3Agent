@@ -1,0 +1,12 @@
+check_id=check_refactor_core_001
+check_type=test
+command=python -m py_compile scripts/pxml_validator.py scripts/packet_builder.py scripts/trace_appender.py
+pass_condition=exit_code==0
+timeout_sec=300
+returncode=0
+result=pass
+error_reason=
+--- stdout ---
+
+--- stderr ---
+

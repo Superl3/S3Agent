@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_hooks_registry_batch1</doc_id>
+    <doc_class>hooks_registry</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch1_registry_bootstrap</task_id>
+    <run_id>run_batch1_20260322</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T00:00:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <source_root>C:\Users\bug95\.config\opencode-build\everything-claude-code</source_root>
+    <entries>
+      <hook>
+        <hook_id>hook_ecc_placeholder_pre_route</hook_id>
+        <source>imported/ecc/hooks/placeholder_pre_route.yaml</source>
+        <name>ECC Placeholder PreRoute Hook</name>
+        <purpose>Provenance-only hook placeholder for future optional activation.</purpose>
+        <trigger_phase>pre_route</trigger_phase>
+        <allowed_agents>
+          <item>manager</item>
+        </allowed_agents>
+        <capability_scope>
+          <item>utility</item>
+        </capability_scope>
+        <enabled_by_default>false</enabled_by_default>
+        <registry_status>imported</registry_status>
+        <notes>Batch 1 dormant entry. No runtime binding.</notes>
+      </hook>
+    </entries>
+  </payload>
+  <integrity>
+    <content_sha256>1111111111111111111111111111111111111111111111111111111111111111</content_sha256>
+  </integrity>
+</pxml>

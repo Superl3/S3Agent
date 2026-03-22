@@ -1,0 +1,12 @@
+{
+  "note": "coordinator completed conditional lane orchestration",
+  "packet_doc_id": "doc_execution_packet_task_full_lane_candidate_001_0003",
+  "planner_artifact": "C:\\Users\\bug95\\.config\\opencode\\runtime\\sidecars\\planner\\doc_plan_sidecar_task_full_lane_can_0004_123622_acab01.pxml",
+  "reviewer_artifact": "C:\\Users\\bug95\\.config\\opencode\\runtime\\sidecars\\reviewer\\doc_review_sidecar_task_full_lane_can_0005_123622_c65e5c.pxml",
+  "route_doc_id": "doc_manager_route_task_full_lane_candidate_001_0002",
+  "selected_path": "full_lane",
+  "status": "completed",
+  "task_id": "task_full_lane_candidate_001",
+  "time": "2026-03-22T12:36:24Z",
+  "verification_artifact": "C:\\Users\\bug95\\.config\\opencode\\runtime\\verification\\results\\doc_verifres_task_full_lane_candi_0003_20260322123623_09c1311a.pxml"
+}

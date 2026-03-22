@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="PruningActionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="report_only"/>
+      <xs:enumeration value="quarantine"/>
+      <xs:enumeration value="delete_derived_safe"/>
+      <xs:enumeration value="deny"/>
+      <xs:enumeration value="require_override"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="ArtifactPruningRuleType">
+    <xs:sequence>
+      <xs:element name="policy_id" type="NonEmptyStringType"/>
+      <xs:element name="rule_name" type="NonEmptyStringType"/>
+      <xs:element name="applies_to" type="StringListType"/>
+      <xs:element name="candidate_condition" type="NonEmptyStringType"/>
+      <xs:element name="action" type="PruningActionType"/>
+      <xs:element name="rationale" type="NonEmptyStringType"/>
+      <xs:element name="enforcement_level" type="EnforcementLevelType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ArtifactPruningRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="ArtifactPruningRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ArtifactPruningPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policy_name" type="NonEmptyStringType"/>
+      <xs:element name="rules" type="ArtifactPruningRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ArtifactPruningPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ArtifactPruningPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ArtifactPruningPolicyDocumentType"/>
+
+</xs:schema>

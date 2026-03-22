@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_rendering_policy_batch8_001</doc_id>
+    <doc_class>rendering_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch8_final_renderer</task_id>
+    <run_id>run_batch8_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T08:00:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_operator_workflow_guide_b7_001</doc_id>
+      <doc_class>operator_workflow_guide</doc_class>
+      <relation>workflow_reference</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_trace_event_semantics_b7_001</doc_id>
+      <doc_class>trace_event_semantics</doc_class>
+      <relation>semantics_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>final_renderer_gate_and_output_policy</policy_name>
+    <rules>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>render_allowed_when_ready</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+          <item>preflight:ready</item>
+        </applies_to>
+        <trigger_condition>operator_preflight_report.render_readiness == ready</trigger_condition>
+        <decision>allow_render</decision>
+        <rationale>Ready tasks can be rendered as operator-facing derived output.</rationale>
+        <output_mode>pxml_and_markdown</output_mode>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>render_allowed_when_caution</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+          <item>preflight:caution</item>
+        </applies_to>
+        <trigger_condition>operator_preflight_report.render_readiness == caution</trigger_condition>
+        <decision>allow_render_with_warning</decision>
+        <rationale>Caution tasks can be rendered when warnings are surfaced and operator intent is explicit.</rationale>
+        <output_mode>pxml_and_markdown</output_mode>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>render_allowed_when_not_ready</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+          <item>preflight:not_ready</item>
+        </applies_to>
+        <trigger_condition>operator_preflight_report.render_readiness == not_ready</trigger_condition>
+        <decision>require_override</decision>
+        <rationale>Not-ready tasks require explicit override to avoid misleading operator summaries.</rationale>
+        <output_mode>summary_only</output_mode>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>include_trace_summary</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>execution_trace exists</trigger_condition>
+        <decision>allow_render</decision>
+        <rationale>Operator summary should include key trace events for explainability.</rationale>
+        <output_mode>summary_only</output_mode>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>include_compaction_checkpoint_if_present</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>latest compaction_checkpoint exists</trigger_condition>
+        <decision>allow_render</decision>
+        <rationale>Checkpoint context improves long-trace readability without replacing trace SSOT.</rationale>
+        <output_mode>summary_only</output_mode>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>include_failure_index_summary</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>runtime/index/failures has entries</trigger_condition>
+        <decision>allow_render</decision>
+        <rationale>Failure index reasons should surface in operator-facing risk summary.</rationale>
+        <output_mode>summary_only</output_mode>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>include_quarantine_flags</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>operator_preflight_report.quarantine_flags contains non-none item</trigger_condition>
+        <decision>allow_render_with_warning</decision>
+        <rationale>Quarantine flags are mandatory warnings for operator trustworthiness.</rationale>
+        <output_mode>summary_only</output_mode>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>include_next_action</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>task_status_report.next_recommended_action exists</trigger_condition>
+        <decision>allow_render</decision>
+        <rationale>Renderer should preserve operational next action guidance.</rationale>
+        <output_mode>summary_only</output_mode>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>render_format_policy</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>format argument resolved against policy output_mode</trigger_condition>
+        <decision>allow_render</decision>
+        <rationale>PXML report is required; markdown export is optional policy-governed derivative.</rationale>
+        <output_mode>pxml_and_markdown</output_mode>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RENDER-B8-001</policy_id>
+        <rule_name>operator_override_allowed</rule_name>
+        <applies_to>
+          <item>final_renderer</item>
+          <item>preflight:not_ready</item>
+        </applies_to>
+        <trigger_condition>operator passes --override-not-ready</trigger_condition>
+        <decision>allow_render_with_warning</decision>
+        <rationale>Controlled override is allowed for operator incident response visibility.</rationale>
+        <output_mode>summary_only</output_mode>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1</content_sha256>
+  </integrity>
+</pxml>

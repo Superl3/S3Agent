@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ReleaseBundleRefListType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseBundleManifestPayloadType">
+    <xs:sequence>
+      <xs:element name="manifest_id" type="NonEmptyStringType"/>
+      <xs:element name="generated_at" type="xs:dateTime"/>
+      <xs:element name="derived" type="xs:boolean"/>
+      <xs:element name="source_release_candidate_report_ref" type="ReferenceItemType"/>
+      <xs:element name="key_policy_refs" type="ReleaseBundleRefListType"/>
+      <xs:element name="key_schema_refs" type="PathListType"/>
+      <xs:element name="key_script_refs" type="PathListType"/>
+      <xs:element name="key_runtime_refs" type="PathListType"/>
+      <xs:element name="smoke_task_ids" type="StringListType"/>
+      <xs:element name="candidate_gate_task_ids" type="StringListType" minOccurs="0"/>
+      <xs:element name="latest_release_refs" type="PathListType"/>
+      <xs:element name="operator_entrypoints" type="StringListType"/>
+      <xs:element name="known_warnings" type="StringListType"/>
+      <xs:element name="handoff_notes" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseBundleManifestDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ReleaseBundleManifestPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ReleaseBundleManifestDocumentType"/>
+
+</xs:schema>

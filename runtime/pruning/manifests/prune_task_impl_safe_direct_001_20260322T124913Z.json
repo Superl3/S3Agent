@@ -1,0 +1,40 @@
+{
+  "apply_mode": "quarantine-first",
+  "created_at": "2026-03-22T12:49:13Z",
+  "dry_run": false,
+  "entries": [
+    {
+      "applied_action": "quarantined",
+      "destination": "C:\\Users\\bug95\\.config\\opencode\\runtime\\quarantine\\20260322T124913Z\\task_impl_safe_direct_001\\rendered\\reports\\doc_final_render_task_impl_safe_direc_0007.pxml",
+      "doc_class": "final_render_report",
+      "doc_id": "doc_final_render_task_impl_safe_direc_0007",
+      "planned_action": "quarantine",
+      "reason": "non_latest_version",
+      "source": "C:\\Users\\bug95\\.config\\opencode\\runtime\\rendered\\reports\\doc_final_render_task_impl_safe_direc_0007.pxml",
+      "task_id": "task_impl_safe_direct_001"
+    },
+    {
+      "applied_action": "quarantined",
+      "destination": "C:\\Users\\bug95\\.config\\opencode\\runtime\\quarantine\\20260322T124913Z\\task_impl_safe_direct_001\\pruning\\reports\\doc_pruning_report_task_impl_safe_direc_0009.pxml",
+      "doc_class": "pruning_report",
+      "doc_id": "doc_pruning_report_task_impl_safe_direc_0009",
+      "planned_action": "quarantine",
+      "reason": "non_latest_version",
+      "source": "C:\\Users\\bug95\\.config\\opencode\\runtime\\pruning\\reports\\doc_pruning_report_task_impl_safe_direc_0009.pxml",
+      "task_id": "task_impl_safe_direct_001"
+    },
+    {
+      "applied_action": "quarantined",
+      "destination": "C:\\Users\\bug95\\.config\\opencode\\runtime\\quarantine\\20260322T124913Z\\task_impl_safe_direct_001\\pruning\\reports\\doc_pruning_report_task_impl_safe_direc_0010.pxml",
+      "doc_class": "pruning_report",
+      "doc_id": "doc_pruning_report_task_impl_safe_direc_0010",
+      "planned_action": "quarantine",
+      "reason": "non_latest_version",
+      "source": "C:\\Users\\bug95\\.config\\opencode\\runtime\\pruning\\reports\\doc_pruning_report_task_impl_safe_direc_0010.pxml",
+      "task_id": "task_impl_safe_direct_001"
+    }
+  ],
+  "manifest_id": "prune_task_impl_safe_direct_001_20260322T124913Z",
+  "policy": "C:\\Users\\bug95\\.config\\opencode\\instructions\\artifact_pruning_policy.pxml",
+  "scope": "task_impl_safe_direct_001"
+}

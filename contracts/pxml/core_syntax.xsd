@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="common_types.xsd"/>
+
+  <xs:complexType name="MetaType">
+    <xs:sequence>
+      <xs:element name="doc_id" type="DocIdType"/>
+      <xs:element name="doc_class" type="DocClassType"/>
+      <xs:element name="schema_version" type="SchemaVersionType"/>
+      <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="run_id" type="RunIdType"/>
+      <xs:element name="sequence" type="SequenceType"/>
+      <xs:element name="writer_agent" type="WriterAgentType"/>
+      <xs:element name="created_at" type="xs:dateTime"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="IntegrityType">
+    <xs:sequence>
+      <xs:element name="content_sha256" type="Sha256Type"/>
+      <xs:element name="parent_sha256" type="Sha256Type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PxmlEnvelopeType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="xs:anyType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

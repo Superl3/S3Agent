@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "artifact_ref": {
+        "doc_class": "implementer_result",
+        "doc_id": "doc_implres_task_verify_post_s_0003_20260322043743_119776a6",
+        "relation": "latest_implementer_result"
+      },
+      "doc_id": "doc_implres_task_verify_post_s_0003_20260322043743_119776a6",
+      "escalation_requested": false,
+      "reason_code": null,
+      "retry_count": 0,
+      "status": "applied",
+      "time": "2026-03-22T04:37:43Z",
+      "timestamp": "2026-03-22T04:37:43Z"
+    }
+  ],
+  "task_id": "task_verify_post_smoke_001"
+}

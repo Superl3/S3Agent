@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="PruningResultType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="success"/>
+      <xs:enumeration value="partial"/>
+      <xs:enumeration value="denied"/>
+      <xs:enumeration value="failed"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PruningCandidateActionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="report_only"/>
+      <xs:enumeration value="quarantine"/>
+      <xs:enumeration value="delete_derived_safe"/>
+      <xs:enumeration value="deny"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="PruningCandidateType">
+    <xs:sequence>
+      <xs:element name="doc_id" type="DocIdType"/>
+      <xs:element name="doc_class" type="DocClassType"/>
+      <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="path" type="PathStringType"/>
+      <xs:element name="reason" type="NonEmptyStringType"/>
+      <xs:element name="action" type="PruningCandidateActionType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PruningCandidateListType">
+    <xs:sequence>
+      <xs:element name="candidate" type="PruningCandidateType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReplacementProofType">
+    <xs:sequence>
+      <xs:element name="candidate_doc_id" type="DocIdType"/>
+      <xs:element name="replacement_doc_id" type="DocIdType"/>
+      <xs:element name="proof" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReplacementProofListType">
+    <xs:sequence>
+      <xs:element name="proof_item" type="ReplacementProofType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="OptionalStringListType">
+    <xs:sequence>
+      <xs:element name="item" type="NonEmptyStringType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PruningReportPayloadType">
+    <xs:sequence>
+      <xs:element name="pruning_report_id" type="NonEmptyStringType"/>
+      <xs:element name="task_scope" type="NonEmptyStringType"/>
+      <xs:element name="policy_ref" type="ReferenceItemType"/>
+      <xs:element name="derived" type="xs:boolean"/>
+      <xs:element name="dry_run" type="xs:boolean"/>
+      <xs:element name="run_started_at" type="xs:dateTime"/>
+      <xs:element name="run_finished_at" type="xs:dateTime"/>
+      <xs:element name="candidate_count" type="xs:nonNegativeInteger"/>
+      <xs:element name="kept_refs" type="OptionalStringListType"/>
+      <xs:element name="denied_candidates" type="PruningCandidateListType"/>
+      <xs:element name="quarantine_candidates" type="PruningCandidateListType"/>
+      <xs:element name="delete_candidates" type="PruningCandidateListType"/>
+      <xs:element name="replacement_proofs" type="ReplacementProofListType"/>
+      <xs:element name="lineage_safety_ok" type="xs:boolean"/>
+      <xs:element name="latest_pointer_safety_ok" type="xs:boolean"/>
+      <xs:element name="result" type="PruningResultType"/>
+      <xs:element name="warnings" type="StringListType"/>
+      <xs:element name="next_action" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PruningReportDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="PruningReportPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="PruningReportDocumentType"/>
+
+</xs:schema>

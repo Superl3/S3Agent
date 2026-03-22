@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="PytestTargetType">
+    <xs:restriction base="NonEmptyStringType">
+      <xs:maxLength value="512"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="PytestTargetListType">
+    <xs:sequence>
+      <xs:element name="item" type="PytestTargetType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PytestArgListType">
+    <xs:sequence>
+      <xs:element name="item" type="NonEmptyStringType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CiTestProfilePayloadType">
+    <xs:sequence>
+      <xs:element name="profile_id" type="NonEmptyStringType"/>
+      <xs:element name="profile_name" type="NonEmptyStringType"/>
+      <xs:element name="quick_smoke_targets" type="PytestTargetListType"/>
+      <xs:element name="full_regression_targets" type="PytestTargetListType"/>
+      <xs:element name="release_critical_targets" type="PytestTargetListType"/>
+      <xs:element name="default_pytest_args" type="PytestArgListType"/>
+      <xs:element name="fail_fast_default" type="xs:boolean"/>
+      <xs:element name="runtime_isolation_required" type="xs:boolean"/>
+      <xs:element name="notes" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CiTestProfileDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="CiTestProfilePayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="CiTestProfileDocumentType"/>
+
+</xs:schema>

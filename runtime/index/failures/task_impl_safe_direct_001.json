@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "artifact_ref": {
+        "doc_class": "implementer_result",
+        "doc_id": "doc_implres_task_impl_safe_dir_0003_20260322123546_9bcbf451",
+        "relation": "latest_implementer_result"
+      },
+      "doc_id": "doc_implres_task_impl_safe_dir_0003_20260322123546_9bcbf451",
+      "escalation_requested": false,
+      "reason_code": null,
+      "retry_count": 0,
+      "status": "no_op",
+      "time": "2026-03-22T12:35:46Z",
+      "timestamp": "2026-03-22T12:35:46Z"
+    }
+  ],
+  "task_id": "task_impl_safe_direct_001"
+}

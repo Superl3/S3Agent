@@ -1,0 +1,12 @@
+{
+  "note": "coordinator completed conditional lane orchestration",
+  "packet_doc_id": "doc_execution_packet_task_verify_post_smoke_001_0003",
+  "planner_artifact": null,
+  "reviewer_artifact": null,
+  "route_doc_id": "doc_manager_route_task_verify_post_smoke_001_0002",
+  "selected_path": "verifier_post",
+  "status": "completed",
+  "task_id": "task_verify_post_smoke_001",
+  "time": "2026-03-22T04:37:43Z",
+  "verification_artifact": "C:\\Users\\bug95\\.config\\opencode\\runtime\\verification\\results\\doc_verifres_task_verify_post_smo_0003_20260322043742_f213356d.pxml"
+}

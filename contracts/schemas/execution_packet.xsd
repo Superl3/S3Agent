@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ExecutionPacketRefsType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExpectedFileItemType">
+    <xs:sequence>
+      <xs:element name="path" type="PathStringType"/>
+      <xs:element name="mode" type="ExpectedFileModeType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExpectedFilesType">
+    <xs:sequence>
+      <xs:element name="file" type="ExpectedFileItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PatchConstraintsType">
+    <xs:sequence>
+      <xs:element name="patch_mode" type="PatchModeType" default="patch_first"/>
+      <xs:element name="max_files" type="xs:positiveInteger"/>
+      <xs:element name="rewrite_exception_approved" type="xs:boolean"/>
+      <xs:element name="rewrite_exception_reason" type="NonEmptyStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="AcceptanceCheckType">
+    <xs:sequence>
+      <xs:element name="check_id" type="NonEmptyStringType"/>
+      <xs:element name="check_type" type="CheckTypeType"/>
+      <xs:element name="command" type="NonEmptyStringType"/>
+      <xs:element name="pass_condition" type="NonEmptyStringType"/>
+      <xs:element name="deterministic" type="xs:boolean"/>
+      <xs:element name="timeout_sec" type="xs:positiveInteger"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="AcceptanceChecksType">
+    <xs:sequence>
+      <xs:element name="check" type="AcceptanceCheckType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExecutionPacketPayloadType">
+    <xs:sequence>
+      <xs:element name="task_summary" type="NonEmptyStringType"/>
+      <xs:element name="in_scope" type="PathListType"/>
+      <xs:element name="out_of_scope" type="PathListType"/>
+      <xs:element name="expected_files" type="ExpectedFilesType"/>
+      <xs:element name="patch_constraints" type="PatchConstraintsType"/>
+      <xs:element name="acceptance_checks" type="AcceptanceChecksType"/>
+      <xs:element name="acceptance_lock_hash" type="Sha256Type"/>
+      <xs:element name="test_guidance" type="StringListType"/>
+      <xs:element name="escalation_triggers" type="StringListType"/>
+      <xs:element name="stop_conditions" type="StringListType"/>
+      <xs:element name="localization_targets" type="PathListType" minOccurs="0"/>
+      <xs:element name="planner_notes_ref" type="ReferenceItemType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExecutionPacketDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="ExecutionPacketRefsType"/>
+      <xs:element name="payload" type="ExecutionPacketPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ExecutionPacketDocumentType"/>
+
+</xs:schema>

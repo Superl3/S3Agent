@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="VerifyPhaseType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="lane"/>
+      <xs:enumeration value="post_implement"/>
+      <xs:enumeration value="either"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="OptionalStringListType">
+    <xs:sequence>
+      <xs:element name="item" type="NonEmptyStringType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TraceEventSemanticItemType">
+    <xs:sequence>
+      <xs:element name="event_type" type="TraceEventType"/>
+      <xs:element name="semantic_meaning" type="NonEmptyStringType"/>
+      <xs:element name="ordering_expectation" type="NonEmptyStringType"/>
+      <xs:element name="required_artifact_refs" type="OptionalStringListType"/>
+      <xs:element name="optional_metadata_fields" type="OptionalStringListType"/>
+      <xs:element name="verify_phase_hint" type="VerifyPhaseType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TraceEventSemanticListType">
+    <xs:sequence>
+      <xs:element name="event" type="TraceEventSemanticItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TraceEventSemanticsPayloadType">
+    <xs:sequence>
+      <xs:element name="semantics_id" type="NonEmptyStringType"/>
+      <xs:element name="lane_verifier_semantics" type="NonEmptyStringType"/>
+      <xs:element name="post_implement_verifier_semantics" type="NonEmptyStringType"/>
+      <xs:element name="events" type="TraceEventSemanticListType"/>
+      <xs:element name="notes" type="OptionalStringListType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TraceEventSemanticsDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="TraceEventSemanticsPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="TraceEventSemanticsDocumentType"/>
+
+</xs:schema>

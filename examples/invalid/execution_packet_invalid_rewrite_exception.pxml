@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_execution_packet_invalid_001</doc_id>
+    <doc_class>execution_packet</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_bugfix_login_001</task_id>
+    <run_id>run_batch1_examples_001</run_id>
+    <sequence>3</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T00:02:30Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_manager_route_valid_001</doc_id>
+      <doc_class>manager_route</doc_class>
+      <relation>route</relation>
+    </ref>
+  </refs>
+  <payload>
+    <task_summary>Invalid sample: full rewrite exception without proper approval.</task_summary>
+    <in_scope>
+      <item>src/auth/retry_counter.py</item>
+    </in_scope>
+    <out_of_scope>
+      <item>docs/</item>
+    </out_of_scope>
+    <expected_files>
+      <file>
+        <path>src/auth/retry_counter.py</path>
+        <mode>modify</mode>
+      </file>
+    </expected_files>
+    <patch_constraints>
+      <patch_mode>full_rewrite_exception</patch_mode>
+      <max_files>1</max_files>
+      <rewrite_exception_approved>false</rewrite_exception_approved>
+    </patch_constraints>
+    <acceptance_checks>
+      <check>
+        <check_id>check_login_retry_unit</check_id>
+        <check_type>test</check_type>
+        <command>pytest tests/auth/test_retry_counter.py</command>
+        <pass_condition>exit_code==0</pass_condition>
+        <deterministic>true</deterministic>
+        <timeout_sec>120</timeout_sec>
+      </check>
+    </acceptance_checks>
+    <acceptance_lock_hash>cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc</acceptance_lock_hash>
+    <test_guidance>
+      <item>Run retry unit tests.</item>
+    </test_guidance>
+    <escalation_triggers>
+      <item>Rewrite not approved.</item>
+    </escalation_triggers>
+    <stop_conditions>
+      <item>Stop on schema/rule failure.</item>
+    </stop_conditions>
+    <localization_targets>
+      <item>src/auth/retry_counter.py:increment_retry</item>
+    </localization_targets>
+  </payload>
+  <integrity>
+    <content_sha256>fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210</content_sha256>
+    <parent_sha256>dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd</parent_sha256>
+  </integrity>
+</pxml>

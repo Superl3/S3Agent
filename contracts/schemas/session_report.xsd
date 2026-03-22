@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="ReleaseReadinessResultType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="pass"/>
+      <xs:enumeration value="fail"/>
+      <xs:enumeration value="inconclusive"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SessionRenderDecisionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="rendered"/>
+      <xs:enumeration value="rendered_with_warning"/>
+      <xs:enumeration value="denied"/>
+      <xs:enumeration value="skipped"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RunbookResultType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="success"/>
+      <xs:enumeration value="partial"/>
+      <xs:enumeration value="blocked"/>
+      <xs:enumeration value="failed"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="SessionReportPayloadType">
+    <xs:sequence>
+      <xs:element name="session_report_id" type="NonEmptyStringType"/>
+      <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="derived" type="xs:boolean"/>
+      <xs:element name="runbook_start_time" type="xs:dateTime"/>
+      <xs:element name="runbook_end_time" type="xs:dateTime"/>
+      <xs:element name="cleanup_performed" type="xs:boolean"/>
+      <xs:element name="source_intake_ref" type="ReferenceItemType"/>
+      <xs:element name="latest_route_ref" type="ReferenceItemType"/>
+      <xs:element name="latest_packet_ref" type="ReferenceItemType"/>
+      <xs:element name="latest_status_report_ref" type="ReferenceItemType"/>
+      <xs:element name="latest_preflight_ref" type="ReferenceItemType"/>
+      <xs:element name="latest_render_report_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="latest_trace_ref" type="ReferenceItemType"/>
+      <xs:element name="latest_verification_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="latest_compaction_checkpoint_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="quarantine_refs" type="StringListType" minOccurs="0"/>
+      <xs:element name="release_readiness_result" type="ReleaseReadinessResultType"/>
+      <xs:element name="render_decision" type="SessionRenderDecisionType"/>
+      <xs:element name="render_override_used" type="xs:boolean"/>
+      <xs:element name="runbook_result" type="RunbookResultType"/>
+      <xs:element name="warnings" type="StringListType"/>
+      <xs:element name="next_action" type="NonEmptyStringType"/>
+      <xs:element name="task_executor_exit_code" type="xs:int"/>
+      <xs:element name="preflight_exit_code" type="xs:int"/>
+      <xs:element name="renderer_exit_code" type="xs:int" minOccurs="0"/>
+      <xs:element name="harness_exit_code" type="xs:int" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SessionReportDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="SessionReportPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="SessionReportDocumentType"/>
+
+</xs:schema>

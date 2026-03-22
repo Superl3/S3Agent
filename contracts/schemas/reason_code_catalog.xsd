@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="ReasonCodeType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[a-z][a-z0-9_]{2,127}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ReasonCodeCategoryType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="rc"/>
+      <xs:enumeration value="implementer"/>
+      <xs:enumeration value="verifier"/>
+      <xs:enumeration value="coordinator"/>
+      <xs:enumeration value="planner"/>
+      <xs:enumeration value="reviewer"/>
+      <xs:enumeration value="system"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ReasonCodeSeverityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="info"/>
+      <xs:enumeration value="minor"/>
+      <xs:enumeration value="major"/>
+      <xs:enumeration value="blocker"/>
+      <xs:enumeration value="critical"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ReasonCodeClassificationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="info"/>
+      <xs:enumeration value="warning"/>
+      <xs:enumeration value="blocker"/>
+      <xs:enumeration value="excluded"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="ReasonCodeEntryType">
+    <xs:sequence>
+      <xs:element name="code" type="ReasonCodeType"/>
+      <xs:element name="category" type="ReasonCodeCategoryType"/>
+      <xs:element name="severity" type="ReasonCodeSeverityType"/>
+      <xs:element name="description" type="NonEmptyStringType"/>
+      <xs:element name="default_classification" type="ReasonCodeClassificationType"/>
+      <xs:element name="affects_gate_default" type="xs:boolean"/>
+      <xs:element name="recommended_operator_action" type="NonEmptyStringType"/>
+      <xs:element name="source_layer" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReasonCodeEntryListType">
+    <xs:sequence>
+      <xs:element name="reason" type="ReasonCodeEntryType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReasonCodeCatalogPayloadType">
+    <xs:sequence>
+      <xs:element name="catalog_id" type="NonEmptyStringType"/>
+      <xs:element name="catalog_name" type="NonEmptyStringType"/>
+      <xs:element name="reasons" type="ReasonCodeEntryListType"/>
+      <xs:element name="notes" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReasonCodeCatalogDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ReasonCodeCatalogPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ReasonCodeCatalogDocumentType"/>
+
+</xs:schema>

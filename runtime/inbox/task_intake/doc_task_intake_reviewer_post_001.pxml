@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_task_intake_reviewer_post_001</doc_id>
+    <doc_class>task_intake</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_reviewer_post_smoke_001</task_id>
+    <run_id>run_batch4_examples_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T03:00:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <request_text>Patch high-risk account lock boundary behavior and require reviewer signoff before release.</request_text>
+    <task_type>bugfix</task_type>
+    <requested_outcome>Scoped patch packet is issued and reviewer approval evidence is recorded.</requested_outcome>
+    <constraints>
+      <item>Keep changes localized to lock boundary checks.</item>
+      <item>Avoid broad refactors or API reshaping.</item>
+    </constraints>
+    <risk_hint>high</risk_hint>
+    <acceptance_hint>Coordinator should route through reviewer_post and append review_done trace evidence.</acceptance_hint>
+  </payload>
+  <integrity>
+    <content_sha256>cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd</content_sha256>
+  </integrity>
+</pxml>

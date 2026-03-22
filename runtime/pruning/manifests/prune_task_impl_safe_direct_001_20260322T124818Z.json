@@ -1,0 +1,20 @@
+{
+  "apply_mode": "quarantine-first",
+  "created_at": "2026-03-22T12:48:18Z",
+  "dry_run": false,
+  "entries": [
+    {
+      "applied_action": "denied",
+      "destination": null,
+      "doc_class": "final_render_report",
+      "doc_id": "doc_final_render_task_impl_safe_direc_0007",
+      "planned_action": "deny",
+      "reason": "non_latest_version,referenced_by_latest",
+      "source": "C:\\Users\\bug95\\.config\\opencode\\runtime\\rendered\\reports\\doc_final_render_task_impl_safe_direc_0007.pxml",
+      "task_id": "task_impl_safe_direct_001"
+    }
+  ],
+  "manifest_id": "prune_task_impl_safe_direct_001_20260322T124818Z",
+  "policy": "C:\\Users\\bug95\\.config\\opencode\\instructions\\artifact_pruning_policy.pxml",
+  "scope": "task_impl_safe_direct_001"
+}

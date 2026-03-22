@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_compaction_policy_batch7_001</doc_id>
+    <doc_class>compaction_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch7_stability_hardening</task_id>
+    <run_id>run_batch7_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T07:00:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_post_impl_verify_policy_b6_001</doc_id>
+      <doc_class>post_implement_verification_policy</doc_class>
+      <relation>adjacent_policy</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>trace_compaction_checkpoint_skeleton</policy_name>
+    <checkpoint_reason_default>operator_checkpoint_for_long_trace_reconstruction</checkpoint_reason_default>
+    <max_events_before_checkpoint>50</max_events_before_checkpoint>
+    <include_failed_attempts>true</include_failed_attempts>
+    <include_established_facts>true</include_established_facts>
+    <preservation_mode>checkpoint_only_no_trace_deletion</preservation_mode>
+    <notes>
+      <item>Compaction checkpoint is reconstruction aid only and not runtime SSOT.</item>
+      <item>execution_trace source events remain immutable and append-only.</item>
+    </notes>
+  </payload>
+  <integrity>
+    <content_sha256>7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a</content_sha256>
+  </integrity>
+</pxml>

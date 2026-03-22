@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="VerifyPhaseRuntimeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="lane"/>
+      <xs:enumeration value="post_implement"/>
+      <xs:enumeration value="unknown_legacy"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="TraceEventTypeDef">
+    <xs:sequence>
+      <xs:element name="event_seq" type="SequenceType"/>
+      <xs:element name="event_type" type="TraceEventType"/>
+      <xs:element name="event_time" type="xs:dateTime"/>
+      <xs:element name="actor" type="WriterAgentType"/>
+      <xs:element name="message" type="NonEmptyStringType"/>
+      <xs:element name="reason_code" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="attempt" type="xs:positiveInteger" minOccurs="0"/>
+      <xs:element name="lineage_lock_sha256" type="Sha256Type" minOccurs="0"/>
+      <xs:element name="verify_phase" type="VerifyPhaseRuntimeType" minOccurs="0"/>
+      <xs:element name="artifact_refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="event_sha256" type="Sha256Type"/>
+      <xs:element name="prev_event_sha256" type="Sha256Type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TraceEventsType">
+    <xs:sequence>
+      <xs:element name="event" type="TraceEventTypeDef" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExecutionTracePayloadType">
+    <xs:sequence>
+      <xs:element name="events" type="TraceEventsType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExecutionTraceDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ExecutionTracePayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ExecutionTraceDocumentType"/>
+
+</xs:schema>

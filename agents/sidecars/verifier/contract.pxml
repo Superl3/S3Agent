@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_verifier_contract_batch3_001</doc_id>
+    <doc_class>verifier_contract</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_harness_batch3_sidecars</task_id>
+    <run_id>run_batch3_contracts_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T01:02:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_execution_policy_batch2_001</doc_id>
+      <doc_class>execution_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+  </refs>
+  <payload>
+    <role>Conditional verifier sidecar that executes declared acceptance_checks from execution_packet and emits verification_result artifacts.</role>
+    <inputs>
+      <item>execution_packet artifact acceptance_checks</item>
+      <item>optional review_sidecar artifact</item>
+      <item>runtime environment and command execution logs</item>
+    </inputs>
+    <outputs>
+      <item>verification_result artifact with tests_run outcomes unverified_areas residual_risks final_verdict verdict_reason</item>
+      <item>verification log evidence files under runtime/verification/logs</item>
+    </outputs>
+    <must_do>
+      <item>Read acceptance_checks in packet order and execute without mutation.</item>
+      <item>Record each check result as pass fail error or skipped with evidence reference.</item>
+      <item>Compute outcomes counters and final_verdict deterministically.</item>
+      <item>Report unverified areas and residual risks explicitly.</item>
+      <item>Persist verification_result only when schema and rule validation succeeds.</item>
+    </must_do>
+    <must_not_do>
+      <item>Do not add or remove acceptance checks from execution_packet.</item>
+      <item>Do not modify manager_route selected path or lane flags.</item>
+      <item>Do not perform code write or patch operations.</item>
+      <item>Do not delegate verdict logic to unstructured manual text.</item>
+      <item>Do not activate or invoke ECC registry assets.</item>
+    </must_not_do>
+    <failure_handoff>
+      <item>Emit final_verdict inconclusive when checks cannot execute due environment limits.</item>
+      <item>Emit final_verdict fail when declared acceptance checks fail.</item>
+      <item>Emit logs_ref and verdict_reason for deterministic diagnosis.</item>
+    </failure_handoff>
+    <artifact_responsibilities>
+      <item>Write verification_result artifacts to runtime/verification/results.</item>
+      <item>Write logs to runtime/verification/logs and reference them via logs_ref or evidence_ref.</item>
+      <item>Reference execution_packet in refs with relation verification_target.</item>
+    </artifact_responsibilities>
+    <dormant_registry_note>ECC registries remain dormant metadata and are not verifier execution inputs in Batch 3.</dormant_registry_note>
+  </payload>
+  <integrity>
+    <content_sha256>22a22bc0db906172652d4608e577015026f8fbbabcb6d5929f845fedc48973cd</content_sha256>
+  </integrity>
+</pxml>

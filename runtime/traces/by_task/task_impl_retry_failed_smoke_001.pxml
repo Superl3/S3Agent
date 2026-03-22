@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_execution_trace_task_impl_retry_failed_smoke_001</doc_id>
+    <doc_class>execution_trace</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_impl_retry_failed_smoke_001</task_id>
+    <run_id>run_trace_task_impl_retry_failed_smoke_001</run_id>
+    <sequence>9</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T03:35:29Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <events>
+      <event>
+        <event_seq>1</event_seq>
+        <event_type>route</event_type>
+        <event_time>2026-03-22T03:35:29Z</event_time>
+        <actor>manager</actor>
+        <message>Route selected by manager and observed by coordinator.</message>
+        <artifact_refs>
+          <ref>
+            <doc_id>doc_manager_route_task_impl_retry_failed_smoke_001_0002</doc_id>
+            <doc_class>manager_route</doc_class>
+            <relation>evidence</relation>
+          </ref>
+        </artifact_refs>
+        <event_sha256>c3d3659484f9908f6857e8d6ffc4948da13e922f5a2f8a15fb302b7d20be617a</event_sha256>
+      </event>
+    <event><event_seq>2</event_seq><event_type>packet_issued</event_type><event_time>2026-03-22T03:35:29Z</event_time><actor>manager</actor><message>Execution packet issued and accepted for orchestration.</message><artifact_refs><ref><doc_id>doc_execution_packet_task_impl_retry_failed_smoke_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>f29823a7428eb34be9f393170d1272f391b1c3f6c1166851bd7838fbbb1504ae</event_sha256><prev_event_sha256>c3d3659484f9908f6857e8d6ffc4948da13e922f5a2f8a15fb302b7d20be617a</prev_event_sha256></event><event><event_seq>3</event_seq><event_type>implement_start</event_type><event_time>2026-03-22T03:35:38Z</event_time><actor>implementer</actor><message>Implementer started execution from execution_packet contract.</message><lineage_lock_sha256>7d2002c37584bd7583b166ede5f272fdf76a4d5354ecafc62cc14453bf327fbf</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_execution_packet_task_impl_retry_failed_smoke_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>36f9513022fcc8d6f80d3618695a9dfdafb6d5cc53df65e3e9a9bacbbdf194fc</event_sha256><prev_event_sha256>f29823a7428eb34be9f393170d1272f391b1c3f6c1166851bd7838fbbb1504ae</prev_event_sha256></event><event><event_seq>4</event_seq><event_type>blocked</event_type><event_time>2026-03-22T03:35:38Z</event_time><actor>implementer</actor><message>Implementer blocked: implementer_modify_target_missing</message><reason_code>implementer_modify_target_missing</reason_code><attempt>1</attempt><lineage_lock_sha256>7d2002c37584bd7583b166ede5f272fdf76a4d5354ecafc62cc14453bf327fbf</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_implres_task_impl_retry_fa_0003_20260322033538_d265e451</doc_id><doc_class>implementer_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>de8372c7f4d42af73edf4b3ac7c6db4e766a34287e6d34793bf67370f4c8faa2</event_sha256><prev_event_sha256>36f9513022fcc8d6f80d3618695a9dfdafb6d5cc53df65e3e9a9bacbbdf194fc</prev_event_sha256></event><event><event_seq>5</event_seq><event_type>implement_start</event_type><event_time>2026-03-22T03:35:45Z</event_time><actor>implementer</actor><message>Implementer started execution from execution_packet contract.</message><lineage_lock_sha256>7d2002c37584bd7583b166ede5f272fdf76a4d5354ecafc62cc14453bf327fbf</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_execution_packet_task_impl_retry_failed_smoke_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>01e62f8d2a8f248dcddc933ed88a6b1a9a6d6da6f4422e08a2d672fccca089ef</event_sha256><prev_event_sha256>de8372c7f4d42af73edf4b3ac7c6db4e766a34287e6d34793bf67370f4c8faa2</prev_event_sha256></event><event><event_seq>6</event_seq><event_type>blocked</event_type><event_time>2026-03-22T03:35:46Z</event_time><actor>implementer</actor><message>Implementer blocked: implementer_modify_target_missing</message><reason_code>implementer_modify_target_missing</reason_code><attempt>2</attempt><lineage_lock_sha256>7d2002c37584bd7583b166ede5f272fdf76a4d5354ecafc62cc14453bf327fbf</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_implres_task_impl_retry_fa_0003_20260322033545_3c33ef37</doc_id><doc_class>implementer_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>a782c6b59017503229ad5071f37df902e43638729cce039b0033a68ce679b01a</event_sha256><prev_event_sha256>01e62f8d2a8f248dcddc933ed88a6b1a9a6d6da6f4422e08a2d672fccca089ef</prev_event_sha256></event><event><event_seq>7</event_seq><event_type>retry_failed</event_type><event_time>2026-03-22T03:35:46Z</event_time><actor>implementer</actor><message>Retry limit reached for reason implementer_modify_target_missing.</message><reason_code>implementer_modify_target_missing</reason_code><attempt>2</attempt><lineage_lock_sha256>7d2002c37584bd7583b166ede5f272fdf76a4d5354ecafc62cc14453bf327fbf</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_implres_task_impl_retry_fa_0003_20260322033545_3c33ef37</doc_id><doc_class>implementer_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>a82fc1fe04024d979e38dc378a6a72d31cdab02d36a0a3547d466a649a00921c</event_sha256><prev_event_sha256>a782c6b59017503229ad5071f37df902e43638729cce039b0033a68ce679b01a</prev_event_sha256></event><event><event_seq>8</event_seq><event_type>escalation</event_type><event_time>2026-03-22T03:35:46Z</event_time><actor>implementer</actor><message>Implementer requested escalation after retry limit.</message><reason_code>implementer_retry_limit_reached</reason_code><attempt>2</attempt><lineage_lock_sha256>7d2002c37584bd7583b166ede5f272fdf76a4d5354ecafc62cc14453bf327fbf</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_implres_task_impl_retry_fa_0003_20260322033545_3c33ef37</doc_id><doc_class>implementer_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>060616e9d9a641f7affe79337b29e112bb0c86b8e78621ea4c1249f94b0bd742</event_sha256><prev_event_sha256>a82fc1fe04024d979e38dc378a6a72d31cdab02d36a0a3547d466a649a00921c</prev_event_sha256></event><event><event_seq>9</event_seq><event_type>stop</event_type><event_time>2026-03-22T03:35:47Z</event_time><actor>implementer</actor><message>Execution stopped after implementer escalation.</message><reason_code>implementer_retry_limit_reached</reason_code><attempt>2</attempt><lineage_lock_sha256>7d2002c37584bd7583b166ede5f272fdf76a4d5354ecafc62cc14453bf327fbf</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_implres_task_impl_retry_fa_0003_20260322033545_3c33ef37</doc_id><doc_class>implementer_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>3ad423ed87f0051570f4ae171c346aa7919766f3f33f3cca16e981dfc2706820</event_sha256><prev_event_sha256>060616e9d9a641f7affe79337b29e112bb0c86b8e78621ea4c1249f94b0bd742</prev_event_sha256></event></events>
+  </payload>
+  <integrity>
+    <content_sha256>c6e90502f4cfc5e8e8cc5b548e2cad00a5779f900a7a360692b6238d207fba07</content_sha256>
+    <parent_sha256>670d6520ea4301a6ee254756d64e6cb3953fc65da99fe74130515ecc13238b58</parent_sha256>
+  </integrity>
+</pxml>

@@ -1,0 +1,25 @@
+{
+  "failed_count": 3,
+  "failures": [
+    "task_impl_blocked_smoke_001:missing_required_runtime_artifacts",
+    "task_impl_retry_failed_smoke_001:missing_required_runtime_artifacts",
+    "task_reviewer_post_smoke_001:missing_required_runtime_artifacts"
+  ],
+  "generated_at": "2026-03-22T14:31:15Z",
+  "refreshed_count": 2,
+  "task_count": 5,
+  "tasks": [
+    {
+      "release_readiness_result": "pass",
+      "runbook_result": "success",
+      "session_report": "ops/session_reports/doc_session_report_task_impl_feature_di_0018.pxml",
+      "task_id": "task_impl_feature_direct_001"
+    },
+    {
+      "release_readiness_result": "pass",
+      "runbook_result": "success",
+      "session_report": "ops/session_reports/doc_session_report_task_verify_post_smo_0016.pxml",
+      "task_id": "task_verify_post_smoke_001"
+    }
+  ]
+}

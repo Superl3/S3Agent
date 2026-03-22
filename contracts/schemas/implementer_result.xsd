@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ImplementerResultRefsType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ImplementationFileListType">
+    <xs:sequence>
+      <xs:element name="item" type="PathStringType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PatchEvidencePathListType">
+    <xs:sequence>
+      <xs:element name="item" type="PathStringType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ImplementerResultPayloadType">
+    <xs:sequence>
+      <xs:element name="packet_ref" type="ReferenceItemType"/>
+      <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="modified_files" type="ImplementationFileListType"/>
+      <xs:element name="created_files" type="ImplementationFileListType"/>
+      <xs:element name="patch_mode_used" type="PatchModeType"/>
+      <xs:element name="patch_evidence_refs" type="PatchEvidencePathListType"/>
+      <xs:element name="result_status" type="ImplementerResultStatusType"/>
+      <xs:element name="blocked_reason" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="retry_count" type="xs:nonNegativeInteger"/>
+      <xs:element name="escalation_requested" type="xs:boolean"/>
+      <xs:element name="notes" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ImplementerResultDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="ImplementerResultRefsType"/>
+      <xs:element name="payload" type="ImplementerResultPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ImplementerResultDocumentType"/>
+
+</xs:schema>

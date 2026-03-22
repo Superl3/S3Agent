@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_ci_test_profile_b14_001</doc_id>
+    <doc_class>ci_test_profile</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch14_ci_integration</task_id>
+    <run_id>run_batch14_ci_profile_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-23T02:30:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_operator_workflow_guide_b7_001</doc_id>
+      <doc_class>operator_workflow_guide</doc_class>
+      <relation>workflow_reference</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_ci_exit_code_policy_b12_001</doc_id>
+      <doc_class>ci_exit_code_policy</doc_class>
+      <relation>ci_exit_policy_reference</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_reason_code_catalog_b14_001</doc_id>
+      <doc_class>reason_code_catalog</doc_class>
+      <relation>reason_catalog_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <profile_id>ci_release_profile_batch14</profile_id>
+    <profile_name>batch14_release_gate_regression_profile</profile_name>
+    <quick_smoke_targets>
+      <item>tests/test_release_candidate_check_failure_paths.py</item>
+      <item>tests/test_release_ops_gate_failure_paths.py</item>
+    </quick_smoke_targets>
+    <full_regression_targets>
+      <item>tests/test_release_candidate_check_failure_paths.py</item>
+      <item>tests/test_release_ops_gate_failure_paths.py</item>
+      <item>tests/test_latest_pointer_guard.py</item>
+      <item>tests/test_verify_phase_audit_latest_guard.py</item>
+      <item>tests/test_reason_code_catalog_consistency.py</item>
+      <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_pass_on_healthy_candidate_subset</item>
+      <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_missing_candidate_returns_fail_without_crash</item>
+      <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_broken_latest_chain_returns_fail_without_crash</item>
+      <item>tests/test_release_candidate_check_failure_paths.py::test_harness_validator_strict_release_readiness_regression</item>
+      <item>tests/test_latest_pointer_guard.py::test_release_candidate_check_validation_failure_does_not_promote_latest</item>
+      <item>tests/test_verify_phase_audit_latest_guard.py::test_verify_phase_audit_does_not_promote_latest_on_validation_failure</item>
+    </full_regression_targets>
+    <release_critical_targets>
+      <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_pass_on_healthy_candidate_subset</item>
+      <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_missing_candidate_returns_fail_without_crash</item>
+      <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_broken_latest_chain_returns_fail_without_crash</item>
+      <item>tests/test_latest_pointer_guard.py::test_release_candidate_check_validation_failure_does_not_promote_latest</item>
+      <item>tests/test_verify_phase_audit_latest_guard.py::test_verify_phase_audit_does_not_promote_latest_on_validation_failure</item>
+      <item>tests/test_release_candidate_check_failure_paths.py::test_harness_validator_strict_release_readiness_regression</item>
+    </release_critical_targets>
+    <default_pytest_args>
+      <item>-q</item>
+      <item>--disable-warnings</item>
+      <item>-rA</item>
+    </default_pytest_args>
+    <fail_fast_default>false</fail_fast_default>
+    <runtime_isolation_required>true</runtime_isolation_required>
+    <notes>
+      <item>quick mode is optimized for RC gate failure-path smoke checks with sandbox runtime fixtures.</item>
+      <item>full mode executes all maintained regression files and allows node-id entries for release-critical subset alignment.</item>
+      <item>release-critical mode enforces healthy pass missing candidate broken latest strict readiness and latest pointer guard paths, including verify_phase audit promotion safety.</item>
+      <item>All CI test runs should avoid mutating live runtime paths and rely on temporary sandbox roots.</item>
+    </notes>
+  </payload>
+  <integrity>
+    <content_sha256>1414141414141414141414141414141414141414141414141414141414141414</content_sha256>
+  </integrity>
+</pxml>

@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_manager_route_task_full_lane_candidate_001_0002</doc_id>
+    <doc_class>manager_route</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_full_lane_candidate_001</task_id>
+    <run_id>run_batch4_examples_001</run_id>
+    <sequence>2</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T03:10:01Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_task_intake_full_lane_candidate_001</doc_id>
+      <doc_class>task_intake</doc_class>
+      <relation>intake</relation>
+    </ref>
+  </refs>
+  <payload>
+    <selected_path>full_lane</selected_path>
+    <lane_flags>
+      <planner>true</planner>
+      <reviewer>true</reviewer>
+      <verifier>true</verifier>
+    </lane_flags>
+    <route_reason>Critical risk task uses full lane.</route_reason>
+    <risk_level>critical</risk_level>
+    <acceptance_lock>
+      <lock_id>lock_task_full_lane_candidate_001_0002</lock_id>
+      <lock_sha256>7959bc1ff76d6995c23e1080f466824401b125095de7772553f4effd1d96d203</lock_sha256>
+      <locked_at>2026-03-22T03:10:01Z</locked_at>
+    </acceptance_lock>
+  </payload>
+  <integrity>
+    <content_sha256>661a4cdb560a8908fbf1dccec28c4748f9ce1f7d4e5a698ad9dd6338da6a7bec</content_sha256>
+    <parent_sha256>efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef</parent_sha256>
+  </integrity>
+</pxml>

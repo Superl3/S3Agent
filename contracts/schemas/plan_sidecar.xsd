@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="PlanSidecarRefsType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PlanRiskItemType">
+    <xs:sequence>
+      <xs:element name="target" type="NonEmptyStringType"/>
+      <xs:element name="risk_level" type="RiskLevelType"/>
+      <xs:element name="rationale" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PlanRiskMapType">
+    <xs:sequence>
+      <xs:element name="risk" type="PlanRiskItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PlanSidecarPayloadType">
+    <xs:sequence>
+      <xs:element name="ambiguities" type="StringListType"/>
+      <xs:element name="assumptions" type="StringListType"/>
+      <xs:element name="proposed_steps" type="StringListType"/>
+      <xs:element name="risk_map" type="PlanRiskMapType"/>
+      <xs:element name="plan_status" type="PlanStatusType"/>
+      <xs:element name="alternative_plans" type="StringListType" minOccurs="0"/>
+      <xs:element name="open_questions" type="StringListType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PlanSidecarDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="PlanSidecarRefsType"/>
+      <xs:element name="payload" type="PlanSidecarPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="PlanSidecarDocumentType"/>
+
+</xs:schema>

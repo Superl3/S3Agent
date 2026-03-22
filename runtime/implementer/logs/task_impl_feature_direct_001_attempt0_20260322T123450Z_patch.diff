@@ -1,0 +1,3 @@
+# implementer patch evidence
++++ src/new_feature_module.py
++# implementer_runner task_impl_feature_direct_001 patch evidence

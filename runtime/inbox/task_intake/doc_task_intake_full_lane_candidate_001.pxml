@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_task_intake_full_lane_candidate_001</doc_id>
+    <doc_class>task_intake</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_full_lane_candidate_001</task_id>
+    <run_id>run_batch4_examples_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T03:10:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <request_text>Authentication ownership boundary is unclear, requires reviewer gate, and must verify regression coverage before acceptance.</request_text>
+    <task_type>refactor</task_type>
+    <requested_outcome>Planner resolves ambiguity, reviewer confirms packet scope, and verifier produces acceptance evidence.</requested_outcome>
+    <constraints>
+      <item>No full rewrites; keep packet patch-first.</item>
+      <item>Preserve existing external login contract.</item>
+    </constraints>
+    <risk_hint>critical</risk_hint>
+    <acceptance_hint>This candidate should execute full_lane with planner, reviewer, and verifier sidecars.</acceptance_hint>
+  </payload>
+  <integrity>
+    <content_sha256>efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef</content_sha256>
+  </integrity>
+</pxml>

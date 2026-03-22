@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="WorkflowPhaseType">
+    <xs:sequence>
+      <xs:element name="phase_id" type="NonEmptyStringType"/>
+      <xs:element name="phase_name" type="NonEmptyStringType"/>
+      <xs:element name="command_examples" type="StringListType"/>
+      <xs:element name="expected_output" type="NonEmptyStringType"/>
+      <xs:element name="failure_branch" type="NonEmptyStringType"/>
+      <xs:element name="escalation_branch" type="NonEmptyStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="WorkflowPhaseListType">
+    <xs:sequence>
+      <xs:element name="phase" type="WorkflowPhaseType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseHandoffAppendixType">
+    <xs:sequence>
+      <xs:element name="release_candidate_check_procedure" type="StringListType"/>
+      <xs:element name="handoff_bundle_validation" type="StringListType"/>
+      <xs:element name="known_warning_review" type="StringListType"/>
+      <xs:element name="rc_outcome_actions" type="StringListType"/>
+      <xs:element name="operator_entrypoints" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseOpsAppendixType">
+    <xs:sequence>
+      <xs:element name="profile_and_policy_sources" type="StringListType"/>
+      <xs:element name="session_refresh_procedure" type="StringListType"/>
+      <xs:element name="ci_gate_wrapper" type="StringListType"/>
+      <xs:element name="verification_commands" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="OperatorWorkflowGuidePayloadType">
+    <xs:sequence>
+      <xs:element name="workflow_name" type="NonEmptyStringType"/>
+      <xs:element name="phases" type="WorkflowPhaseListType"/>
+      <xs:element name="guardrails" type="StringListType"/>
+      <xs:element name="release_handoff_appendix" type="ReleaseHandoffAppendixType" minOccurs="0"/>
+      <xs:element name="release_ops_appendix" type="ReleaseOpsAppendixType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="OperatorWorkflowGuideDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="OperatorWorkflowGuidePayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="OperatorWorkflowGuideDocumentType"/>
+
+</xs:schema>

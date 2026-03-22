@@ -1,0 +1,8 @@
+{
+  "latest_execution_packet": "packets\\execution_packet\\doc_execution_packet_task_impl_retry_failed_smoke_001_0003.pxml",
+  "latest_execution_trace": "traces\\by_task\\task_impl_retry_failed_smoke_001.pxml",
+  "latest_implementer_result": "implementer\\results\\doc_implres_task_impl_retry_fa_0003_20260322033545_3c33ef37.pxml",
+  "latest_manager_route": "packets\\manager_route\\doc_manager_route_task_impl_retry_failed_smoke_001_0002.pxml",
+  "task_id": "task_impl_retry_failed_smoke_001",
+  "updated_at": "2026-03-22T03:35:47Z"
+}

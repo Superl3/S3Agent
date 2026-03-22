@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="FailureReasonCodeType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[a-z][a-z0-9_]{2,127}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="FailureCategoryType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="implementer"/>
+      <xs:enumeration value="verifier"/>
+      <xs:enumeration value="coordinator"/>
+      <xs:enumeration value="reviewer"/>
+      <xs:enumeration value="planner"/>
+      <xs:enumeration value="system"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="FailureReasonType">
+    <xs:sequence>
+      <xs:element name="taxonomy_id" type="NonEmptyStringType"/>
+      <xs:element name="code" type="FailureReasonCodeType"/>
+      <xs:element name="category" type="FailureCategoryType"/>
+      <xs:element name="severity" type="FindingSeverityType"/>
+      <xs:element name="description" type="NonEmptyStringType"/>
+      <xs:element name="recommended_next_action" type="NonEmptyStringType"/>
+      <xs:element name="escalation_default" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FailureReasonListType">
+    <xs:sequence>
+      <xs:element name="reason" type="FailureReasonType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FailureReasonTaxonomyPayloadType">
+    <xs:sequence>
+      <xs:element name="taxonomy_id" type="NonEmptyStringType"/>
+      <xs:element name="reasons" type="FailureReasonListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FailureReasonTaxonomyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="FailureReasonTaxonomyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="FailureReasonTaxonomyDocumentType"/>
+
+</xs:schema>

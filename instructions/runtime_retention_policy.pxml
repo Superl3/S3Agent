@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_runtime_retention_policy_b7_001</doc_id>
+    <doc_class>runtime_retention_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch7_stability_hardening</task_id>
+    <run_id>run_batch7_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T07:01:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_failure_reason_taxonomy_b6_001</doc_id>
+      <doc_class>failure_reason_taxonomy</doc_class>
+      <relation>shared_reason_basis</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>runtime_retention_and_quarantine</policy_name>
+    <stale_artifact_detection_basis>
+      <item>latest_pointer_drift</item>
+      <item>lineage_lock_mismatch</item>
+      <item>duplicate_non_latest_versions</item>
+      <item>operator_stale_suspicion</item>
+    </stale_artifact_detection_basis>
+    <quarantine_instead_of_delete_default>true</quarantine_instead_of_delete_default>
+    <cleanup_vs_quarantine_criteria>
+      <item>cleanup_for_deterministic_task_reset</item>
+      <item>quarantine_for_suspicious_or_lineage_mismatch</item>
+      <item>quarantine_for_outdated_non_latest_artifacts</item>
+    </cleanup_vs_quarantine_criteria>
+    <task_id_scoped_cleanup_principle>cleanup_task_runtime remains deterministic task_id scoped reset and should not silently purge suspicious lineage records.</task_id_scoped_cleanup_principle>
+    <artifact_version_drift_response>When version drift is detected preserve artifact in quarantine and generate manifest for operator review.</artifact_version_drift_response>
+    <lineage_mismatch_response>Any acceptance lineage mismatch should move candidate artifacts to quarantine before optional cleanup rerun.</lineage_mismatch_response>
+    <retention_window_placeholder>placeholder_30d_until_batch8_gc_policy</retention_window_placeholder>
+    <operator_override_allowed>true</operator_override_allowed>
+  </payload>
+  <integrity>
+    <content_sha256>8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b</content_sha256>
+  </integrity>
+</pxml>

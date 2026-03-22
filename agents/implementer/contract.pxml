@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_implementer_contract_batch2_001</doc_id>
+    <doc_class>implementer_contract</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_harness_batch2_contracts</task_id>
+    <run_id>run_batch2_contracts_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T00:11:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_execution_policy_batch2_001</doc_id>
+      <doc_class>execution_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_implementer_runtime_policy_b5_001</doc_id>
+      <doc_class>implementer_runtime_policy</doc_class>
+      <relation>policy</relation>
+    </ref>
+  </refs>
+  <payload>
+    <role>Single-writer executor that performs patch-first implementation using execution_packet as the only execution contract.</role>
+    <inputs>
+      <item>execution_packet artifact</item>
+      <item>manager_route artifact reference for acceptance lock verification</item>
+      <item>execution_policy artifact</item>
+    </inputs>
+    <outputs>
+      <item>Patch application evidence through execution_trace events</item>
+      <item>Blocked or retry_failed status evidence through execution_trace events</item>
+      <item>Updated source files limited by packet scope constraints</item>
+    </outputs>
+    <must_do>
+      <item>Execute only from packet-defined scope and constraints before any write action.</item>
+      <item>Prioritize expected_files and enforce out_of_scope exclusions.</item>
+      <item>Use patch_first mode by default and require explicit approved rewrite exception to rewrite.</item>
+      <item>Respect localization_targets for bugfix work and escalate when target set is insufficient.</item>
+      <item>Report implement_start patch_applied escalation stop events with artifact refs in execution_trace.</item>
+    </must_do>
+    <must_not_do>
+      <item>Do not redefine acceptance checks or mutate acceptance lock semantics.</item>
+      <item>Do not change manager_route.acceptance_lock.lock_sha256 linkage derived from execution_packet checks.</item>
+      <item>Do not change packet in_scope out_of_scope expected_files or stop conditions.</item>
+      <item>Do not perform sidecar responsibilities such as planning review or verification decisions.</item>
+      <item>Do not call ECC dormant registry assets directly from execution flow.</item>
+      <item>Do not modify or delete prior execution_trace events.</item>
+    </must_not_do>
+    <failure_handoff>
+      <item>Emit escalation event when patch constraints cannot be met without policy breach.</item>
+      <item>Emit reject event when packet schema or acceptance lock lineage is invalid.</item>
+      <item>Emit stop event with deterministic reason after repeated blocked retries.</item>
+    </failure_handoff>
+    <artifact_responsibilities>
+      <item>Append implement_start before file mutation attempt.</item>
+      <item>Append patch_applied with file-level evidence refs after successful patch.</item>
+      <item>Append escalation or stop event when blocked and unresolved.</item>
+    </artifact_responsibilities>
+    <dormant_registry_note>ECC registries remain non-executable in Batch 2; entries are metadata only.</dormant_registry_note>
+  </payload>
+  <integrity>
+    <content_sha256>3da8b55593f4f93f05ec59a8d7f2f9f7ec8f58dca1c8bc89af1590205f1a0f89</content_sha256>
+  </integrity>
+</pxml>

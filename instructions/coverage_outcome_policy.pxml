@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_coverage_outcome_policy_b12_001</doc_id>
+    <doc_class>coverage_outcome_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch12_release_governance</task_id>
+    <run_id>run_batch12_coverage_policy_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T16:12:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_release_gate_profile_b12_001</doc_id>
+      <doc_class>release_gate_profile</doc_class>
+      <relation>profile_reference</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_release_candidate_policy_b10_001</doc_id>
+      <doc_class>release_candidate_policy</doc_class>
+      <relation>base_release_policy</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>batch12_coverage_outcome_operational_standard</policy_name>
+    <rules>
+      <rule>
+        <rule_name>strict_fail_blocks_gate</rule_name>
+        <source_kind>strict_release_readiness</source_kind>
+        <source_value>fail</source_value>
+        <classification>blocker</classification>
+        <affects_gate>true</affects_gate>
+        <rationale>Candidate tasks with strict release-readiness fail must block RC handoff.</rationale>
+        <recommended_operator_action>Resolve strict readiness failures before rerunning release candidate check.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>strict_inconclusive_warns_gate</rule_name>
+        <source_kind>strict_release_readiness</source_kind>
+        <source_value>inconclusive</source_value>
+        <classification>warning</classification>
+        <affects_gate>true</affects_gate>
+        <rationale>Strict inconclusive outcomes can proceed only under caution release policy.</rationale>
+        <recommended_operator_action>Investigate inconclusive strict readiness output and document any override.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>strict_pass_is_info</rule_name>
+        <source_kind>strict_release_readiness</source_kind>
+        <source_value>pass</source_value>
+        <classification>info</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Strict pass contributes positive evidence and requires no additional gate action.</rationale>
+        <recommended_operator_action>No action required.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>default_fail_is_coverage_warning</rule_name>
+        <source_kind>default_harness</source_kind>
+        <source_value>fail</source_value>
+        <classification>warning</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Default harness failures remain visible in coverage evidence but do not alone block RC.</rationale>
+        <recommended_operator_action>Review default harness failure context and align with strict mode output.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>default_inconclusive_is_coverage_warning</rule_name>
+        <source_kind>default_harness</source_kind>
+        <source_value>inconclusive</source_value>
+        <classification>warning</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Inconclusive default outcomes should be surfaced but not force candidate gate failure.</rationale>
+        <recommended_operator_action>Inspect logs for inconclusive states and rerun task-level harness if needed.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>preflight_not_ready_is_coverage_warning</rule_name>
+        <source_kind>preflight_render_readiness</source_kind>
+        <source_value>not_ready</source_value>
+        <classification>warning</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Not-ready in coverage set is tracked for evidence even when task is outside candidate gate subset.</rationale>
+        <recommended_operator_action>Keep remediation backlog for not_ready tasks without blocking non-candidate RC promotion.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>preflight_caution_is_coverage_warning</rule_name>
+        <source_kind>preflight_render_readiness</source_kind>
+        <source_value>caution</source_value>
+        <classification>warning</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Caution coverage outcomes remain visible while preserving candidate-subset gating.</rationale>
+        <recommended_operator_action>Review caution justifications before final handoff.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>task_blocked_is_coverage_warning</rule_name>
+        <source_kind>task_status</source_kind>
+        <source_value>blocked</source_value>
+        <classification>warning</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Blocked status in non-candidate tasks should not fail RC by itself.</rationale>
+        <recommended_operator_action>Track blocked tasks in coverage_summary and resolve independently from candidate gate.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>task_retry_failed_is_coverage_warning</rule_name>
+        <source_kind>task_status</source_kind>
+        <source_value>retry_failed</source_value>
+        <classification>warning</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Retry-failed outcomes are preserved as coverage evidence without forcing RC fail outside candidate subset.</rationale>
+        <recommended_operator_action>Escalate retry-failed tasks to remediation queue and keep evidence in coverage summaries.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>task_fail_blocks_gate</rule_name>
+        <source_kind>task_status</source_kind>
+        <source_value>fail</source_value>
+        <classification>blocker</classification>
+        <affects_gate>true</affects_gate>
+        <rationale>Explicit task failure remains a hard blocker when present in candidate gate subset.</rationale>
+        <recommended_operator_action>Fix failing candidate task status before release promotion.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>render_denied_blocks_gate</rule_name>
+        <source_kind>preflight_render_readiness</source_kind>
+        <source_value>denied</source_value>
+        <classification>blocker</classification>
+        <affects_gate>true</affects_gate>
+        <rationale>Denied render outcome indicates hard handoff failure for candidate readiness.</rationale>
+        <recommended_operator_action>Resolve renderer denial causes and rerun preflight and render stages.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>task_pass_is_info</rule_name>
+        <source_kind>task_status</source_kind>
+        <source_value>pass</source_value>
+        <classification>info</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Passing task status is non-blocking evidence.</rationale>
+        <recommended_operator_action>No action required.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>task_no_op_is_excluded</rule_name>
+        <source_kind>task_status</source_kind>
+        <source_value>no_op</source_value>
+        <classification>excluded</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>No-op status is retained as coverage evidence but excluded from gate weighting.</rationale>
+        <recommended_operator_action>Keep no-op evidence visible; do not count as candidate gate pass evidence.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>preflight_ready_is_info</rule_name>
+        <source_kind>preflight_render_readiness</source_kind>
+        <source_value>ready</source_value>
+        <classification>info</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Ready preflight status contributes positive coverage evidence.</rationale>
+        <recommended_operator_action>No action required.</recommended_operator_action>
+      </rule>
+      <rule>
+        <rule_name>default_pass_is_info</rule_name>
+        <source_kind>default_harness</source_kind>
+        <source_value>pass</source_value>
+        <classification>info</classification>
+        <affects_gate>false</affects_gate>
+        <rationale>Default pass adds context but strict mode remains authoritative for gate decisions.</rationale>
+        <recommended_operator_action>No action required.</recommended_operator_action>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb</content_sha256>
+  </integrity>
+</pxml>

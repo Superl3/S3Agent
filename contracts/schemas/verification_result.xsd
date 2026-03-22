@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="VerificationPhaseType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="lane"/>
+      <xs:enumeration value="post_implement"/>
+      <xs:enumeration value="unknown_legacy"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="VerificationResultRefsType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VerificationTestRunType">
+    <xs:sequence>
+      <xs:element name="check_id" type="NonEmptyStringType"/>
+      <xs:element name="check_type" type="CheckTypeType"/>
+      <xs:element name="command" type="NonEmptyStringType"/>
+      <xs:element name="result" type="TestResultType"/>
+      <xs:element name="duration_ms" type="xs:nonNegativeInteger"/>
+      <xs:element name="evidence_ref" type="PathStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VerificationTestsRunType">
+    <xs:sequence>
+      <xs:element name="test" type="VerificationTestRunType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VerificationOutcomesType">
+    <xs:sequence>
+      <xs:element name="passed" type="xs:nonNegativeInteger"/>
+      <xs:element name="failed" type="xs:nonNegativeInteger"/>
+      <xs:element name="errored" type="xs:nonNegativeInteger"/>
+      <xs:element name="skipped" type="xs:nonNegativeInteger"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ResidualRiskItemType">
+    <xs:sequence>
+      <xs:element name="severity" type="RiskLevelType"/>
+      <xs:element name="description" type="NonEmptyStringType"/>
+      <xs:element name="mitigation" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ResidualRisksType">
+    <xs:sequence>
+      <xs:element name="risk" type="ResidualRiskItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VerificationResultPayloadType">
+    <xs:sequence>
+      <xs:element name="tests_run" type="VerificationTestsRunType"/>
+      <xs:element name="outcomes" type="VerificationOutcomesType"/>
+      <xs:element name="unverified_areas" type="StringListType"/>
+      <xs:element name="residual_risks" type="ResidualRisksType"/>
+      <xs:element name="acceptance_lock_sha256" type="Sha256Type"/>
+      <xs:element name="verify_phase" type="VerificationPhaseType" minOccurs="0"/>
+      <xs:element name="final_verdict" type="FinalVerdictType"/>
+      <xs:element name="verdict_reason" type="NonEmptyStringType"/>
+      <xs:element name="logs_ref" type="PathStringType" minOccurs="0"/>
+      <xs:element name="environment_fingerprint" type="NonEmptyStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VerificationResultDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="VerificationResultRefsType"/>
+      <xs:element name="payload" type="VerificationResultPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="VerificationResultDocumentType"/>
+
+</xs:schema>

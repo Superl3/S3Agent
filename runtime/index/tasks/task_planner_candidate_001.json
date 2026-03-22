@@ -1,0 +1,9 @@
+{
+  "latest_execution_packet": "packets\\execution_packet\\doc_execution_packet_task_planner_candidate_001_0003.pxml",
+  "latest_execution_trace": "traces\\by_task\\task_planner_candidate_001.pxml",
+  "latest_implementer_result": "implementer\\results\\doc_implres_task_planner_candi_0003_20260322043725_6a6319f6.pxml",
+  "latest_manager_route": "packets\\manager_route\\doc_manager_route_task_planner_candidate_001_0002.pxml",
+  "latest_task_status_report": "status\\reports\\doc_task_status_task_planner_candida_0006.pxml",
+  "task_id": "task_planner_candidate_001",
+  "updated_at": "2026-03-22T04:37:25Z"
+}

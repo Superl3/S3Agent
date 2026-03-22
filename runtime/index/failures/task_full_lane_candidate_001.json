@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "artifact_ref": {
+        "doc_class": "implementer_result",
+        "doc_id": "doc_implres_task_full_lane_can_0003_20260322123624_58c844a5",
+        "relation": "latest_implementer_result"
+      },
+      "doc_id": "doc_implres_task_full_lane_can_0003_20260322123624_58c844a5",
+      "escalation_requested": false,
+      "reason_code": "implementer_modify_target_missing",
+      "retry_count": 1,
+      "status": "blocked",
+      "time": "2026-03-22T12:36:24Z",
+      "timestamp": "2026-03-22T12:36:24Z"
+    }
+  ],
+  "task_id": "task_full_lane_candidate_001"
+}

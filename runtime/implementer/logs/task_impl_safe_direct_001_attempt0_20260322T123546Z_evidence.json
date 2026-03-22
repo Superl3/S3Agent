@@ -1,0 +1,13 @@
+{
+  "blocked_reason": null,
+  "operations": [
+    {
+      "mode": "modify",
+      "path": "src/target_bugfix.py"
+    }
+  ],
+  "retry_count": 0,
+  "status": "no_op",
+  "task_id": "task_impl_safe_direct_001",
+  "time": "2026-03-22T12:35:46Z"
+}

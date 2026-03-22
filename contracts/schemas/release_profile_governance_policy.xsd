@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="ProfileGovernanceRequirementType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="require_field"/>
+      <xs:enumeration value="require_documentation"/>
+      <xs:enumeration value="require_approval"/>
+      <xs:enumeration value="deny_unapproved_change"/>
+      <xs:enumeration value="allow_emergency_override_with_log"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="ReleaseProfileGovernanceRuleType">
+    <xs:sequence>
+      <xs:element name="policy_id" type="NonEmptyStringType"/>
+      <xs:element name="rule_name" type="NonEmptyStringType"/>
+      <xs:element name="applies_to" type="StringListType"/>
+      <xs:element name="trigger_condition" type="NonEmptyStringType"/>
+      <xs:element name="requirement" type="ProfileGovernanceRequirementType"/>
+      <xs:element name="rationale" type="NonEmptyStringType"/>
+      <xs:element name="enforcement_level" type="EnforcementLevelType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseProfileGovernanceRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="ReleaseProfileGovernanceRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseProfileGovernancePolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policy_name" type="NonEmptyStringType"/>
+      <xs:element name="rules" type="ReleaseProfileGovernanceRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseProfileGovernancePolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ReleaseProfileGovernancePolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ReleaseProfileGovernancePolicyDocumentType"/>
+
+</xs:schema>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="AttachmentItemType">
+    <xs:sequence>
+      <xs:element name="name" type="NonEmptyStringType"/>
+      <xs:element name="source" type="NonEmptyStringType"/>
+      <xs:element name="notes" type="NonEmptyStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="AttachmentsType">
+    <xs:sequence>
+      <xs:element name="attachment" type="AttachmentItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TaskIntakePayloadType">
+    <xs:sequence>
+      <xs:element name="request_text" type="NonEmptyStringType"/>
+      <xs:element name="task_type" type="TaskTypeType"/>
+      <xs:element name="requested_outcome" type="NonEmptyStringType"/>
+      <xs:element name="constraints" type="StringListType"/>
+      <xs:element name="risk_hint" type="RiskLevelType"/>
+      <xs:element name="acceptance_hint" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="attachments" type="AttachmentsType" minOccurs="0"/>
+      <xs:element name="environment_notes" type="StringListType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TaskIntakeDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="TaskIntakePayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="TaskIntakeDocumentType"/>
+
+</xs:schema>

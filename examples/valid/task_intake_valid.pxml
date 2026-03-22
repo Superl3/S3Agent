@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_task_intake_valid_001</doc_id>
+    <doc_class>task_intake</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_bugfix_login_001</task_id>
+    <run_id>run_batch1_examples_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T00:00:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <request_text>Fix login retry counter overflow.</request_text>
+    <task_type>bugfix</task_type>
+    <requested_outcome>Retry counter no longer overflows and tests pass.</requested_outcome>
+    <constraints>
+      <item>Keep change minimal.</item>
+      <item>Avoid unrelated refactors.</item>
+    </constraints>
+    <risk_hint>medium</risk_hint>
+    <acceptance_hint>All login retry tests pass with deterministic output.</acceptance_hint>
+    <environment_notes>
+      <item>Runtime: python3.12</item>
+    </environment_notes>
+  </payload>
+  <integrity>
+    <content_sha256>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</content_sha256>
+  </integrity>
+</pxml>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_failure_reason_taxonomy_b6_001</doc_id>
+    <doc_class>failure_reason_taxonomy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_harness_batch6_failure_taxonomy</task_id>
+    <run_id>run_batch6_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T06:01:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+    <reasons>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>implementer_rewrite_exception_unapproved</code>
+        <category>implementer</category>
+        <severity>major</severity>
+        <description>Packet requested full rewrite exception without explicit approval or reason.</description>
+        <recommended_next_action>Update packet constraints or revert to patch_first execution.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>implementer_max_files_exceeded</code>
+        <category>implementer</category>
+        <severity>major</severity>
+        <description>expected_files count exceeded patch_constraints max_files.</description>
+        <recommended_next_action>Reduce expected file set or issue approved packet update.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>implementer_expected_outside_scope</code>
+        <category>implementer</category>
+        <severity>blocker</severity>
+        <description>Expected file path is outside packet in_scope boundary.</description>
+        <recommended_next_action>Regenerate packet with corrected scope mapping.</recommended_next_action>
+        <escalation_default>true</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>implementer_out_of_scope_violation</code>
+        <category>implementer</category>
+        <severity>blocker</severity>
+        <description>Expected file collides with packet out_of_scope restriction.</description>
+        <recommended_next_action>Adjust expected_files or scope exclusions before retry.</recommended_next_action>
+        <escalation_default>true</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>implementer_modify_target_missing</code>
+        <category>implementer</category>
+        <severity>major</severity>
+        <description>Modify target file does not exist in workspace.</description>
+        <recommended_next_action>Create file through approved packet change or switch mode to create.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>implementer_create_target_exists</code>
+        <category>implementer</category>
+        <severity>major</severity>
+        <description>Create target already exists and violates expected_files mode.</description>
+        <recommended_next_action>Switch expected mode to modify or remove stale file before retry.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>implementer_retry_limit_reached</code>
+        <category>implementer</category>
+        <severity>blocker</severity>
+        <description>Implementer reached retry threshold for same blocked reason.</description>
+        <recommended_next_action>Escalate to manager for packet correction or human decision.</recommended_next_action>
+        <escalation_default>true</escalation_default>
+      </reason>
+
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>verifier_inconclusive</code>
+        <category>verifier</category>
+        <severity>major</severity>
+        <description>Verifier produced inconclusive verdict after check execution.</description>
+        <recommended_next_action>Resolve skipped or errored checks and rerun verification.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>verifier_fail</code>
+        <category>verifier</category>
+        <severity>blocker</severity>
+        <description>Verifier produced fail verdict for declared acceptance checks.</description>
+        <recommended_next_action>Address failed checks, regenerate patch evidence, and rerun verifier.</recommended_next_action>
+        <escalation_default>true</escalation_default>
+      </reason>
+
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>acceptance_lineage_mismatch</code>
+        <category>coordinator</category>
+        <severity>blocker</severity>
+        <description>manager_route and execution_packet acceptance lock mismatch detected.</description>
+        <recommended_next_action>Re-issue route/packet pair with aligned acceptance lock hash.</recommended_next_action>
+        <escalation_default>true</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>planner_artifact_generation_failed</code>
+        <category>planner</category>
+        <severity>major</severity>
+        <description>Planner sidecar artifact generation failed in coordinator lane.</description>
+        <recommended_next_action>Fix planner artifact generation inputs and retry lane.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>review_sidecar_generation_failed</code>
+        <category>reviewer</category>
+        <severity>major</severity>
+        <description>Reviewer sidecar artifact generation failed in coordinator lane.</description>
+        <recommended_next_action>Fix reviewer artifact generation inputs and retry lane.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>reviewer_decision_requires_escalation</code>
+        <category>reviewer</category>
+        <severity>major</severity>
+        <description>Reviewer decision remained non-approvable and required escalation.</description>
+        <recommended_next_action>Address reviewer blockers or revise packet scope before retry.</recommended_next_action>
+        <escalation_default>true</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>reviewer_revise</code>
+        <category>reviewer</category>
+        <severity>minor</severity>
+        <description>Reviewer requested revision on current attempt.</description>
+        <recommended_next_action>Apply requested revisions and retry reviewer lane.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>verification_runner_error</code>
+        <category>coordinator</category>
+        <severity>major</severity>
+        <description>verification_runner returned non-zero in coordinator verifier lane.</description>
+        <recommended_next_action>Inspect verifier logs and retry within policy threshold.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>verification_lineage_mismatch</code>
+        <category>coordinator</category>
+        <severity>blocker</severity>
+        <description>verification_result acceptance lock did not match packet lock.</description>
+        <recommended_next_action>Regenerate verification output from the latest packet and lock.</recommended_next_action>
+        <escalation_default>true</escalation_default>
+      </reason>
+
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>system_runtime_error</code>
+        <category>system</category>
+        <severity>major</severity>
+        <description>Unexpected runtime-level process error during task execution pipeline.</description>
+        <recommended_next_action>Inspect command stderr, repair environment, and rerun task executor.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+    </reasons>
+  </payload>
+  <integrity>
+    <content_sha256>6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b</content_sha256>
+  </integrity>
+</pxml>

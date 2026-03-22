@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_task_intake_impl_feature_direct_001</doc_id>
+    <doc_class>task_intake</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_impl_feature_direct_001</task_id>
+    <run_id>run_batch6_examples_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T06:30:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <request_text>Add bounded helper module for profile enrichment flow.</request_text>
+    <task_type>feature</task_type>
+    <requested_outcome>Implementer applies direct packet-first create change and verifier runs in auto policy.</requested_outcome>
+    <constraints>
+      <item>Keep scope to src/ module creation only.</item>
+      <item>No route ambiguity and no sidecar dependency.</item>
+    </constraints>
+    <risk_hint>medium</risk_hint>
+    <acceptance_hint>Direct feature flow should produce applied implementer result and verification evidence.</acceptance_hint>
+  </payload>
+  <integrity>
+    <content_sha256>efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef</content_sha256>
+  </integrity>
+</pxml>

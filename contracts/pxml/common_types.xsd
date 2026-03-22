@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="common_enums.xsd"/>
+
+  <xs:simpleType name="NonEmptyStringType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <xs:pattern value=".*\S.*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SchemaVersionType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9]+\.[0-9]+\.[0-9]+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="DocIdType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="doc_[a-z0-9][a-z0-9._-]{5,63}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TaskIdType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="task_[a-z0-9][a-z0-9._-]{3,63}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RunIdType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="run_[a-z0-9][a-z0-9._-]{3,63}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Sha256Type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Fa-f0-9]{64}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PathStringType">
+    <xs:restriction base="NonEmptyStringType">
+      <xs:maxLength value="512"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RuleCodeType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="E[0-9]{3}_[A-Z0-9_]+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SequenceType">
+    <xs:restriction base="xs:positiveInteger"/>
+  </xs:simpleType>
+
+  <xs:complexType name="ReferenceItemType">
+    <xs:sequence>
+      <xs:element name="doc_id" type="DocIdType"/>
+      <xs:element name="doc_class" type="DocClassType" minOccurs="0"/>
+      <xs:element name="relation" type="NonEmptyStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RefsType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="StringListType">
+    <xs:sequence>
+      <xs:element name="item" type="NonEmptyStringType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PathListType">
+    <xs:sequence>
+      <xs:element name="item" type="PathStringType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RuleCodeListType">
+    <xs:sequence>
+      <xs:element name="item" type="RuleCodeType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="WriterAgentListType">
+    <xs:sequence>
+      <xs:element name="item" type="WriterAgentType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CapabilityScopeListType">
+    <xs:sequence>
+      <xs:element name="item" type="CapabilityScopeType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RoutePathListType">
+    <xs:sequence>
+      <xs:element name="item" type="RoutePathType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

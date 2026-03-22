@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_release_candidate_policy_b10_001</doc_id>
+    <doc_class>release_candidate_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch10_release_candidate</task_id>
+    <run_id>run_batch10_release_candidate_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T13:30:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_operator_runbook_policy_b9_001</doc_id>
+      <doc_class>operator_runbook_policy</doc_class>
+      <relation>runbook_reference</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_artifact_pruning_policy_b9_1_001</doc_id>
+      <doc_class>artifact_pruning_policy</doc_class>
+      <relation>pruning_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>release_candidate_gate_policy</policy_name>
+    <rules>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>require_lane_coverage</rule_name>
+        <applies_to>
+          <item>release_candidate_check</item>
+          <item>release_candidate_report</item>
+        </applies_to>
+        <trigger_condition>smoke set summary is computed for selected paths</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>Release candidate must cover direct and conditional sidecar lanes.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>require_ready_render_case</rule_name>
+        <applies_to>
+          <item>release_candidate_check</item>
+        </applies_to>
+        <trigger_condition>at least one ready task is present in smoke set</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>RC cannot pass without a confirmed ready/rendered path.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>allow_caution_with_documented_warning</rule_name>
+        <applies_to>
+          <item>release_candidate_check</item>
+          <item>release_candidate_report</item>
+        </applies_to>
+        <trigger_condition>caution preflight tasks exist in smoke set</trigger_condition>
+        <decision>warning_allowed</decision>
+        <rationale>Caution flows are admissible when documented warnings remain visible.</rationale>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>deny_not_ready_as_rc_pass</rule_name>
+        <applies_to>
+          <item>release_candidate_check</item>
+        </applies_to>
+        <trigger_condition>not_ready tasks are evaluated for render gate outcomes</trigger_condition>
+        <decision>fail_requirement</decision>
+        <rationale>Not-ready tasks must not be counted as RC pass evidence.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>require_pruning_branch_coverage</rule_name>
+        <applies_to>
+          <item>release_candidate_check</item>
+          <item>release_candidate_report</item>
+        </applies_to>
+        <trigger_condition>runtime pruning manifests are available</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>Both quarantine-first and delete-derived-safe behavior must be evidenced.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>require_release_readiness_strict_result</rule_name>
+        <applies_to>
+          <item>release_candidate_check</item>
+        </applies_to>
+        <trigger_condition>strict harness release-readiness checks are executed</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>RC gate requires strict readiness signal consistency.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>require_latest_pointer_safety</rule_name>
+        <applies_to>
+          <item>release_candidate_check</item>
+          <item>release_candidate_report</item>
+        </applies_to>
+        <trigger_condition>latest runtime pointers and refs are traversed</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>Latest pointer and reference closure must remain intact for RC handoff.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>require_verify_phase_rollout_minimum</rule_name>
+        <applies_to>
+          <item>release_candidate_check</item>
+          <item>release_candidate_report</item>
+        </applies_to>
+        <trigger_condition>verify_done and verification_result metadata are sampled from smoke set</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>verify_phase rollout must be visible in at least minimal lane and post-implement evidence.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>require_handoff_manifest</rule_name>
+        <applies_to>
+          <item>release_bundle_manifest</item>
+        </applies_to>
+        <trigger_condition>release candidate report is generated for operator handoff</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>Operator handoff requires explicit bundle manifest with entrypoints and refs.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RC-B10-001</policy_id>
+        <rule_name>operator_override_logging_required</rule_name>
+        <applies_to>
+          <item>release_candidate_report</item>
+          <item>release_bundle_manifest</item>
+        </applies_to>
+        <trigger_condition>caution overrides or explicit manual decisions are present in smoke evidence</trigger_condition>
+        <decision>require_documentation</decision>
+        <rationale>Operator overrides must remain auditable in RC artifacts.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>b10b10b10b10b10b10b10b10b10b10b10b10b10b10b10b10b10b10b10b10b10</content_sha256>
+  </integrity>
+</pxml>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_plan_sidecar_valid_001</doc_id>
+    <doc_class>plan_sidecar</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_bugfix_login_001</task_id>
+    <run_id>run_batch3_examples_001</run_id>
+    <sequence>4</sequence>
+    <writer_agent>planner</writer_agent>
+    <created_at>2026-03-22T03:00:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_task_intake_valid_001</doc_id>
+      <doc_class>task_intake</doc_class>
+      <relation>intake</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_manager_route_valid_001</doc_id>
+      <doc_class>manager_route</doc_class>
+      <relation>route</relation>
+    </ref>
+  </refs>
+  <payload>
+    <ambiguities>
+      <item>None critical; planner artifact provided as format example.</item>
+    </ambiguities>
+    <assumptions>
+      <item>Retry counter overflow fix stays inside auth retry module.</item>
+    </assumptions>
+    <proposed_steps>
+      <item>Inspect overflow increment path.</item>
+      <item>Apply localized patch.</item>
+      <item>Run acceptance checks.</item>
+    </proposed_steps>
+    <risk_map>
+      <risk>
+        <target>src/auth/retry_counter.py</target>
+        <risk_level>medium</risk_level>
+        <rationale>Incorrect boundary updates can alter lockout behavior.</rationale>
+      </risk>
+    </risk_map>
+    <plan_status>ready</plan_status>
+  </payload>
+  <integrity>
+    <content_sha256>19b6f2883e3f9f7f7bd39f1a8aa26e6eaf9f56be6ca493f41b2740b0fcbcb68f</content_sha256>
+    <parent_sha256>dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd</parent_sha256>
+  </integrity>
+</pxml>

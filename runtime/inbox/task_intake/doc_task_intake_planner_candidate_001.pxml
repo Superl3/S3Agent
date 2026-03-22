@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_task_intake_planner_candidate_001</doc_id>
+    <doc_class>task_intake</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_planner_candidate_001</task_id>
+    <run_id>run_batch3_examples_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T02:10:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <request_text>Refactor ambiguous authentication flow behavior; exact boundary is unclear and needs a planning pass.</request_text>
+    <task_type>refactor</task_type>
+    <requested_outcome>Clear scoped refactor plan and safe implementation packet are produced.</requested_outcome>
+    <constraints>
+      <item>No broad module rewrites.</item>
+      <item>Preserve existing external API behavior.</item>
+    </constraints>
+    <risk_hint>medium</risk_hint>
+    <acceptance_hint>Manager should route through planner_pre before implementation.</acceptance_hint>
+  </payload>
+  <integrity>
+    <content_sha256>bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc</content_sha256>
+  </integrity>
+</pxml>

@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "doc_id": "doc_implres_task_impl_retry_fa_0003_20260322033538_d265e451",
+      "escalation_requested": false,
+      "reason_code": "implementer_modify_target_missing",
+      "retry_count": 1,
+      "status": "blocked",
+      "time": "2026-03-22T03:35:38Z"
+    },
+    {
+      "doc_id": "doc_implres_task_impl_retry_fa_0003_20260322033545_3c33ef37",
+      "escalation_requested": true,
+      "reason_code": "implementer_modify_target_missing",
+      "retry_count": 2,
+      "status": "retry_failed",
+      "time": "2026-03-22T03:35:45Z"
+    }
+  ],
+  "task_id": "task_impl_retry_failed_smoke_001"
+}

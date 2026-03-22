@@ -1,0 +1,3 @@
+# implementer patch evidence
++++ src/target_bugfix.py
++# implementer_runner task_verify_post_smoke_001 patch evidence

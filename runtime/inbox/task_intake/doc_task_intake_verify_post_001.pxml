@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_task_intake_verify_post_001</doc_id>
+    <doc_class>task_intake</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_verify_post_smoke_001</task_id>
+    <run_id>run_batch3_examples_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T02:00:00Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <request_text>Fix retry counter overflow and verify regression coverage.</request_text>
+    <task_type>bugfix</task_type>
+    <requested_outcome>Overflow is fixed and verification evidence is produced for acceptance checks.</requested_outcome>
+    <constraints>
+      <item>Keep patch local to auth retry logic.</item>
+      <item>Do not perform full rewrite.</item>
+    </constraints>
+    <risk_hint>medium</risk_hint>
+    <acceptance_hint>Verification command exits with code zero.</acceptance_hint>
+  </payload>
+  <integrity>
+    <content_sha256>adadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadad</content_sha256>
+  </integrity>
+</pxml>

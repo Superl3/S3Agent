@@ -1,0 +1,7 @@
+{
+  "latest_release_bundle_manifest": "release/manifests/doc_release_bundle_manifest_task_release_candida_0032.pxml",
+  "latest_release_candidate_report": "release/reports/doc_release_candidate_report_task_release_candida_0031.pxml",
+  "latest_verify_phase_audit_report": "release/audits/doc_verify_phase_audit_task_release_candida_0030.pxml",
+  "task_id": "task_release_candidate_batch10",
+  "updated_at": "2026-03-22T15:26:20Z"
+}

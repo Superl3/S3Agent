@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="RenderDecisionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="allow_render"/>
+      <xs:enumeration value="allow_render_with_warning"/>
+      <xs:enumeration value="deny_render"/>
+      <xs:enumeration value="require_override"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RenderOutputModeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="pxml_only"/>
+      <xs:enumeration value="pxml_and_markdown"/>
+      <xs:enumeration value="summary_only"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="RenderingPolicyRuleType">
+    <xs:sequence>
+      <xs:element name="policy_id" type="NonEmptyStringType"/>
+      <xs:element name="rule_name" type="NonEmptyStringType"/>
+      <xs:element name="applies_to" type="StringListType"/>
+      <xs:element name="trigger_condition" type="NonEmptyStringType"/>
+      <xs:element name="decision" type="RenderDecisionType"/>
+      <xs:element name="rationale" type="NonEmptyStringType"/>
+      <xs:element name="output_mode" type="RenderOutputModeType"/>
+      <xs:element name="enforcement_level" type="EnforcementLevelType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RenderingPolicyRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="RenderingPolicyRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RenderingPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policy_name" type="NonEmptyStringType"/>
+      <xs:element name="rules" type="RenderingPolicyRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RenderingPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="RenderingPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="RenderingPolicyDocumentType"/>
+
+</xs:schema>

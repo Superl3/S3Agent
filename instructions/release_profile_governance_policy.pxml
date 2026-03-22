@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_release_profile_governance_b12_001</doc_id>
+    <doc_class>release_profile_governance_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch12_release_governance</task_id>
+    <run_id>run_batch12_profile_governance_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T16:20:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_release_gate_profile_b12_001</doc_id>
+      <doc_class>release_gate_profile</doc_class>
+      <relation>governed_profile</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>release_profile_change_governance_policy</policy_name>
+    <rules>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>profile_version_required</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+        </applies_to>
+        <trigger_condition>release profile is created or modified</trigger_condition>
+        <requirement>require_field</requirement>
+        <rationale>Every profile revision must be traceable by explicit profile_version.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>profile_owner_required</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+        </applies_to>
+        <trigger_condition>release profile is created or modified</trigger_condition>
+        <requirement>require_field</requirement>
+        <rationale>Profile owner must be explicit for accountable approvals and rollbacks.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>candidate_subset_change_requires_approval</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+          <item>candidate_gate_task_ids</item>
+        </applies_to>
+        <trigger_condition>candidate subset task list changes</trigger_condition>
+        <requirement>require_approval</requirement>
+        <rationale>Candidate subset controls RC gate truth and requires explicit owner approval.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>coverage_set_change_requires_documentation</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+          <item>coverage_task_ids</item>
+        </applies_to>
+        <trigger_condition>coverage set task list changes</trigger_condition>
+        <requirement>require_documentation</requirement>
+        <rationale>Coverage changes must preserve evidence intent and require change rationale.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>required_change_reason</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+        </applies_to>
+        <trigger_condition>profile_version increments</trigger_condition>
+        <requirement>require_documentation</requirement>
+        <rationale>Profile changes require a durable reason for release governance audits.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>required_review_ref_or_ticket</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+        </applies_to>
+        <trigger_condition>candidate subset or coverage set changes</trigger_condition>
+        <requirement>require_approval</requirement>
+        <rationale>Approval reference is required for deterministic governance review trails.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>candidate_subset_must_remain_subset</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+          <item>candidate_gate_task_ids</item>
+          <item>coverage_task_ids</item>
+        </applies_to>
+        <trigger_condition>profile validation runs</trigger_condition>
+        <requirement>deny_unapproved_change</requirement>
+        <rationale>Candidate subset must remain a strict subset of coverage evidence tasks.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>profile_hash_or_version_traceable</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+          <item>release_candidate_report</item>
+        </applies_to>
+        <trigger_condition>release profile is consumed in release ops</trigger_condition>
+        <requirement>require_documentation</requirement>
+        <rationale>Runtime and release artifacts must trace profile version lineage.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>emergency_override_allowed</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+        </applies_to>
+        <trigger_condition>incident response requires temporary profile override</trigger_condition>
+        <requirement>allow_emergency_override_with_log</requirement>
+        <rationale>Emergency operations are allowed only with explicit override capture.</rationale>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RPG-B12-001</policy_id>
+        <rule_name>override_logging_required</rule_name>
+        <applies_to>
+          <item>release_gate_profile</item>
+          <item>release_candidate_report</item>
+          <item>release_bundle_manifest</item>
+        </applies_to>
+        <trigger_condition>emergency override or approval bypass is used</trigger_condition>
+        <requirement>require_documentation</requirement>
+        <rationale>Override events must be auditable in derived release artifacts.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>33cc33cc33cc33cc33cc33cc33cc33cc33cc33cc33cc33cc33cc33cc33cc33cc</content_sha256>
+  </integrity>
+</pxml>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="RuntimeRetentionPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policy_name" type="NonEmptyStringType"/>
+      <xs:element name="stale_artifact_detection_basis" type="StringListType"/>
+      <xs:element name="quarantine_instead_of_delete_default" type="xs:boolean"/>
+      <xs:element name="cleanup_vs_quarantine_criteria" type="StringListType"/>
+      <xs:element name="task_id_scoped_cleanup_principle" type="NonEmptyStringType"/>
+      <xs:element name="artifact_version_drift_response" type="NonEmptyStringType"/>
+      <xs:element name="lineage_mismatch_response" type="NonEmptyStringType"/>
+      <xs:element name="retention_window_placeholder" type="NonEmptyStringType"/>
+      <xs:element name="operator_override_allowed" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RuntimeRetentionPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="RuntimeRetentionPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="RuntimeRetentionPolicyDocumentType"/>
+
+</xs:schema>

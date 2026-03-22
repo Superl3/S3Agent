@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_routing_policy_batch2_001</doc_id>
+    <doc_class>routing_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_harness_batch2_policies</task_id>
+    <run_id>run_batch2_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T00:12:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_execution_policy_batch2_001</doc_id>
+      <doc_class>execution_policy</doc_class>
+      <relation>companion_policy</relation>
+    </ref>
+  </refs>
+  <payload>
+    <default_path>direct</default_path>
+    <minimal_complexity_first>true</minimal_complexity_first>
+    <decision_basis>
+      <item>risk_level</item>
+      <item>task ambiguity</item>
+      <item>explicit verification need</item>
+    </decision_basis>
+    <paths>
+      <path>
+        <path_id>direct</path_id>
+        <entry_condition>
+          <item>Risk low or medium.</item>
+          <item>Task intake request and outcome are clear.</item>
+        </entry_condition>
+        <reject_condition>
+          <item>High ambiguity requiring decomposition.</item>
+          <item>Critical risk requiring full lane controls.</item>
+        </reject_condition>
+        <escalation_condition>
+          <item>Implementer reports blocked due to out_of_scope conflict.</item>
+        </escalation_condition>
+        <stop_condition>
+          <item>Execution packet issued and accepted by Implementer.</item>
+          <item>Escalation emitted.</item>
+        </stop_condition>
+        <required_artifacts>
+          <item>task_intake</item>
+          <item>manager_route</item>
+          <item>execution_packet</item>
+        </required_artifacts>
+      </path>
+      <path>
+        <path_id>planner_pre</path_id>
+        <entry_condition>
+          <item>Input ambiguity prevents deterministic in_scope extraction.</item>
+          <item>Risk is not critical but assumptions are unresolved.</item>
+        </entry_condition>
+        <reject_condition>
+          <item>Task already clear and low-risk with direct eligibility.</item>
+        </reject_condition>
+        <escalation_condition>
+          <item>Planner output missing required assumptions and risk map.</item>
+        </escalation_condition>
+        <stop_condition>
+          <item>Planner decision artifact emitted for manager re-route.</item>
+        </stop_condition>
+        <required_artifacts>
+          <item>task_intake</item>
+          <item>manager_route</item>
+          <item>plan_sidecar</item>
+          <item>execution_packet</item>
+        </required_artifacts>
+      </path>
+      <path>
+        <path_id>reviewer_post</path_id>
+        <entry_condition>
+          <item>Risk high and change touches sensitive or broad modules.</item>
+        </entry_condition>
+        <reject_condition>
+          <item>Tiny localized change with low risk and no sensitive scope.</item>
+        </reject_condition>
+        <escalation_condition>
+          <item>Reviewer returns blocker findings or escalate decision.</item>
+        </escalation_condition>
+        <stop_condition>
+          <item>Review decision approve or managed escalation complete.</item>
+        </stop_condition>
+        <required_artifacts>
+          <item>task_intake</item>
+          <item>manager_route</item>
+          <item>execution_packet</item>
+          <item>review_sidecar</item>
+        </required_artifacts>
+      </path>
+      <path>
+        <path_id>verifier_post</path_id>
+        <entry_condition>
+          <item>Task explicitly demands deterministic verification proof.</item>
+        </entry_condition>
+        <reject_condition>
+          <item>No deterministic checks are defined in acceptance criteria.</item>
+        </reject_condition>
+        <escalation_condition>
+          <item>Verification verdict is fail or inconclusive.</item>
+        </escalation_condition>
+        <stop_condition>
+          <item>Verification verdict pass or managed escalation complete.</item>
+        </stop_condition>
+        <required_artifacts>
+          <item>task_intake</item>
+          <item>manager_route</item>
+          <item>execution_packet</item>
+          <item>verification_result</item>
+        </required_artifacts>
+      </path>
+      <path>
+        <path_id>full_lane</path_id>
+        <entry_condition>
+          <item>Risk critical or high risk combined with ambiguity and verification need.</item>
+        </entry_condition>
+        <reject_condition>
+          <item>Low-risk clear tasks that satisfy direct path conditions.</item>
+        </reject_condition>
+        <escalation_condition>
+          <item>Any lane emits blocker repeatedly beyond retry threshold.</item>
+        </escalation_condition>
+        <stop_condition>
+          <item>Planner review verifier outcomes satisfy route acceptance and stop rules.</item>
+          <item>Escalation terminates execution.</item>
+        </stop_condition>
+        <required_artifacts>
+          <item>task_intake</item>
+          <item>manager_route</item>
+          <item>plan_sidecar</item>
+          <item>execution_packet</item>
+          <item>review_sidecar</item>
+          <item>verification_result</item>
+        </required_artifacts>
+      </path>
+    </paths>
+    <sidecar_execution_mode>conditional_sidecar_artifact_orchestration_batch3</sidecar_execution_mode>
+  </payload>
+  <integrity>
+    <content_sha256>bb3ff4cb6b5d6b366ff94d2210e4d2b1156cd99266d9cac855f5911c4eae5f9f</content_sha256>
+  </integrity>
+</pxml>

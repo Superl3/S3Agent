@@ -1,0 +1,12 @@
+{
+  "note": "coordinator completed conditional lane orchestration",
+  "packet_doc_id": "doc_execution_packet_task_impl_retry_failed_smoke_001_0003",
+  "planner_artifact": null,
+  "reviewer_artifact": null,
+  "route_doc_id": "doc_manager_route_task_impl_retry_failed_smoke_001_0002",
+  "selected_path": "direct",
+  "status": "completed",
+  "task_id": "task_impl_retry_failed_smoke_001",
+  "time": "2026-03-22T03:35:29Z",
+  "verification_artifact": null
+}

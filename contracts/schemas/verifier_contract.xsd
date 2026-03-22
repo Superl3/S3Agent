@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="VerifierContractPayloadType">
+    <xs:sequence>
+      <xs:element name="role" type="NonEmptyStringType"/>
+      <xs:element name="inputs" type="StringListType"/>
+      <xs:element name="outputs" type="StringListType"/>
+      <xs:element name="must_do" type="StringListType"/>
+      <xs:element name="must_not_do" type="StringListType"/>
+      <xs:element name="failure_handoff" type="StringListType"/>
+      <xs:element name="artifact_responsibilities" type="StringListType"/>
+      <xs:element name="dormant_registry_note" type="NonEmptyStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VerifierContractDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="VerifierContractPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="VerifierContractDocumentType"/>
+
+</xs:schema>

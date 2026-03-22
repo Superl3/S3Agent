@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_execution_trace_task_full_lane_candidate_001</doc_id>
+    <doc_class>execution_trace</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_full_lane_candidate_001</task_id>
+    <run_id>run_trace_task_full_lane_candidate_001</run_id>
+    <sequence>6</sequence>
+    <writer_agent>system</writer_agent>
+    <created_at>2026-03-22T12:36:21Z</created_at>
+  </meta>
+  <refs/>
+  <payload>
+    <events>
+      <event>
+        <event_seq>1</event_seq>
+        <event_type>route</event_type>
+        <event_time>2026-03-22T12:36:21Z</event_time>
+        <actor>manager</actor>
+        <message>Route selected by manager and observed by coordinator.</message>
+        <artifact_refs>
+          <ref>
+            <doc_id>doc_manager_route_task_full_lane_candidate_001_0002</doc_id>
+            <doc_class>manager_route</doc_class>
+            <relation>evidence</relation>
+          </ref>
+        </artifact_refs>
+        <event_sha256>9b1bf13a5bb03c1b3a459e9057f4ce25541888bbf07cf62fd1abb911359d9893</event_sha256>
+      </event>
+    <event><event_seq>2</event_seq><event_type>packet_issued</event_type><event_time>2026-03-22T12:36:22Z</event_time><actor>manager</actor><message>Execution packet issued and accepted for orchestration.</message><artifact_refs><ref><doc_id>doc_execution_packet_task_full_lane_candidate_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>2c9cd7a1d48ee7f774b596380643c1704e0049607ab08bde751666b4d41c8b40</event_sha256><prev_event_sha256>9b1bf13a5bb03c1b3a459e9057f4ce25541888bbf07cf62fd1abb911359d9893</prev_event_sha256></event><event><event_seq>3</event_seq><event_type>review_done</event_type><event_time>2026-03-22T12:36:22Z</event_time><actor>reviewer</actor><message>Reviewer completed artifact with approve decision.</message><lineage_lock_sha256>7959bc1ff76d6995c23e1080f466824401b125095de7772553f4effd1d96d203</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_review_sidecar_task_full_lane_can_0005_123622_c65e5c</doc_id><doc_class>review_sidecar</doc_class><relation>evidence</relation></ref><ref><doc_id>doc_plan_sidecar_task_full_lane_can_0004_123622_acab01</doc_id><doc_class>plan_sidecar</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>7aaab51d7f03f8c1f1881d20a46a616d9935e09fe52eed76eb0d3055cd4287b4</event_sha256><prev_event_sha256>2c9cd7a1d48ee7f774b596380643c1704e0049607ab08bde751666b4d41c8b40</prev_event_sha256></event><event><event_seq>4</event_seq><event_type>verify_done</event_type><event_time>2026-03-22T12:36:23Z</event_time><actor>verifier</actor><message>Verifier produced verdict pass.</message><lineage_lock_sha256>7959bc1ff76d6995c23e1080f466824401b125095de7772553f4effd1d96d203</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_verifres_task_full_lane_candi_0003_20260322123623_09c1311a</doc_id><doc_class>verification_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>2717a18267d059b9f35d5fa68c9bf0aa11410c4b6187e31bb3cfe5a49ef2a1b7</event_sha256><prev_event_sha256>7aaab51d7f03f8c1f1881d20a46a616d9935e09fe52eed76eb0d3055cd4287b4</prev_event_sha256></event><event><event_seq>5</event_seq><event_type>implement_start</event_type><event_time>2026-03-22T12:36:24Z</event_time><actor>implementer</actor><message>Implementer started execution from execution_packet contract.</message><lineage_lock_sha256>7959bc1ff76d6995c23e1080f466824401b125095de7772553f4effd1d96d203</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_execution_packet_task_full_lane_candidate_001_0003</doc_id><doc_class>execution_packet</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>2157515ead2f1bba2c2265bc142b76a357085b5bd2eaff99a17895c5059ceca4</event_sha256><prev_event_sha256>2717a18267d059b9f35d5fa68c9bf0aa11410c4b6187e31bb3cfe5a49ef2a1b7</prev_event_sha256></event><event><event_seq>6</event_seq><event_type>blocked</event_type><event_time>2026-03-22T12:36:25Z</event_time><actor>implementer</actor><message>Implementer blocked: implementer_modify_target_missing</message><reason_code>implementer_modify_target_missing</reason_code><attempt>1</attempt><lineage_lock_sha256>7959bc1ff76d6995c23e1080f466824401b125095de7772553f4effd1d96d203</lineage_lock_sha256><artifact_refs><ref><doc_id>doc_implres_task_full_lane_can_0003_20260322123624_58c844a5</doc_id><doc_class>implementer_result</doc_class><relation>evidence</relation></ref></artifact_refs><event_sha256>8b8730bc4633ce7a2cf6e149ff6dcafcafc7bef3b8ab4fae9ae9c26620db9fd9</event_sha256><prev_event_sha256>2157515ead2f1bba2c2265bc142b76a357085b5bd2eaff99a17895c5059ceca4</prev_event_sha256></event></events>
+  </payload>
+  <integrity>
+    <content_sha256>7a009d8c5c015624b5f57a47e545a516a17cdd9c6fac8b4149782b24c4d5cbc2</content_sha256>
+    <parent_sha256>623725c3313baa6677ceda0cb8ea9c70973e8e998c10c941af34576b69a064a9</parent_sha256>
+  </integrity>
+</pxml>

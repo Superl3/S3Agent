@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "artifact_ref": {
+        "doc_class": "implementer_result",
+        "doc_id": "doc_implres_task_reviewer_post_0003_20260322043733_de7bc3ae",
+        "relation": "latest_implementer_result"
+      },
+      "doc_id": "doc_implres_task_reviewer_post_0003_20260322043733_de7bc3ae",
+      "escalation_requested": false,
+      "reason_code": null,
+      "retry_count": 0,
+      "status": "no_op",
+      "time": "2026-03-22T04:37:33Z",
+      "timestamp": "2026-03-22T04:37:33Z"
+    }
+  ],
+  "task_id": "task_reviewer_post_smoke_001"
+}

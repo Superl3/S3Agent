@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:simpleType name="DocClassType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="task_intake"/>
+      <xs:enumeration value="manager_route"/>
+      <xs:enumeration value="execution_packet"/>
+      <xs:enumeration value="plan_sidecar"/>
+      <xs:enumeration value="review_sidecar"/>
+      <xs:enumeration value="implementer_result"/>
+      <xs:enumeration value="verification_result"/>
+      <xs:enumeration value="execution_trace"/>
+      <xs:enumeration value="task_status_report"/>
+      <xs:enumeration value="compaction_checkpoint"/>
+      <xs:enumeration value="operator_preflight_report"/>
+      <xs:enumeration value="final_render_report"/>
+      <xs:enumeration value="operator_runbook_policy"/>
+      <xs:enumeration value="session_report"/>
+      <xs:enumeration value="artifact_pruning_policy"/>
+      <xs:enumeration value="pruning_report"/>
+      <xs:enumeration value="release_candidate_policy"/>
+      <xs:enumeration value="release_candidate_report"/>
+      <xs:enumeration value="release_bundle_manifest"/>
+      <xs:enumeration value="release_gate_profile"/>
+      <xs:enumeration value="coverage_outcome_policy"/>
+      <xs:enumeration value="release_profile_governance_policy"/>
+      <xs:enumeration value="ci_exit_code_policy"/>
+      <xs:enumeration value="verify_phase_audit_policy"/>
+      <xs:enumeration value="verify_phase_audit_report"/>
+      <xs:enumeration value="ci_test_profile"/>
+      <xs:enumeration value="reason_code_catalog"/>
+      <xs:enumeration value="hooks_registry"/>
+      <xs:enumeration value="skills_registry"/>
+      <xs:enumeration value="mcp_registry"/>
+      <xs:enumeration value="extension_activation_policy"/>
+      <xs:enumeration value="manager_contract"/>
+      <xs:enumeration value="implementer_contract"/>
+      <xs:enumeration value="planner_contract"/>
+      <xs:enumeration value="reviewer_contract"/>
+      <xs:enumeration value="verifier_contract"/>
+      <xs:enumeration value="routing_policy"/>
+      <xs:enumeration value="execution_policy"/>
+      <xs:enumeration value="implementer_runtime_policy"/>
+      <xs:enumeration value="compaction_policy"/>
+      <xs:enumeration value="runtime_retention_policy"/>
+      <xs:enumeration value="trace_event_semantics"/>
+      <xs:enumeration value="operator_workflow_guide"/>
+      <xs:enumeration value="rendering_policy"/>
+      <xs:enumeration value="post_implement_verification_policy"/>
+      <xs:enumeration value="failure_reason_taxonomy"/>
+      <xs:enumeration value="escalation_policy"/>
+      <xs:enumeration value="retry_policy"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="WriterAgentType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="manager"/>
+      <xs:enumeration value="implementer"/>
+      <xs:enumeration value="planner"/>
+      <xs:enumeration value="reviewer"/>
+      <xs:enumeration value="verifier"/>
+      <xs:enumeration value="system"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RiskLevelType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="low"/>
+      <xs:enumeration value="medium"/>
+      <xs:enumeration value="high"/>
+      <xs:enumeration value="critical"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="FinalVerdictType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="pass"/>
+      <xs:enumeration value="fail"/>
+      <xs:enumeration value="inconclusive"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RoutePathType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="direct"/>
+      <xs:enumeration value="planner_pre"/>
+      <xs:enumeration value="reviewer_post"/>
+      <xs:enumeration value="verifier_post"/>
+      <xs:enumeration value="full_lane"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TaskTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="bugfix"/>
+      <xs:enumeration value="feature"/>
+      <xs:enumeration value="refactor"/>
+      <xs:enumeration value="docs"/>
+      <xs:enumeration value="ops"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RegistryStatusType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="imported"/>
+      <xs:enumeration value="normalized"/>
+      <xs:enumeration value="disabled"/>
+      <xs:enumeration value="candidate"/>
+      <xs:enumeration value="approved"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ActivationModeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="disabled"/>
+      <xs:enumeration value="advisory"/>
+      <xs:enumeration value="read_only"/>
+      <xs:enumeration value="gated"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ActivationDefaultStateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="disabled"/>
+      <xs:enumeration value="enabled"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CapabilityScopeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="research"/>
+      <xs:enumeration value="discovery"/>
+      <xs:enumeration value="planning"/>
+      <xs:enumeration value="review"/>
+      <xs:enumeration value="verification"/>
+      <xs:enumeration value="utility"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PatchModeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="patch_first"/>
+      <xs:enumeration value="full_rewrite_exception"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CheckTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="test"/>
+      <xs:enumeration value="lint"/>
+      <xs:enumeration value="build"/>
+      <xs:enumeration value="static_rule"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PlanStatusType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ready"/>
+      <xs:enumeration value="needs_escalation"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ReviewDecisionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="approve"/>
+      <xs:enumeration value="revise"/>
+      <xs:enumeration value="escalate"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="FindingSeverityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="info"/>
+      <xs:enumeration value="minor"/>
+      <xs:enumeration value="major"/>
+      <xs:enumeration value="blocker"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TestResultType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="pass"/>
+      <xs:enumeration value="fail"/>
+      <xs:enumeration value="error"/>
+      <xs:enumeration value="skipped"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExpectedFileModeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="modify"/>
+      <xs:enumeration value="create"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ImplementerResultStatusType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="applied"/>
+      <xs:enumeration value="blocked"/>
+      <xs:enumeration value="retry_failed"/>
+      <xs:enumeration value="escalated"/>
+      <xs:enumeration value="no_op"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TraceEventType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="route"/>
+      <xs:enumeration value="packet_issued"/>
+      <xs:enumeration value="implement_start"/>
+      <xs:enumeration value="patch_applied"/>
+      <xs:enumeration value="blocked"/>
+      <xs:enumeration value="retry_failed"/>
+      <xs:enumeration value="review_done"/>
+      <xs:enumeration value="verify_done"/>
+      <xs:enumeration value="escalation"/>
+      <xs:enumeration value="stop"/>
+      <xs:enumeration value="reject"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="EnforcementLevelType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="hard"/>
+      <xs:enumeration value="soft"/>
+      <xs:enumeration value="advisory"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ViolationEffectType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="reject"/>
+      <xs:enumeration value="escalate"/>
+      <xs:enumeration value="warn"/>
+      <xs:enumeration value="stop"/>
+      <xs:enumeration value="defer"/>
+      <xs:enumeration value="retry"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="EscalationEffectType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="escalate"/>
+      <xs:enumeration value="stop"/>
+      <xs:enumeration value="warn"/>
+      <xs:enumeration value="defer"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RetryNextEffectType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="retry"/>
+      <xs:enumeration value="escalate"/>
+      <xs:enumeration value="stop"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

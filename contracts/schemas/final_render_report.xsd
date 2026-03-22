@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="FinalRenderModeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="rendered"/>
+      <xs:enumeration value="rendered_with_warning"/>
+      <xs:enumeration value="denied"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RenderReadinessBasisType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ready"/>
+      <xs:enumeration value="caution"/>
+      <xs:enumeration value="not_ready"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="RenderSummarySectionType">
+    <xs:sequence>
+      <xs:element name="section_name" type="NonEmptyStringType"/>
+      <xs:element name="content" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RenderSummarySectionListType">
+    <xs:sequence>
+      <xs:element name="section" type="RenderSummarySectionType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="GeneratedExportsType">
+    <xs:sequence>
+      <xs:element name="pxml_path" type="PathStringType"/>
+      <xs:element name="markdown_path" type="PathStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FinalRenderReportPayloadType">
+    <xs:sequence>
+      <xs:element name="report_id" type="NonEmptyStringType"/>
+      <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="derived" type="xs:boolean"/>
+      <xs:element name="source_preflight_ref" type="ReferenceItemType"/>
+      <xs:element name="source_status_report_ref" type="ReferenceItemType"/>
+      <xs:element name="source_route_ref" type="ReferenceItemType"/>
+      <xs:element name="source_packet_ref" type="ReferenceItemType"/>
+      <xs:element name="source_trace_ref" type="ReferenceItemType"/>
+      <xs:element name="source_verification_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="source_compaction_checkpoint_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="render_mode" type="FinalRenderModeType"/>
+      <xs:element name="render_readiness_basis" type="RenderReadinessBasisType"/>
+      <xs:element name="selected_path" type="RoutePathType"/>
+      <xs:element name="current_status" type="NonEmptyStringType"/>
+      <xs:element name="final_verdict_candidate" type="NonEmptyStringType"/>
+      <xs:element name="acceptance_lock_sha256" type="Sha256Type"/>
+      <xs:element name="notable_events" type="StringListType"/>
+      <xs:element name="notable_failures" type="StringListType"/>
+      <xs:element name="quarantine_flags" type="StringListType"/>
+      <xs:element name="summary_sections" type="RenderSummarySectionListType"/>
+      <xs:element name="next_recommended_action" type="NonEmptyStringType"/>
+      <xs:element name="warnings" type="StringListType"/>
+      <xs:element name="generated_exports" type="GeneratedExportsType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FinalRenderReportDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="FinalRenderReportPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="FinalRenderReportDocumentType"/>
+
+</xs:schema>

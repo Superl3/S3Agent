@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="TaskCurrentPhaseType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="intake"/>
+      <xs:enumeration value="routing"/>
+      <xs:enumeration value="planning"/>
+      <xs:enumeration value="implementing"/>
+      <xs:enumeration value="reviewing"/>
+      <xs:enumeration value="verifying"/>
+      <xs:enumeration value="escalated"/>
+      <xs:enumeration value="stopped"/>
+      <xs:enumeration value="completed"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TaskCurrentStatusType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="pending"/>
+      <xs:enumeration value="running"/>
+      <xs:enumeration value="blocked"/>
+      <xs:enumeration value="retry_failed"/>
+      <xs:enumeration value="escalated"/>
+      <xs:enumeration value="passed"/>
+      <xs:enumeration value="failed"/>
+      <xs:enumeration value="inconclusive"/>
+      <xs:enumeration value="no_op"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TaskEscalationStateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="none"/>
+      <xs:enumeration value="requested"/>
+      <xs:enumeration value="escalated"/>
+      <xs:enumeration value="stopped"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="FinalVerdictCandidateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="pass"/>
+      <xs:enumeration value="fail"/>
+      <xs:enumeration value="inconclusive"/>
+      <xs:enumeration value="unknown"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="TaskStatusReportPayloadType">
+    <xs:sequence>
+      <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="current_phase" type="TaskCurrentPhaseType"/>
+      <xs:element name="current_status" type="TaskCurrentStatusType"/>
+      <xs:element name="selected_path" type="RoutePathType" minOccurs="0"/>
+      <xs:element name="latest_route_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="latest_packet_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="latest_implementer_result_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="latest_review_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="latest_verification_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="latest_trace_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="acceptance_lock_sha256" type="Sha256Type" minOccurs="0"/>
+      <xs:element name="retry_count" type="xs:nonNegativeInteger"/>
+      <xs:element name="escalation_state" type="TaskEscalationStateType"/>
+      <xs:element name="final_verdict_candidate" type="FinalVerdictCandidateType"/>
+      <xs:element name="next_recommended_action" type="NonEmptyStringType"/>
+      <xs:element name="failure_reason_codes" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TaskStatusReportDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="TaskStatusReportPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="TaskStatusReportDocumentType"/>
+
+</xs:schema>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="CiLabelType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="success"/>
+      <xs:enumeration value="caution"/>
+      <xs:enumeration value="failure"/>
+      <xs:enumeration value="usage_error"/>
+      <xs:enumeration value="infra_error"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CiExitCodeType">
+    <xs:restriction base="xs:nonNegativeInteger">
+      <xs:maxInclusive value="255"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="CiExitCodeRuleType">
+    <xs:sequence>
+      <xs:element name="policy_id" type="NonEmptyStringType"/>
+      <xs:element name="rule_name" type="NonEmptyStringType"/>
+      <xs:element name="input_condition" type="NonEmptyStringType"/>
+      <xs:element name="output_exit_code" type="CiExitCodeType"/>
+      <xs:element name="ci_label" type="CiLabelType"/>
+      <xs:element name="rationale" type="NonEmptyStringType"/>
+      <xs:element name="enforcement_level" type="EnforcementLevelType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CiExitCodeRuleListType">
+    <xs:sequence>
+      <xs:element name="rule" type="CiExitCodeRuleType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CiExitCodePolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policy_name" type="NonEmptyStringType"/>
+      <xs:element name="rules" type="CiExitCodeRuleListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CiExitCodePolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="CiExitCodePolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="CiExitCodePolicyDocumentType"/>
+
+</xs:schema>

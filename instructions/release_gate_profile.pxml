@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_release_gate_profile_b12_001</doc_id>
+    <doc_class>release_gate_profile</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch12_release_governance</task_id>
+    <run_id>run_batch12_release_profile_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T16:10:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_release_candidate_policy_b10_001</doc_id>
+      <doc_class>release_candidate_policy</doc_class>
+      <relation>base_release_policy</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_operator_workflow_guide_b7_001</doc_id>
+      <doc_class>operator_workflow_guide</doc_class>
+      <relation>workflow_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <profile_id>release_ops_profile_batch12</profile_id>
+    <profile_name>batch12_release_ops_governed_profile</profile_name>
+    <profile_version>12.0.0</profile_version>
+    <profile_owner>release-ops-team</profile_owner>
+    <last_change_reason>Batch12 governance baseline freeze for candidate subset and CI policy linkage.</last_change_reason>
+    <approval_ref>RC-GOV-2026-03-22-001</approval_ref>
+    <coverage_task_ids>
+      <item>task_impl_feature_direct_001</item>
+      <item>task_verify_post_smoke_001</item>
+    </coverage_task_ids>
+    <candidate_gate_task_ids>
+      <item>task_impl_feature_direct_001</item>
+      <item>task_verify_post_smoke_001</item>
+    </candidate_gate_task_ids>
+    <allow_caution_rc>true</allow_caution_rc>
+    <required_lane_coverage>
+      <item>direct</item>
+      <item>verifier_post</item>
+    </required_lane_coverage>
+    <required_ready_cases>1</required_ready_cases>
+    <required_pruning_branches>
+      <item>quarantine_first</item>
+      <item>delete_derived_safe</item>
+    </required_pruning_branches>
+    <required_release_artifacts>
+      <item>task_status_report</item>
+      <item>operator_preflight_report</item>
+      <item>final_render_report</item>
+      <item>execution_trace</item>
+    </required_release_artifacts>
+    <required_entrypoints>
+      <item>cleanup_task_runtime</item>
+      <item>task_executor</item>
+      <item>operator_preflight</item>
+      <item>final_renderer</item>
+      <item>operator_runbook</item>
+      <item>runtime_prune</item>
+      <item>session_report_refresh</item>
+      <item>release_candidate_check</item>
+      <item>release_ops_gate</item>
+    </required_entrypoints>
+    <notes>
+      <item>Blocked retry_failed caution and not_ready outcomes stay in coverage evidence when explicitly supplied to release_candidate_check.</item>
+      <item>Candidate subset remains narrow so release gate reflects readiness of designated promotion tasks.</item>
+      <item>Profile is source-of-truth for batch11 release ops defaults unless explicit CLI overrides are provided.</item>
+    </notes>
+  </payload>
+  <integrity>
+    <content_sha256>11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa</content_sha256>
+  </integrity>
+</pxml>

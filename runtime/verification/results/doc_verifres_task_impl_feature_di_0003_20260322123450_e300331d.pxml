@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_verifres_task_impl_feature_di_0003_20260322123450_e300331d</doc_id>
+    <doc_class>verification_result</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_impl_feature_direct_001</task_id>
+    <run_id>run_batch6_examples_001</run_id>
+    <sequence>4</sequence>
+    <writer_agent>verifier</writer_agent>
+    <created_at>2026-03-22T12:34:50Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_execution_packet_task_impl_feature_direct_001_0003</doc_id>
+      <doc_class>execution_packet</doc_class>
+      <relation>verification_target</relation>
+    </ref>
+  </refs>
+  <payload>
+    <tests_run>
+      <test>
+        <check_id>check_feature_core_001</check_id>
+        <check_type>test</check_type>
+        <command>python -m py_compile scripts/pxml_validator.py scripts/packet_builder.py scripts/trace_appender.py</command>
+        <result>pass</result>
+        <duration_ms>141</duration_ms>
+        <evidence_ref>C:\Users\bug95\.config\opencode\runtime\verification\logs\check_feature_core_001_20260322T123450Z.log</evidence_ref>
+      </test>
+    </tests_run>
+    <outcomes>
+      <passed>1</passed>
+      <failed>0</failed>
+      <errored>0</errored>
+      <skipped>0</skipped>
+    </outcomes>
+    <unverified_areas>
+      <item>none</item>
+    </unverified_areas>
+    <residual_risks>
+      <risk>
+        <severity>low</severity>
+        <description>Declared acceptance checks passed.</description>
+        <mitigation>Monitor regression in normal CI pipeline.</mitigation>
+      </risk>
+    </residual_risks>
+    <acceptance_lock_sha256>61cb2fe6d49fe911a87ef840587357b40318a93351650a538f6f7591187df6a4</acceptance_lock_sha256>
+    <final_verdict>pass</final_verdict>
+    <verdict_reason>All declared acceptance checks passed deterministically.</verdict_reason>
+    <logs_ref>C:\Users\bug95\.config\opencode\runtime\verification\logs\check_feature_core_001_20260322T123450Z.log</logs_ref>
+    <environment_fingerprint>python=3.14.3;platform=Windows-11-10.0.26200-SP0;dry_run=false</environment_fingerprint>
+  </payload>
+  <integrity>
+    <content_sha256>6d4f4fbc07fc83d793c2caf09b5669952463be4d83052e673589bce88ec649ad</content_sha256>
+    <parent_sha256>1cea484d2b6bf1a92a1ecc71dda7a6743392e02d336f5f9970db6e79c76c6177</parent_sha256>
+  </integrity>
+</pxml>

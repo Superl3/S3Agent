@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_execution_policy_batch2_001</doc_id>
+    <doc_class>execution_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_harness_batch2_policies</task_id>
+    <run_id>run_batch2_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T00:13:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_extension_activation_policy_batch1</doc_id>
+      <doc_class>extension_activation_policy</doc_class>
+      <relation>dormant_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>batch2_core_execution_policy</policy_name>
+    <rules>
+      <rule>
+        <policy_id>POL-001</policy_id>
+        <rule_name>single_writer</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>source_code_mutations</item>
+        </applies_to>
+        <description>Only Implementer may write code artifacts in runtime flow.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-002</policy_id>
+        <rule_name>patch_first</rule_name>
+        <applies_to>
+          <item>execution_packet.patch_constraints</item>
+          <item>implementer</item>
+        </applies_to>
+        <description>Patch-first is mandatory unless rewrite exception is explicitly approved.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>stop</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-003</policy_id>
+        <rule_name>acceptance_immutable</rule_name>
+        <applies_to>
+          <item>manager_route.acceptance_lock</item>
+          <item>execution_packet.acceptance_checks</item>
+        </applies_to>
+        <description>Acceptance checks are manager-fixed and cannot be redefined by Implementer.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-004</policy_id>
+        <rule_name>append_only_trace</rule_name>
+        <applies_to>
+          <item>execution_trace</item>
+          <item>trace_appender</item>
+        </applies_to>
+        <description>Execution trace events may only be appended with monotonic sequence.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>stop</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-005</policy_id>
+        <rule_name>bug_localization_first</rule_name>
+        <applies_to>
+          <item>task_type_bugfix</item>
+          <item>execution_packet.localization_targets</item>
+        </applies_to>
+        <description>Bugfix tasks require explicit localization targets before implementation.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-006</policy_id>
+        <rule_name>rewrite_exception_requires_approval</rule_name>
+        <applies_to>
+          <item>execution_packet.patch_constraints</item>
+        </applies_to>
+        <description>full_rewrite_exception requires approval flag true and explicit reason.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-007</policy_id>
+        <rule_name>out_of_scope_strict</rule_name>
+        <applies_to>
+          <item>execution_packet.out_of_scope</item>
+          <item>implementer</item>
+        </applies_to>
+        <description>Out-of-scope boundaries are strict and require escalation if violated.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>escalate</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-008</policy_id>
+        <rule_name>packet_before_write</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>execution_packet</item>
+        </applies_to>
+        <description>No write action may begin before a valid execution_packet exists.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-009</policy_id>
+        <rule_name>validate_before_publish</rule_name>
+        <applies_to>
+          <item>manager_route</item>
+          <item>execution_packet</item>
+          <item>execution_trace</item>
+        </applies_to>
+        <description>Artifacts must pass schema and rule checks before publication to runtime/latest.</description>
+        <enforcement_level>soft</enforcement_level>
+        <violation_effect>warn</violation_effect>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>873f87172f4d4d4fd0b11b5ecf9dcfa4b47a161cf51f9574a082e456d0f6adbb</content_sha256>
+  </integrity>
+</pxml>

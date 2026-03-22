@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_plan_sidecar_task_full_lane_can_0004_123622_acab01</doc_id>
+    <doc_class>plan_sidecar</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_full_lane_candidate_001</task_id>
+    <run_id>run_batch4_examples_001</run_id>
+    <sequence>4</sequence>
+    <writer_agent>planner</writer_agent>
+    <created_at>2026-03-22T12:36:22Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_task_intake_full_lane_candidate_001</doc_id>
+      <doc_class>task_intake</doc_class>
+      <relation>intake</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_manager_route_task_full_lane_candidate_001_0002</doc_id>
+      <doc_class>manager_route</doc_class>
+      <relation>route</relation>
+    </ref>
+  </refs>
+  <payload>
+    <ambiguities>
+      <item>Planner lane selected; scope assumptions were clarified for execution packet safety.</item>
+    </ambiguities>
+    <assumptions>
+      <item>Execution remains bound by existing packet in_scope and out_of_scope constraints.</item>
+    </assumptions>
+    <proposed_steps>
+      <item>Apply packet-defined implementation path after ambiguity resolution.</item>
+    </proposed_steps>
+    <risk_map>
+      <risk>
+        <target>execution_packet</target>
+        <risk_level>critical</risk_level>
+        <rationale>Planner confirms manager route assumptions before downstream lanes.</rationale>
+      </risk>
+    </risk_map>
+    <plan_status>ready</plan_status>
+  </payload>
+  <integrity>
+    <content_sha256>b6cc92a48189dd646c0683e90497c67a5f599975f76e1b3a880c678d12644ae0</content_sha256>
+    <parent_sha256>dd74c2e0316b333f6b8fe040ab6bff19affd4cc3e617e0e097e2c0f998e053d7</parent_sha256>
+  </integrity>
+</pxml>

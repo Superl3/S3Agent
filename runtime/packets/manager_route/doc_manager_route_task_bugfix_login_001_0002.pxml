@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_manager_route_task_bugfix_login_001_0002</doc_id>
+    <doc_class>manager_route</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_bugfix_login_001</task_id>
+    <run_id>run_batch1_examples_001</run_id>
+    <sequence>2</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T00:00:01Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_task_intake_valid_001</doc_id>
+      <doc_class>task_intake</doc_class>
+      <relation>intake</relation>
+    </ref>
+  </refs>
+  <payload>
+    <selected_path>direct</selected_path>
+    <lane_flags>
+      <planner>false</planner>
+      <reviewer>false</reviewer>
+      <verifier>false</verifier>
+    </lane_flags>
+    <route_reason>Clear low-complexity intake defaults to direct path.</route_reason>
+    <risk_level>medium</risk_level>
+    <acceptance_lock>
+      <lock_id>lock_task_bugfix_login_001_0002</lock_id>
+      <lock_sha256>7994348a46305fb9f15ba34ccb16a2506761f8c3e33ba44d5d54e789c38295eb</lock_sha256>
+      <locked_at>2026-03-22T00:00:01Z</locked_at>
+    </acceptance_lock>
+  </payload>
+  <integrity>
+    <content_sha256>3db3cfdf652a560e1f916ff4e2ab0095edf85d59f5f9074d73810f6063b56fdd</content_sha256>
+    <parent_sha256>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</parent_sha256>
+  </integrity>
+</pxml>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="OptionalStringListType">
+    <xs:sequence>
+      <xs:element name="item" type="NonEmptyStringType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CompactionPolicyPayloadType">
+    <xs:sequence>
+      <xs:element name="policy_name" type="NonEmptyStringType"/>
+      <xs:element name="checkpoint_reason_default" type="NonEmptyStringType"/>
+      <xs:element name="max_events_before_checkpoint" type="xs:positiveInteger"/>
+      <xs:element name="include_failed_attempts" type="xs:boolean"/>
+      <xs:element name="include_established_facts" type="xs:boolean"/>
+      <xs:element name="preservation_mode" type="NonEmptyStringType"/>
+      <xs:element name="notes" type="OptionalStringListType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CompactionPolicyDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="CompactionPolicyPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="CompactionPolicyDocumentType"/>
+
+</xs:schema>

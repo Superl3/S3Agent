@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_manager_route_invalid_001</doc_id>
+    <doc_class>manager_route</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_bugfix_login_001</task_id>
+    <run_id>run_batch1_examples_001</run_id>
+    <sequence>2</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T00:01:30Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_task_intake_valid_001</doc_id>
+      <doc_class>task_intake</doc_class>
+      <relation>intake</relation>
+    </ref>
+  </refs>
+  <payload>
+    <selected_path>direct</selected_path>
+    <lane_flags>
+      <planner>true</planner>
+      <reviewer>false</reviewer>
+      <verifier>false</verifier>
+    </lane_flags>
+    <route_reason>Intentional invalid example for lane mismatch.</route_reason>
+    <risk_level>medium</risk_level>
+    <acceptance_lock>
+      <lock_id>lock_login_retry_002</lock_id>
+      <lock_sha256>eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</lock_sha256>
+      <locked_at>2026-03-22T00:01:30Z</locked_at>
+    </acceptance_lock>
+  </payload>
+  <integrity>
+    <content_sha256>ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff</content_sha256>
+    <parent_sha256>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</parent_sha256>
+  </integrity>
+</pxml>

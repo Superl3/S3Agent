@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>doc_operator_runbook_policy_b9_001</doc_id>
+    <doc_class>operator_runbook_policy</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>task_batch9_operator_pipeline</task_id>
+    <run_id>run_batch9_policies_001</run_id>
+    <sequence>1</sequence>
+    <writer_agent>manager</writer_agent>
+    <created_at>2026-03-22T09:00:00Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>doc_operator_workflow_guide_b7_001</doc_id>
+      <doc_class>operator_workflow_guide</doc_class>
+      <relation>workflow_reference</relation>
+    </ref>
+    <ref>
+      <doc_id>doc_rendering_policy_batch8_001</doc_id>
+      <doc_class>rendering_policy</doc_class>
+      <relation>render_policy_reference</relation>
+    </ref>
+  </refs>
+  <payload>
+    <policy_name>operator_runbook_execution_policy</policy_name>
+    <rules>
+      <rule>
+        <policy_id>RUNBOOK-B9-001</policy_id>
+        <rule_name>cleanup_before_run_default</rule_name>
+        <applies_to>
+          <item>operator_runbook</item>
+        </applies_to>
+        <trigger_condition>runbook invoked for deterministic smoke or operational rerun</trigger_condition>
+        <decision>allow</decision>
+        <rationale>Task-scoped cleanup is recommended for deterministic runtime behavior.</rationale>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RUNBOOK-B9-001</policy_id>
+        <rule_name>preflight_required_before_render</rule_name>
+        <applies_to>
+          <item>operator_runbook</item>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>render stage requested</trigger_condition>
+        <decision>deny</decision>
+        <rationale>Renderer handoff is blocked until operator_preflight_report exists.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RUNBOOK-B9-001</policy_id>
+        <rule_name>allow_caution_render_with_override</rule_name>
+        <applies_to>
+          <item>operator_runbook</item>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>preflight render_readiness equals caution</trigger_condition>
+        <decision>allow_with_override</decision>
+        <rationale>Caution renders require explicit operator override to avoid silent risk acceptance.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RUNBOOK-B9-001</policy_id>
+        <rule_name>deny_not_ready_render_without_override</rule_name>
+        <applies_to>
+          <item>operator_runbook</item>
+          <item>final_renderer</item>
+        </applies_to>
+        <trigger_condition>preflight render_readiness equals not_ready and no explicit override</trigger_condition>
+        <decision>deny</decision>
+        <rationale>Not-ready render is denied by default to preserve operator trust boundaries.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RUNBOOK-B9-001</policy_id>
+        <rule_name>run_harness_after_render_default</rule_name>
+        <applies_to>
+          <item>operator_runbook</item>
+        </applies_to>
+        <trigger_condition>render stage completed</trigger_condition>
+        <decision>allow</decision>
+        <rationale>Harness can run after render for operator confidence without changing SSOT.</rationale>
+        <enforcement_level>soft</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RUNBOOK-B9-001</policy_id>
+        <rule_name>session_report_required</rule_name>
+        <applies_to>
+          <item>operator_runbook</item>
+        </applies_to>
+        <trigger_condition>runbook exits with any stage outcome</trigger_condition>
+        <decision>require_logging</decision>
+        <rationale>Every operator session must emit a derived session report for traceable handoff.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+      <rule>
+        <policy_id>RUNBOOK-B9-001</policy_id>
+        <rule_name>operator_override_logging_required</rule_name>
+        <applies_to>
+          <item>operator_runbook</item>
+          <item>session_report</item>
+        </applies_to>
+        <trigger_condition>caution override or any manual gate override is used</trigger_condition>
+        <decision>require_logging</decision>
+        <rationale>Override decisions must be visible in derived reports for auditability.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
+    </rules>
+  </payload>
+  <integrity>
+    <content_sha256>9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b</content_sha256>
+  </integrity>
+</pxml>

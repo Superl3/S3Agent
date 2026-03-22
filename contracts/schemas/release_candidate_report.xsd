@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:simpleType name="ReleaseCandidateResultType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="pass"/>
+      <xs:enumeration value="caution"/>
+      <xs:enumeration value="fail"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="ReleaseCandidateRefListType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseCandidateReportPayloadType">
+    <xs:sequence>
+      <xs:element name="release_candidate_report_id" type="NonEmptyStringType"/>
+      <xs:element name="generated_at" type="xs:dateTime"/>
+      <xs:element name="derived" type="xs:boolean"/>
+      <xs:element name="policy_ref" type="ReferenceItemType"/>
+      <xs:element name="harness_version_refs" type="ReleaseCandidateRefListType"/>
+      <xs:element name="smoke_task_refs" type="ReleaseCandidateRefListType"/>
+      <xs:element name="coverage_task_refs" type="ReleaseCandidateRefListType" minOccurs="0"/>
+      <xs:element name="candidate_gate_task_refs" type="ReleaseCandidateRefListType" minOccurs="0"/>
+      <xs:element name="coverage_summary" type="StringListType" minOccurs="0"/>
+      <xs:element name="gate_summary" type="StringListType" minOccurs="0"/>
+      <xs:element name="lane_coverage_summary" type="StringListType"/>
+      <xs:element name="operator_runbook_coverage" type="NonEmptyStringType"/>
+      <xs:element name="render_gate_summary" type="StringListType"/>
+      <xs:element name="pruning_branch_summary" type="StringListType"/>
+      <xs:element name="latest_pointer_safety" type="xs:boolean"/>
+      <xs:element name="lineage_safety" type="xs:boolean"/>
+      <xs:element name="verify_phase_rollout_summary" type="StringListType"/>
+      <xs:element name="warnings" type="StringListType"/>
+      <xs:element name="blockers" type="StringListType"/>
+      <xs:element name="rc_result" type="ReleaseCandidateResultType"/>
+      <xs:element name="rc_result_basis" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="next_action" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReleaseCandidateReportDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="RefsType" minOccurs="0"/>
+      <xs:element name="payload" type="ReleaseCandidateReportPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ReleaseCandidateReportDocumentType"/>
+
+</xs:schema>
