@@ -124,6 +124,14 @@ def latest_selected_path(runtime_root: Path, task_id: str) -> Optional[str]:
     return text_at(tree, "/p:pxml/p:payload/p:selected_path")
 
 
+def packet_write_intent(packet_path: Path) -> bool:
+    tree = etree.parse(str(packet_path))
+    value = text_at(tree, "/p:pxml/p:payload/p:write_intent")
+    if value is None:
+        return True
+    return value.lower() == "true"
+
+
 def should_run_verifier_auto(
     policy: PolicyConfig,
     result_status: Optional[str],
@@ -295,21 +303,40 @@ def main() -> int:
         print("ERROR: execution_packet missing after packet builder", file=sys.stderr)
         return 1
 
-    impl_cmd = [
-        sys.executable,
-        str(implementer),
-        "--packet",
-        str(packet_path),
-        "--runtime-root",
-        str(runtime_root),
-        "--workspace-root",
-        str(workspace_root),
-    ]
-    if args.skip_validate:
-        impl_cmd.append("--skip-validate")
-    impl_proc = run_command(impl_cmd, "implementer_runner")
+    try:
+        write_intent = packet_write_intent(packet_path)
+    except Exception as exc:
+        print(
+            f"ERROR: failed to parse execution_packet write_intent: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+    impl_proc: Optional[subprocess.CompletedProcess[str]] = None
+    if write_intent:
+        impl_cmd = [
+            sys.executable,
+            str(implementer),
+            "--packet",
+            str(packet_path),
+            "--runtime-root",
+            str(runtime_root),
+            "--workspace-root",
+            str(workspace_root),
+        ]
+        if args.skip_validate:
+            impl_cmd.append("--skip-validate")
+        impl_proc = run_command(impl_cmd, "implementer_runner")
+    else:
+        print(
+            "[task_executor] stage=explorer_handoff"
+            " write_intent=false -> skipping implementer runner"
+        )
 
-    result_status = latest_implementer_status(runtime_root, task_id)
+    result_status = (
+        latest_implementer_status(runtime_root, task_id)
+        if write_intent
+        else "explore_only"
+    )
     selected_path = latest_selected_path(runtime_root, task_id)
     if result_status is None:
         print(
@@ -320,7 +347,10 @@ def main() -> int:
 
     run_verifier = False
     policy_reason = ""
-    if args.verify_policy == "always":
+    if not write_intent:
+        run_verifier = False
+        policy_reason = "write_intent=false"
+    elif args.verify_policy == "always":
         run_verifier = True
         policy_reason = "override=always"
     elif args.verify_policy == "never":
@@ -404,7 +434,7 @@ def main() -> int:
     if result_status in {"blocked", "retry_failed", "escalated"}:
         return 1
 
-    if impl_proc.returncode != 0:
+    if impl_proc is not None and impl_proc.returncode != 0:
         return impl_proc.returncode
 
     print(f"[task_executor] completed task_id={task_id} status={result_status}")

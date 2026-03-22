@@ -24,6 +24,7 @@
       <item>risk_level</item>
       <item>task ambiguity</item>
       <item>explicit verification need</item>
+      <item>write_intent classification</item>
     </decision_basis>
     <paths>
       <path>
@@ -41,6 +42,7 @@
         </escalation_condition>
         <stop_condition>
           <item>Execution packet issued and accepted by Implementer.</item>
+          <item>write_intent=false packet routed to exploration handoff without implementer call.</item>
           <item>Escalation emitted.</item>
         </stop_condition>
         <required_artifacts>

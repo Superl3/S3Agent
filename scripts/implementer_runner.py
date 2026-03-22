@@ -43,6 +43,7 @@ REQUIRED_RUNTIME_RULES = {
     "blocked_reason_required",
     "retry_failed_after_threshold",
     "escalation_after_retry_limit",
+    "write_intent_required",
 }
 
 
@@ -62,6 +63,7 @@ class PacketInfo:
     created_at: str
     content_sha256: str
     acceptance_lock_hash: str
+    write_intent: bool
     in_scope: List[str]
     out_of_scope: List[str]
     expected_files: List[ExpectedFile]
@@ -69,6 +71,7 @@ class PacketInfo:
     max_files: int
     rewrite_exception_approved: bool
     rewrite_exception_reason: Optional[str]
+    acceptance_check_count: int
 
 
 @dataclass
@@ -191,6 +194,7 @@ def parse_packet(path: Path) -> PacketInfo:
     created_at = text_at(tree, "/p:pxml/p:meta/p:created_at")
     content_sha = text_at(tree, "/p:pxml/p:integrity/p:content_sha256")
     lock_hash = text_at(tree, "/p:pxml/p:payload/p:acceptance_lock_hash")
+    write_intent_text = text_at(tree, "/p:pxml/p:payload/p:write_intent")
 
     patch_mode = text_at(tree, "/p:pxml/p:payload/p:patch_constraints/p:patch_mode")
     max_files_text = text_at(tree, "/p:pxml/p:payload/p:patch_constraints/p:max_files")
@@ -229,12 +233,17 @@ def parse_packet(path: Path) -> PacketInfo:
     expected_nodes = tree.xpath(
         "/p:pxml/p:payload/p:expected_files/p:file", namespaces=XPATH_NS
     )
+    acceptance_nodes = tree.xpath(
+        "/p:pxml/p:payload/p:acceptance_checks/p:check", namespaces=XPATH_NS
+    )
     if not in_scope_nodes:
         raise ValueError("execution_packet has empty in_scope")
     if not out_scope_nodes:
         raise ValueError("execution_packet has empty out_of_scope")
     if not expected_nodes:
         raise ValueError("execution_packet has empty expected_files")
+    if not acceptance_nodes:
+        raise ValueError("execution_packet has empty acceptance_checks")
 
     in_scope: List[str] = []
     for node in in_scope_nodes:
@@ -275,6 +284,9 @@ def parse_packet(path: Path) -> PacketInfo:
         raise ValueError("patch_constraints/max_files must be positive integer")
 
     rewrite_approved = rewrite_approved_text.lower() == "true"
+    write_intent = True
+    if write_intent_text is not None:
+        write_intent = write_intent_text.lower() == "true"
     return PacketInfo(
         path=path,
         doc_id=doc_id,
@@ -284,6 +296,7 @@ def parse_packet(path: Path) -> PacketInfo:
         created_at=created_at,
         content_sha256=content_sha,
         acceptance_lock_hash=lock_hash,
+        write_intent=write_intent,
         in_scope=in_scope,
         out_of_scope=out_scope,
         expected_files=expected_files,
@@ -291,6 +304,7 @@ def parse_packet(path: Path) -> PacketInfo:
         max_files=int(max_files_text),
         rewrite_exception_approved=rewrite_approved,
         rewrite_exception_reason=rewrite_reason,
+        acceptance_check_count=len(acceptance_nodes),
     )
 
 
@@ -469,6 +483,12 @@ def execute_packet(
     if blocked_reason is None and len(packet.expected_files) > packet.max_files:
         blocked_reason = "implementer_max_files_exceeded"
         notes.append("expected_files exceeds patch_constraints max_files")
+
+    if blocked_reason is None and not packet.write_intent:
+        blocked_reason = "implementer_write_intent_disabled"
+        notes.append(
+            "execution_packet write_intent=false rejects implementer write admission"
+        )
 
     if blocked_reason is None:
         for item in packet.expected_files:

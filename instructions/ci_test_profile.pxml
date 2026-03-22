@@ -40,6 +40,8 @@
       <item>tests/test_latest_pointer_guard.py</item>
       <item>tests/test_verify_phase_audit_latest_guard.py</item>
       <item>tests/test_reason_code_catalog_consistency.py</item>
+      <item>tests/test_explorer_routing_guard.py</item>
+      <item>tests/test_task_executor_smoke_matrix.py</item>
       <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_pass_on_healthy_candidate_subset</item>
       <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_missing_candidate_returns_fail_without_crash</item>
       <item>tests/test_release_candidate_check_failure_paths.py::test_release_candidate_check_broken_latest_chain_returns_fail_without_crash</item>

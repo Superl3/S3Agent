@@ -95,6 +95,7 @@ REQUIRED_IMPLEMENTER_RUNTIME_RULES = {
     "blocked_reason_required",
     "retry_failed_after_threshold",
     "escalation_after_retry_limit",
+    "write_intent_required",
 }
 
 REQUIRED_ARTIFACT_PRUNING_POLICY_RULES = {

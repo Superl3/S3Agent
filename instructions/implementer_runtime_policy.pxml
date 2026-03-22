@@ -117,6 +117,17 @@
         <enforcement_level>hard</enforcement_level>
         <violation_effect>escalate</violation_effect>
       </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-009</policy_id>
+        <rule_name>write_intent_required</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>execution_packet.write_intent</item>
+        </applies_to>
+        <description>Implementer must reject write execution when execution_packet write_intent is false.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
     </rules>
   </payload>
   <integrity>

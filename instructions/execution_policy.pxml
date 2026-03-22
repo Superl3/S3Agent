@@ -119,6 +119,28 @@
         <enforcement_level>soft</enforcement_level>
         <violation_effect>warn</violation_effect>
       </rule>
+      <rule>
+        <policy_id>POL-010</policy_id>
+        <rule_name>explore_gate_before_implementer</rule_name>
+        <applies_to>
+          <item>execution_packet.write_intent</item>
+          <item>implementer</item>
+        </applies_to>
+        <description>write_intent=false packets are discovery-only and must bypass implementer invocation.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-011</policy_id>
+        <rule_name>single_implementer_default</rule_name>
+        <applies_to>
+          <item>task_executor</item>
+          <item>implementer</item>
+        </applies_to>
+        <description>Default implementer fanout is exactly one per task; multi-implementer requires explicit split_reason and non-overlapping scope.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
     </rules>
   </payload>
   <integrity>

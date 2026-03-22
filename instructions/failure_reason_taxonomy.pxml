@@ -77,6 +77,15 @@
         <recommended_next_action>Escalate to manager for packet correction or human decision.</recommended_next_action>
         <escalation_default>true</escalation_default>
       </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>implementer_write_intent_disabled</code>
+        <category>implementer</category>
+        <severity>major</severity>
+        <description>Execution packet explicitly disabled write_intent for exploration-only handling.</description>
+        <recommended_next_action>Route through explorer/read-only flow or issue a new packet with write_intent=true.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
 
       <reason>
         <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>

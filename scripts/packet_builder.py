@@ -64,6 +64,24 @@ VERIFY_MARKERS = (
     "must pass tests",
 )
 
+EXPLORE_MARKERS = (
+    "explore",
+    "exploration",
+    "investigate",
+    "research",
+    "analyze only",
+    "analysis only",
+    "read-only",
+    "read only",
+    "no code changes",
+    "do not modify",
+    "without editing",
+    "탐색",
+    "조사",
+    "분석만",
+    "수정 없이",
+)
+
 
 def q(tag: str) -> str:
     return f"{{{NS}}}{tag}"
@@ -187,6 +205,11 @@ def select_route(
     if verify_need:
         return "verifier_post", "Verification requirement detected from intake text."
     return "direct", "Clear low-complexity intake defaults to direct path."
+
+
+def detect_write_intent(request_text: str, requested_outcome: str) -> bool:
+    combined = f"{request_text} {requested_outcome}".lower()
+    return not any(marker in combined for marker in EXPLORE_MARKERS)
 
 
 def default_scope(
@@ -399,6 +422,7 @@ def build_execution_packet(
     route_reason: str,
     checks: Sequence[Dict[str, object]],
     lock_hash: str,
+    write_intent: bool,
 ) -> Tuple[etree._ElementTree, str]:
     in_scope, out_scope, expected_files, localization_targets = default_scope(
         intake.task_type
@@ -424,6 +448,9 @@ def build_execution_packet(
     payload = etree.SubElement(root, q("payload"))
     summary = f"{intake.task_type} task via {selected_path}: {intake.request_text}"
     etree.SubElement(payload, q("task_summary")).text = summary
+    etree.SubElement(payload, q("write_intent")).text = (
+        "true" if write_intent else "false"
+    )
 
     build_string_list(payload, "in_scope", in_scope)
     build_string_list(payload, "out_of_scope", out_scope)
@@ -619,6 +646,14 @@ def main() -> int:
         request_text=intake.request_text,
         requested_outcome=intake.requested_outcome,
     )
+    write_intent = detect_write_intent(
+        request_text=intake.request_text,
+        requested_outcome=intake.requested_outcome,
+    )
+    if not write_intent:
+        route_reason = (
+            route_reason + " Exploration-only request disables implementer writes."
+        )
 
     checks = default_acceptance_checks(intake.task_type)
     lock_hash = acceptance_lock_hash(checks)
@@ -650,6 +685,7 @@ def main() -> int:
         route_reason=route_reason,
         checks=checks,
         lock_hash=lock_hash,
+        write_intent=write_intent,
     )
 
     route_path = runtime_root / "packets" / "manager_route" / f"{route_doc_id}.pxml"

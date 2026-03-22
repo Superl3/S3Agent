@@ -137,6 +137,16 @@
         <recommended_operator_action>Update packet scope restrictions or expected file declarations.</recommended_operator_action>
         <source_layer>implementer_runner</source_layer>
       </reason>
+      <reason>
+        <code>implementer_write_intent_disabled</code>
+        <category>implementer</category>
+        <severity>major</severity>
+        <description>Execution packet marked write_intent=false and implementer admission was rejected.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>false</affects_gate_default>
+        <recommended_operator_action>Use exploration path or regenerate packet with explicit write intent before calling implementer.</recommended_operator_action>
+        <source_layer>implementer_runner</source_layer>
+      </reason>
 
       <reason>
         <code>verifier_inconclusive</code>

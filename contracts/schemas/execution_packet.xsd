@@ -54,6 +54,7 @@
   <xs:complexType name="ExecutionPacketPayloadType">
     <xs:sequence>
       <xs:element name="task_summary" type="NonEmptyStringType"/>
+      <xs:element name="write_intent" type="xs:boolean" minOccurs="0"/>
       <xs:element name="in_scope" type="PathListType"/>
       <xs:element name="out_of_scope" type="PathListType"/>
       <xs:element name="expected_files" type="ExpectedFilesType"/>
