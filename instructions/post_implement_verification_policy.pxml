@@ -120,6 +120,19 @@
         <rationale>Operator may force always or never verify modes while preserving auditability.</rationale>
         <enforcement_level>advisory</enforcement_level>
       </rule>
+      <rule>
+        <policy_id>POST-VERIFY-009</policy_id>
+        <rule_name>verify_on_missing_or_not_run_gate_evidence</rule_name>
+        <applies_to>
+          <item>task_executor</item>
+          <item>implementer_result</item>
+          <item>gate_verification_summary</item>
+        </applies_to>
+        <trigger_condition>required_gate_evidence_missing_or_gate1_gate2_not_run_for_runtime_scope</trigger_condition>
+        <decision>run_verifier</decision>
+        <rationale>Build-only evidence is insufficient for runtime behavior tasks; verifier must collect deterministic runtime evidence.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
     </rules>
   </payload>
   <integrity>

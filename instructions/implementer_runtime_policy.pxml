@@ -128,6 +128,42 @@
         <enforcement_level>hard</enforcement_level>
         <violation_effect>reject</violation_effect>
       </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-010</policy_id>
+        <rule_name>gate_evidence_required</rule_name>
+        <applies_to>
+          <item>implementer_result</item>
+          <item>acceptance_checks</item>
+        </applies_to>
+        <description>Applied outcomes must include requirement-level verification states using PASS FAIL NOT-RUN with evidence refs.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-011</policy_id>
+        <rule_name>build_only_forbidden_for_runtime_behavior</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>gate_0_build</item>
+          <item>gate_1_runtime_behavior</item>
+          <item>gate_2_boundary_regression</item>
+        </applies_to>
+        <description>Build success is Gate 0 only; if runtime or interaction behavior is in scope, Gate 1 and Gate 2 cannot be NOT-RUN for applied status.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-012</policy_id>
+        <rule_name>repeated_symptom_requires_instrumentation</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>retry_policy</item>
+          <item>same_observed_symptom</item>
+        </applies_to>
+        <description>When the same user-visible symptom repeats for two attempts, implementer must add temporary instrumentation or trace evidence before further patch attempts.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>retry</violation_effect>
+      </rule>
     </rules>
   </payload>
   <integrity>

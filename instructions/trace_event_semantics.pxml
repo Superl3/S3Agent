@@ -84,6 +84,8 @@
         </required_artifact_refs>
         <optional_metadata_fields>
           <item>lineage_lock_sha256</item>
+          <item>gate_verification_summary_ref</item>
+          <item>gate_verdict</item>
         </optional_metadata_fields>
       </event>
       <event>

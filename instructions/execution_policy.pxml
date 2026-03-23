@@ -141,6 +141,18 @@
         <enforcement_level>hard</enforcement_level>
         <violation_effect>reject</violation_effect>
       </rule>
+      <rule>
+        <policy_id>POL-012</policy_id>
+        <rule_name>runtime_behavior_gate_required</rule_name>
+        <applies_to>
+          <item>implementer_result</item>
+          <item>task_executor</item>
+          <item>runtime_or_interaction_scope</item>
+        </applies_to>
+        <description>For runtime behavior tasks, applied completion requires Gate 0 build plus Gate 1 runtime behavior and Gate 2 boundary or regression evidence.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
     </rules>
   </payload>
   <integrity>

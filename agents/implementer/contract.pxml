@@ -33,6 +33,7 @@
       <item>Patch application evidence through execution_trace events</item>
       <item>Blocked or retry_failed status evidence through execution_trace events</item>
       <item>Updated source files limited by packet scope constraints</item>
+      <item>Gate verification summary per requirement with PASS FAIL NOT-RUN states and evidence refs</item>
     </outputs>
     <must_do>
       <item>Execute only from packet-defined scope and constraints before any write action.</item>
@@ -40,6 +41,9 @@
       <item>Use patch_first mode by default and require explicit approved rewrite exception to rewrite.</item>
       <item>Respect localization_targets for bugfix work and escalate when target set is insufficient.</item>
       <item>Report implement_start patch_applied escalation stop events with artifact refs in execution_trace.</item>
+      <item>Treat build success as Gate 0 only and do not finalize applied status without Gate 1 runtime behavior checks and Gate 2 boundary or regression checks when interaction behavior is in scope.</item>
+      <item>Emit requirement-level verification states as PASS FAIL NOT-RUN with concise evidence references for each declared acceptance check.</item>
+      <item>When the same user-visible symptom repeats two or more times, add temporary instrumentation or trace evidence before additional patch attempts.</item>
     </must_do>
     <must_not_do>
       <item>Do not redefine acceptance checks or mutate acceptance lock semantics.</item>
@@ -48,6 +52,7 @@
       <item>Do not perform sidecar responsibilities such as planning review or verification decisions.</item>
       <item>Do not call ECC dormant registry assets directly from execution flow.</item>
       <item>Do not modify or delete prior execution_trace events.</item>
+      <item>Do not declare completion from build-only evidence when runtime interaction behavior was requested.</item>
     </must_not_do>
     <failure_handoff>
       <item>Emit escalation event when patch constraints cannot be met without policy breach.</item>
@@ -57,6 +62,7 @@
     <artifact_responsibilities>
       <item>Append implement_start before file mutation attempt.</item>
       <item>Append patch_applied with file-level evidence refs after successful patch.</item>
+      <item>Append gate verification evidence summary before final applied reporting.</item>
       <item>Append escalation or stop event when blocked and unresolved.</item>
     </artifact_responsibilities>
     <dormant_registry_note>ECC registries remain non-executable in Batch 2; entries are metadata only.</dormant_registry_note>
