@@ -34,22 +34,28 @@
       <item>Blocked or retry_failed status evidence through execution_trace events</item>
       <item>Updated source files limited by packet scope constraints</item>
       <item>Gate verification summary per requirement with PASS FAIL NOT-RUN states and evidence refs</item>
+      <item>Structured implementer_result reporting sections for proof_status requirement_status_matrix completion_state and notes</item>
     </outputs>
     <must_do>
       <item>Execute only from packet-defined scope and constraints before any write action.</item>
+      <item>Treat execution_packet as the only executable contract and reject non-packet execution directives.</item>
       <item>Prioritize expected_files and enforce out_of_scope exclusions.</item>
       <item>Use patch_first mode by default and require explicit approved rewrite exception to rewrite.</item>
       <item>Respect localization_targets for bugfix work and escalate when target set is insufficient.</item>
       <item>Report implement_start patch_applied escalation stop events with artifact refs in execution_trace.</item>
       <item>Treat build success as Gate 0 only and do not finalize applied status without Gate 1 runtime behavior checks and Gate 2 boundary or regression checks when interaction behavior is in scope.</item>
       <item>Emit requirement-level verification states as PASS FAIL NOT-RUN with concise evidence references for each declared acceptance check.</item>
-      <item>When the same user-visible symptom repeats two or more times, add temporary instrumentation or trace evidence before additional patch attempts.</item>
+      <item>For every FAIL or NOT-RUN requirement status include reason current_evidence and next_recommended_action fields.</item>
+      <item>Use only conservative completion states: completed_and_verified implemented_but_unverified partial blocked failed.</item>
+      <item>Set completed_and_verified only when required proof requirements are satisfied with explicit evidence references.</item>
+      <item>When the same user-visible symptom repeats two or more times, follow an observation-first flow with temporary instrumentation or trace evidence before additional patch attempts.</item>
     </must_do>
     <must_not_do>
       <item>Do not redefine acceptance checks or mutate acceptance lock semantics.</item>
+      <item>Do not redefine scope acceptance routing or final approval authority; these remain locked by manager_route execution_packet and manager operator decisions.</item>
       <item>Do not change manager_route.acceptance_lock.lock_sha256 linkage derived from execution_packet checks.</item>
       <item>Do not change packet in_scope out_of_scope expected_files or stop conditions.</item>
-      <item>Do not perform sidecar responsibilities such as planning review or verification decisions.</item>
+      <item>Do not perform planner reviewer or verifier responsibilities, including planning review verification verdicts or final readiness approval.</item>
       <item>Do not call ECC dormant registry assets directly from execution flow.</item>
       <item>Do not modify or delete prior execution_trace events.</item>
       <item>Do not declare completion from build-only evidence when runtime interaction behavior was requested.</item>
