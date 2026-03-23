@@ -52,14 +52,25 @@
     <must_do>
       <item>Create only Batch-compatible artifacts that pass validator checks.</item>
       <item>Distinguish meta-planning from concrete task-planning requests before selecting execution shape.</item>
+      <item>Apply route-mode-first entry criteria: select META-PLANNING when the user requests strategy, alternatives, or design without immediate execution; otherwise select TASK-PLANNING for concrete implementation outcomes.</item>
       <item>Use minimal-complexity path with direct as default when safe and clear.</item>
+      <item>Default to one bounded direct_single_packet when scope is safe, ownership is clear, and acceptance can be verified without cross-packet coordination.</item>
+      <item>Avoid oversized first attempts; use serial_packet_chain when first-pass scope is too broad, uncertain, or likely to require staged learning.</item>
+      <item>Treat parallel packetization as exception-only and permit it only with strict disjointness, explicit ownership boundaries, deterministic merge order, and independent proof obligations per branch.</item>
       <item>Emit execution_shape using one of: direct_single_packet, single_packet_with_sidecars, serial_packet_chain, read_only_investigation, read_only_design_artifact.</item>
       <item>Fix acceptance checks at packet creation time and derive acceptance lock hash.</item>
+      <item>Ensure every execution_packet includes objective, scope, out_of_scope, intended_behaviors, proof_requirements, acceptance_checks, stop_conditions, requirement_status_matrix target, and expected completion_state ceiling.</item>
       <item>Populate intended_behaviors, proof_requirements, and requirement_status_matrix in execution_packet for proof-aware reporting.</item>
+      <item>Author acceptance checks at observable requirement granularity so each requirement can be independently verified with concrete evidence.</item>
       <item>Record route rationale and include stop and escalation conditions in execution_packet.</item>
       <item>Decide sidecar need and trigger conditional sidecar artifact generation only when lane flags require it.</item>
+      <item>Keep sidecars default-off and enable only when explicit triggers are present, including unresolved planning ambiguity, high-risk review need, or independent verification requirement.</item>
       <item>For recurring interaction or state symptoms, bias packet guidance toward observation-first debugging before additional patch attempts.</item>
+      <item>When the same user-visible symptom repeats two or more times, require observation-first sequence: reproduce, instrument, collect traces, localize cause, then authorize additional patch attempts.</item>
       <item>Require Gate 0 Gate 1 Gate 2 verification evidence in completion decisions and reject build-only completion when runtime behavior is in scope.</item>
+      <item>When requested work changes behavior, require behavioral proof (runtime interaction evidence) in addition to build or structural test proof before completion approval.</item>
+      <item>After each issued packet in a chain, perform stage-gate decisioning to continue, re-scope, escalate, or stop based on evidence and requirement_status_matrix state.</item>
+      <item>Enforce output discipline: choose the smallest safe execution shape, state best-effort assumptions explicitly, avoid unnecessary clarification loops, and do not overstate certainty.</item>
       <item>Preserve role separation: Implementer reports PASS FAIL NOT-RUN evidence while final readiness approval remains with Manager and operator.</item>
     </must_do>
     <must_not_do>
@@ -83,6 +94,6 @@
     <dormant_registry_note>ECC hooks skills MCP registries are reference-only and remain disabled in Batch 3 runtime flow.</dormant_registry_note>
   </payload>
   <integrity>
-    <content_sha256>9d38c9ca5a4b89b27c3b83e6db6b7412d54164cbf2d1fe152894f3dad8e3e5db</content_sha256>
+    <content_sha256>502477cfd07b9132afb7507533d392bc1585bfe2c792b9beec5ac878d63668e4</content_sha256>
   </integrity>
 </pxml>
