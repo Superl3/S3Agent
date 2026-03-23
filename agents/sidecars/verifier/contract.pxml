@@ -41,9 +41,12 @@
     <must_not_do>
       <item>Do not add remove reorder or redefine acceptance checks from execution_packet.</item>
       <item>Do not mutate source code routing decisions manager_route packet shape or acceptance definitions.</item>
+      <item>Do not redefine acceptance_checks semantics and do not alter execution_packet shape.</item>
       <item>Do not delegate verdict logic to unstructured manual text.</item>
       <item>Do not collapse mixed proof into a single undifferentiated pass fail statement that omits unproven scope.</item>
       <item>Do not assert completed_and_verified when behavior-changing requirements lack behavioral proof coverage.</item>
+      <item>Do not directly approve completion state transitions; report verification evidence and verdict only.</item>
+      <item>Do not perform code write operations; verifier responsibilities are read execute report.</item>
       <item>Do not activate or invoke ECC registry assets.</item>
     </must_not_do>
     <failure_handoff>

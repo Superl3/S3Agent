@@ -73,6 +73,8 @@ class PacketInfo:
     content_sha256: str
     acceptance_lock_hash: str
     checks: List[AcceptanceCheck]
+    intended_behaviors: List[str]
+    required_proofs: Dict[str, bool]
 
 
 def q(tag: str) -> str:
@@ -181,6 +183,31 @@ def parse_packet(path: Path) -> PacketInfo:
             )
         )
 
+    intended_behavior_nodes = tree.xpath(
+        "/p:pxml/p:payload/p:intended_behaviors/p:item", namespaces=XPATH_NS
+    )
+    intended_behaviors: List[str] = []
+    for node in intended_behavior_nodes:
+        text = (node.text or "").strip()
+        if text:
+            intended_behaviors.append(text)
+
+    required_proofs: Dict[str, bool] = {
+        "structural": False,
+        "behavioral": False,
+        "regression": False,
+    }
+    proof_nodes = tree.xpath(
+        "/p:pxml/p:payload/p:proof_requirements/p:proof", namespaces=XPATH_NS
+    )
+    for node in proof_nodes:
+        node_tree = etree.ElementTree(node)
+        category = text_at(node_tree, "./p:proof_category")
+        required_text = text_at(node_tree, "./p:required")
+        if category not in required_proofs or required_text is None:
+            continue
+        required_proofs[category] = required_text.lower() == "true"
+
     assert doc_id is not None
     assert task_id is not None
     assert run_id is not None
@@ -216,6 +243,8 @@ def parse_packet(path: Path) -> PacketInfo:
         content_sha256=content_sha,
         acceptance_lock_hash=packet_lock_hash,
         checks=checks,
+        intended_behaviors=intended_behaviors,
+        required_proofs=required_proofs,
     )
 
 
@@ -413,15 +442,45 @@ def summarize_proof_coverage(tests: Sequence[Dict[str, object]]) -> Dict[str, st
     return summary
 
 
+def required_proof_gaps(
+    required_proofs: Dict[str, bool],
+    proof_coverage: Dict[str, str],
+    behavior_changing: bool,
+) -> List[str]:
+    effective_required = dict(required_proofs)
+    if behavior_changing:
+        effective_required["behavioral"] = True
+
+    gaps: List[str] = []
+    for category, required in effective_required.items():
+        if not required:
+            continue
+        status = proof_coverage.get(category, "NOT-RUN")
+        if status != "PASS":
+            gaps.append(f"proof.{category}:UNPROVEN(status={status})")
+    return gaps
+
+
 def final_verdict(
-    outcomes: Dict[str, int], unverified_areas: Sequence[str]
+    outcomes: Dict[str, int],
+    unverified_areas: Sequence[str],
+    proof_gaps: Sequence[str],
 ) -> Tuple[str, str]:
     if outcomes["failed"] > 0:
         return "fail", "One or more acceptance checks failed."
     if outcomes["errored"] > 0 or outcomes["skipped"] > 0:
+        blockers = ", ".join(item for item in unverified_areas if item != "none")
+        if not blockers:
+            blockers = "execution blockers not recorded"
         return (
             "inconclusive",
-            "Checks errored or were skipped; verification is incomplete.",
+            "Environment-limited verification blocked executable checks; "
+            f"blockers={blockers}",
+        )
+    if proof_gaps:
+        return (
+            "inconclusive",
+            f"Required proof remains unproven; unproven={'; '.join(proof_gaps)}",
         )
     if any(item.strip().lower() != "none" for item in unverified_areas):
         return "inconclusive", "Unverified areas remain unresolved."
@@ -690,19 +749,40 @@ def main() -> int:
         test_record, error_reason, risk = run_check(
             check, logs_dir=logs_dir, dry_run=args.dry_run
         )
+        category = infer_proof_category(test_record)
         tests.append(test_record)
         shared_log_refs.append(str(test_record["evidence_ref"]))
         residual_risks.append(risk)
         if test_record["result"] in {"error", "skipped"}:
             reason = error_reason or f"{test_record['result']}:{check.check_id}"
-            unverified_areas.append(f"{check.check_id}:{reason}")
+            unverified_areas.append(
+                f"{check.check_id}:category={category}:blocked={reason}"
+            )
+
+    outcomes = summarize_outcomes(tests)
+    proof_coverage = summarize_proof_coverage(tests)
+    behavior_changing = bool(packet.intended_behaviors) or packet.required_proofs.get(
+        "behavioral", False
+    )
+    proof_gaps = required_proof_gaps(
+        required_proofs=packet.required_proofs,
+        proof_coverage=proof_coverage,
+        behavior_changing=behavior_changing,
+    )
+    for gap in proof_gaps:
+        unverified_areas.append(gap)
+        residual_risks.append(
+            {
+                "severity": "high",
+                "description": f"Required proof not satisfied: {gap}",
+                "mitigation": "Execute missing proof category checks and attach evidence.",
+            }
+        )
 
     if not unverified_areas:
         unverified_areas = ["none"]
 
-    outcomes = summarize_outcomes(tests)
-    proof_coverage = summarize_proof_coverage(tests)
-    verdict, verdict_reason = final_verdict(outcomes, unverified_areas)
+    verdict, verdict_reason = final_verdict(outcomes, unverified_areas, proof_gaps)
 
     if verdict == "pass":
         residual_risks = [
