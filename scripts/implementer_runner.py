@@ -54,6 +54,23 @@ class ExpectedFile:
 
 
 @dataclass
+class ProofRequirement:
+    proof_category: str
+    required: bool
+    proof_method: str
+    minimum_evidence: str
+
+
+@dataclass
+class RequirementTarget:
+    requirement: str
+    proof_method: str
+    status_target: str
+    minimum_evidence: str
+    next_step_if_missing: str
+
+
+@dataclass
 class PacketInfo:
     path: Path
     doc_id: str
@@ -72,6 +89,10 @@ class PacketInfo:
     rewrite_exception_approved: bool
     rewrite_exception_reason: Optional[str]
     acceptance_check_count: int
+    intended_behaviors: List[str]
+    proof_requirements: List[ProofRequirement]
+    requirement_targets: List[RequirementTarget]
+    completion_state: Optional[str]
 
 
 @dataclass
@@ -236,6 +257,17 @@ def parse_packet(path: Path) -> PacketInfo:
     acceptance_nodes = tree.xpath(
         "/p:pxml/p:payload/p:acceptance_checks/p:check", namespaces=XPATH_NS
     )
+    intended_behavior_nodes = tree.xpath(
+        "/p:pxml/p:payload/p:intended_behaviors/p:item", namespaces=XPATH_NS
+    )
+    proof_nodes = tree.xpath(
+        "/p:pxml/p:payload/p:proof_requirements/p:proof", namespaces=XPATH_NS
+    )
+    requirement_nodes = tree.xpath(
+        "/p:pxml/p:payload/p:requirement_status_matrix/p:requirement",
+        namespaces=XPATH_NS,
+    )
+    packet_completion_state = text_at(tree, "/p:pxml/p:payload/p:completion_state")
     if not in_scope_nodes:
         raise ValueError("execution_packet has empty in_scope")
     if not out_scope_nodes:
@@ -268,6 +300,61 @@ def parse_packet(path: Path) -> PacketInfo:
         if mode not in {"modify", "create"}:
             raise ValueError(f"Unsupported expected file mode: {mode}")
         expected_files.append(ExpectedFile(path=normalized_path, mode=mode))
+
+    intended_behaviors: List[str] = []
+    for node in intended_behavior_nodes:
+        item = (node.text or "").strip()
+        if item:
+            intended_behaviors.append(item)
+
+    proof_requirements: List[ProofRequirement] = []
+    for node in proof_nodes:
+        node_tree = etree.ElementTree(node)
+        category = text_at(node_tree, "./p:proof_category")
+        required_text = text_at(node_tree, "./p:required")
+        method = text_at(node_tree, "./p:proof_method")
+        evidence = text_at(node_tree, "./p:minimum_evidence")
+        if (
+            category is None
+            or required_text is None
+            or method is None
+            or evidence is None
+        ):
+            continue
+        proof_requirements.append(
+            ProofRequirement(
+                proof_category=category,
+                required=required_text.lower() == "true",
+                proof_method=method,
+                minimum_evidence=evidence,
+            )
+        )
+
+    requirement_targets: List[RequirementTarget] = []
+    for node in requirement_nodes:
+        node_tree = etree.ElementTree(node)
+        requirement_text = text_at(node_tree, "./p:requirement")
+        proof_method = text_at(node_tree, "./p:proof_method")
+        status_target = text_at(node_tree, "./p:status_target")
+        minimum_evidence = text_at(node_tree, "./p:minimum_evidence")
+        next_step = text_at(node_tree, "./p:next_step_if_missing")
+        if (
+            requirement_text is None
+            or proof_method is None
+            or status_target is None
+            or minimum_evidence is None
+            or next_step is None
+        ):
+            continue
+        requirement_targets.append(
+            RequirementTarget(
+                requirement=requirement_text,
+                proof_method=proof_method,
+                status_target=status_target,
+                minimum_evidence=minimum_evidence,
+                next_step_if_missing=next_step,
+            )
+        )
 
     assert doc_id is not None
     assert task_id is not None
@@ -305,6 +392,10 @@ def parse_packet(path: Path) -> PacketInfo:
         rewrite_exception_approved=rewrite_approved,
         rewrite_exception_reason=rewrite_reason,
         acceptance_check_count=len(acceptance_nodes),
+        intended_behaviors=intended_behaviors,
+        proof_requirements=proof_requirements,
+        requirement_targets=requirement_targets,
+        completion_state=packet_completion_state,
     )
 
 
@@ -613,6 +704,87 @@ def execute_packet(
     )
 
 
+def implementer_completion_state(result_status: str) -> str:
+    if result_status == "blocked":
+        return "blocked"
+    if result_status in {"retry_failed", "escalated"}:
+        return "failed"
+    if result_status in {"applied", "no_op"}:
+        return "implemented_but_unverified"
+    return "partial"
+
+
+def proof_status_from_result(
+    result_status: str, proof_requirements: Sequence[ProofRequirement]
+) -> Dict[str, str]:
+    status: Dict[str, str] = {
+        "structural": "NOT-RUN",
+        "behavioral": "NOT-RUN",
+        "regression": "NOT-RUN",
+    }
+    if result_status in {"blocked", "retry_failed", "escalated"}:
+        status["structural"] = "FAIL"
+        for requirement in proof_requirements:
+            if requirement.required:
+                status[requirement.proof_category] = "FAIL"
+        return status
+    return status
+
+
+def requirement_matrix_from_result(
+    packet: PacketInfo, result: RunResult
+) -> List[Dict[str, str]]:
+    targets = list(packet.requirement_targets)
+    if not targets and packet.intended_behaviors:
+        targets = [
+            RequirementTarget(
+                requirement=item,
+                proof_method="post_implement_verifier",
+                status_target="PASS",
+                minimum_evidence="required proof categories",
+                next_step_if_missing="Run verifier and update status matrix",
+            )
+            for item in packet.intended_behaviors
+        ]
+    if not targets:
+        targets = [
+            RequirementTarget(
+                requirement="Task outcome is satisfied",
+                proof_method="post_implement_verifier",
+                status_target="PASS",
+                minimum_evidence="required proof categories",
+                next_step_if_missing="Run verifier and update status matrix",
+            )
+        ]
+
+    matrix: List[Dict[str, str]] = []
+    for target in targets:
+        if result.status in {"blocked", "retry_failed", "escalated"}:
+            status = "FAIL"
+            reason = result.blocked_reason or "implementation blocked"
+            current_evidence = "implementer_result indicates blocked execution"
+            next_action = "Fix blocking cause and retry from updated packet"
+        else:
+            status = "NOT-RUN"
+            reason = "behavioral verification pending"
+            current_evidence = (
+                "implementation applied; verifier evidence not yet attached"
+            )
+            next_action = target.next_step_if_missing
+
+        matrix.append(
+            {
+                "requirement": target.requirement,
+                "proof_method": target.proof_method,
+                "status": status,
+                "reason": reason,
+                "current_evidence": current_evidence,
+                "next_recommended_action": next_action,
+            }
+        )
+    return matrix
+
+
 def build_implementer_result(
     packet: PacketInfo,
     doc_id: str,
@@ -661,6 +833,31 @@ def build_implementer_result(
         etree.SubElement(evidence_node, q("item")).text = evidence_ref
 
     etree.SubElement(payload, q("result_status")).text = result.status
+
+    proof_status = proof_status_from_result(result.status, packet.proof_requirements)
+    proof_node = etree.SubElement(payload, q("proof_status"))
+    etree.SubElement(proof_node, q("structural")).text = proof_status["structural"]
+    etree.SubElement(proof_node, q("behavioral")).text = proof_status["behavioral"]
+    etree.SubElement(proof_node, q("regression")).text = proof_status["regression"]
+
+    requirement_matrix = requirement_matrix_from_result(packet, result)
+    matrix_node = etree.SubElement(payload, q("requirement_status_matrix"))
+    for item in requirement_matrix:
+        req_node = etree.SubElement(matrix_node, q("requirement"))
+        etree.SubElement(req_node, q("requirement")).text = item["requirement"]
+        etree.SubElement(req_node, q("proof_method")).text = item["proof_method"]
+        etree.SubElement(req_node, q("status")).text = item["status"]
+        etree.SubElement(req_node, q("reason")).text = item["reason"]
+        etree.SubElement(req_node, q("current_evidence")).text = item[
+            "current_evidence"
+        ]
+        etree.SubElement(req_node, q("next_recommended_action")).text = item[
+            "next_recommended_action"
+        ]
+
+    completion_state = implementer_completion_state(result.status)
+    etree.SubElement(payload, q("completion_state")).text = completion_state
+
     if result.blocked_reason:
         etree.SubElement(payload, q("blocked_reason")).text = result.blocked_reason
     etree.SubElement(payload, q("retry_count")).text = str(result.retry_count)

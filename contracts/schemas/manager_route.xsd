@@ -30,6 +30,8 @@
 
   <xs:complexType name="ManagerRoutePayloadType">
     <xs:sequence>
+      <xs:element name="planning_mode" type="PlanningModeType" minOccurs="0"/>
+      <xs:element name="execution_shape" type="ExecutionShapeType" minOccurs="0"/>
       <xs:element name="selected_path" type="RoutePathType"/>
       <xs:element name="lane_flags" type="LaneFlagsType"/>
       <xs:element name="route_reason" type="NonEmptyStringType"/>

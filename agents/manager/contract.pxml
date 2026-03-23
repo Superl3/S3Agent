@@ -51,10 +51,16 @@
     </outputs>
     <must_do>
       <item>Create only Batch-compatible artifacts that pass validator checks.</item>
+      <item>Distinguish meta-planning from concrete task-planning requests before selecting execution shape.</item>
       <item>Use minimal-complexity path with direct as default when safe and clear.</item>
+      <item>Emit execution_shape using one of: direct_single_packet, single_packet_with_sidecars, serial_packet_chain, read_only_investigation, read_only_design_artifact.</item>
       <item>Fix acceptance checks at packet creation time and derive acceptance lock hash.</item>
+      <item>Populate intended_behaviors, proof_requirements, and requirement_status_matrix in execution_packet for proof-aware reporting.</item>
       <item>Record route rationale and include stop and escalation conditions in execution_packet.</item>
       <item>Decide sidecar need and trigger conditional sidecar artifact generation only when lane flags require it.</item>
+      <item>For recurring interaction or state symptoms, bias packet guidance toward observation-first debugging before additional patch attempts.</item>
+      <item>Require Gate 0 Gate 1 Gate 2 verification evidence in completion decisions and reject build-only completion when runtime behavior is in scope.</item>
+      <item>Preserve role separation: Implementer reports PASS FAIL NOT-RUN evidence while final readiness approval remains with Manager and operator.</item>
     </must_do>
     <must_not_do>
       <item>Do not modify source code or apply patches.</item>

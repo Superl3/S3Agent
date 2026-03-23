@@ -21,6 +21,8 @@
     <default_path>direct</default_path>
     <minimal_complexity_first>true</minimal_complexity_first>
     <decision_basis>
+      <item>planning_mode classification</item>
+      <item>execution_shape selection</item>
       <item>risk_level</item>
       <item>task ambiguity</item>
       <item>explicit verification need</item>
@@ -140,7 +142,7 @@
         </required_artifacts>
       </path>
     </paths>
-    <sidecar_execution_mode>conditional_sidecar_artifact_orchestration_batch3</sidecar_execution_mode>
+    <sidecar_execution_mode>conditional_sidecar_artifact_orchestration_batch3_default_off</sidecar_execution_mode>
   </payload>
   <integrity>
     <content_sha256>bb3ff4cb6b5d6b366ff94d2210e4d2b1156cd99266d9cac855f5911c4eae5f9f</content_sha256>

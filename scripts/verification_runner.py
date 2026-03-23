@@ -36,6 +36,21 @@ NS = "urn:pxml:v1"
 NSMAP = {None: NS}
 XPATH_NS = {"p": NS}
 
+BEHAVIOR_PROOF_MARKERS = (
+    "behavior",
+    "runtime",
+    "interaction",
+    "state",
+    "symptom",
+    "repro",
+)
+
+REGRESSION_PROOF_MARKERS = (
+    "regression",
+    "smoke",
+    "adjacent",
+)
+
 
 @dataclass
 class AcceptanceCheck:
@@ -355,6 +370,49 @@ def summarize_outcomes(tests: Sequence[Dict[str, object]]) -> Dict[str, int]:
     return summary
 
 
+def infer_proof_category(test: Dict[str, object]) -> str:
+    check_id = str(test.get("check_id", "")).lower()
+    command = str(test.get("command", "")).lower()
+    check_type = str(test.get("check_type", "")).lower()
+    combined = f"{check_id} {command}"
+
+    if any(marker in combined for marker in REGRESSION_PROOF_MARKERS):
+        return "regression"
+    if any(marker in combined for marker in BEHAVIOR_PROOF_MARKERS):
+        return "behavioral"
+    if check_type in {"build", "lint", "static_rule", "test"}:
+        return "structural"
+    return "structural"
+
+
+def summarize_proof_coverage(tests: Sequence[Dict[str, object]]) -> Dict[str, str]:
+    buckets: Dict[str, List[str]] = {
+        "structural": [],
+        "behavioral": [],
+        "regression": [],
+    }
+    for test in tests:
+        category = infer_proof_category(test)
+        result = str(test.get("result", "")).lower()
+        if category not in buckets:
+            continue
+        buckets[category].append(result)
+
+    summary: Dict[str, str] = {}
+    for category, results in buckets.items():
+        if not results:
+            summary[category] = "NOT-RUN"
+            continue
+        if any(item in {"fail", "error"} for item in results):
+            summary[category] = "FAIL"
+            continue
+        if all(item == "pass" for item in results):
+            summary[category] = "PASS"
+            continue
+        summary[category] = "NOT-RUN"
+    return summary
+
+
 def final_verdict(
     outcomes: Dict[str, int], unverified_areas: Sequence[str]
 ) -> Tuple[str, str]:
@@ -389,6 +447,7 @@ def build_verification_result(
     doc_id: str,
     tests: Sequence[Dict[str, object]],
     outcomes: Dict[str, int],
+    proof_coverage: Dict[str, str],
     unverified_areas: Sequence[str],
     residual_risks: Sequence[Dict[str, str]],
     verdict: str,
@@ -439,6 +498,11 @@ def build_verification_result(
     etree.SubElement(outcomes_node, q("failed")).text = str(outcomes["failed"])
     etree.SubElement(outcomes_node, q("errored")).text = str(outcomes["errored"])
     etree.SubElement(outcomes_node, q("skipped")).text = str(outcomes["skipped"])
+
+    proof_node = etree.SubElement(payload, q("proof_coverage"))
+    etree.SubElement(proof_node, q("structural")).text = proof_coverage["structural"]
+    etree.SubElement(proof_node, q("behavioral")).text = proof_coverage["behavioral"]
+    etree.SubElement(proof_node, q("regression")).text = proof_coverage["regression"]
 
     unverified = etree.SubElement(payload, q("unverified_areas"))
     for area in unverified_areas:
@@ -637,6 +701,7 @@ def main() -> int:
         unverified_areas = ["none"]
 
     outcomes = summarize_outcomes(tests)
+    proof_coverage = summarize_proof_coverage(tests)
     verdict, verdict_reason = final_verdict(outcomes, unverified_areas)
 
     if verdict == "pass":
@@ -668,6 +733,7 @@ def main() -> int:
         doc_id=doc_id,
         tests=tests,
         outcomes=outcomes,
+        proof_coverage=proof_coverage,
         unverified_areas=unverified_areas,
         residual_risks=residual_risks,
         verdict=verdict,

@@ -60,10 +60,19 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="ProofCoverageType">
+    <xs:sequence>
+      <xs:element name="structural" type="RequirementStatusType"/>
+      <xs:element name="behavioral" type="RequirementStatusType"/>
+      <xs:element name="regression" type="RequirementStatusType"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="VerificationResultPayloadType">
     <xs:sequence>
       <xs:element name="tests_run" type="VerificationTestsRunType"/>
       <xs:element name="outcomes" type="VerificationOutcomesType"/>
+      <xs:element name="proof_coverage" type="ProofCoverageType" minOccurs="0"/>
       <xs:element name="unverified_areas" type="StringListType"/>
       <xs:element name="residual_risks" type="ResidualRisksType"/>
       <xs:element name="acceptance_lock_sha256" type="Sha256Type"/>

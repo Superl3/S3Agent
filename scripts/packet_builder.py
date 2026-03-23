@@ -64,6 +64,70 @@ VERIFY_MARKERS = (
     "must pass tests",
 )
 
+META_PLANNING_MARKERS = (
+    "planning prompt",
+    "planner prompt",
+    "planner policy",
+    "planning policy",
+    "routing policy",
+    "split policy",
+    "packet policy",
+    "sidecar policy",
+    "retry policy",
+    "verification policy",
+    "completion policy",
+    "harness behavior",
+    "harness rules",
+    "planner hardening",
+    "meta-planning",
+)
+
+DESIGN_ONLY_MARKERS = (
+    "design only",
+    "design artifact",
+    "design proposal",
+    "proposal only",
+    "spec only",
+    "architecture only",
+)
+
+LARGE_REFACTOR_MARKERS = (
+    "shared interface",
+    "shared contract",
+    "public interface",
+    "many call sites",
+    "across modules",
+    "cross-module",
+    "cross cutting",
+    "cross-cutting",
+    "broad migration",
+)
+
+RECURRING_SYMPTOM_MARKERS = (
+    "recurring",
+    "recur",
+    "again",
+    "still happening",
+    "state bug",
+    "interaction bug",
+    "race",
+    "timing",
+    "async",
+    "focus issue",
+    "input issue",
+    "lifecycle",
+)
+
+BEHAVIOR_CHANGE_MARKERS = (
+    "runtime behavior",
+    "user-visible",
+    "interaction",
+    "state transition",
+    "bug symptom",
+    "fix bug",
+    "behavior",
+)
+
 EXPLORE_MARKERS = (
     "explore",
     "exploration",
@@ -210,6 +274,211 @@ def select_route(
 def detect_write_intent(request_text: str, requested_outcome: str) -> bool:
     combined = f"{request_text} {requested_outcome}".lower()
     return not any(marker in combined for marker in EXPLORE_MARKERS)
+
+
+def detect_planning_mode(request_text: str, requested_outcome: str) -> str:
+    combined = f"{request_text} {requested_outcome}".lower()
+    if any(marker in combined for marker in META_PLANNING_MARKERS):
+        return "meta_planning"
+    return "task_planning"
+
+
+def detect_design_only(request_text: str, requested_outcome: str) -> bool:
+    combined = f"{request_text} {requested_outcome}".lower()
+    return any(marker in combined for marker in DESIGN_ONLY_MARKERS)
+
+
+def behavior_change_expected(
+    task_type: str, request_text: str, requested_outcome: str
+) -> bool:
+    combined = f"{request_text} {requested_outcome}".lower()
+    if task_type in {"bugfix", "feature", "refactor"}:
+        return True
+    return any(marker in combined for marker in BEHAVIOR_CHANGE_MARKERS)
+
+
+def recurring_symptom_detected(request_text: str, requested_outcome: str) -> bool:
+    combined = f"{request_text} {requested_outcome}".lower()
+    return any(marker in combined for marker in RECURRING_SYMPTOM_MARKERS)
+
+
+def large_refactor_detected(
+    task_type: str, risk_hint: str, request_text: str, requested_outcome: str
+) -> bool:
+    combined = f"{request_text} {requested_outcome}".lower()
+    if task_type != "refactor":
+        return False
+    if risk_hint in {"high", "critical"}:
+        return True
+    return any(marker in combined for marker in LARGE_REFACTOR_MARKERS)
+
+
+@dataclass
+class PlannerPolicyDecision:
+    planning_mode: str
+    execution_shape: str
+    split_required: bool
+    observation_first: bool
+    write_intent: bool
+    reasoning: str
+    intended_behaviors: List[str]
+    proof_requirements: List[Dict[str, str]]
+    requirement_status_matrix: List[Dict[str, str]]
+    completion_state: str
+
+
+def build_proof_requirements(
+    behavior_required: bool,
+    regression_required: bool,
+    observation_first: bool,
+) -> List[Dict[str, str]]:
+    behavioral_method = (
+        "observation-first reproduction plus targeted verification"
+        if observation_first
+        else "targeted scenario verification"
+    )
+    return [
+        {
+            "proof_category": "structural",
+            "required": "true",
+            "proof_method": "build or lint or deterministic check",
+            "minimum_evidence": "at least one deterministic structural check pass",
+        },
+        {
+            "proof_category": "behavioral",
+            "required": "true" if behavior_required else "false",
+            "proof_method": behavioral_method,
+            "minimum_evidence": (
+                "before/after runtime or interaction evidence"
+                if behavior_required
+                else "none"
+            ),
+        },
+        {
+            "proof_category": "regression",
+            "required": "true" if regression_required else "false",
+            "proof_method": "nearby workflow or regression check",
+            "minimum_evidence": (
+                "at least one adjacent regression check"
+                if regression_required
+                else "none"
+            ),
+        },
+    ]
+
+
+def build_requirement_targets(
+    intended_behaviors: Sequence[str], observation_first: bool
+) -> List[Dict[str, str]]:
+    if not intended_behaviors:
+        return [
+            {
+                "requirement": "Task outcome is satisfied",
+                "proof_method": "post_implement_verifier",
+                "status_target": "PASS",
+                "minimum_evidence": "explicit evidence for required proof categories",
+                "next_step_if_missing": "Run verifier and update requirement evidence",
+            }
+        ]
+    next_step = "Run verifier and mark requirement PASS or FAIL with evidence"
+    if observation_first:
+        next_step = (
+            "Collect observation-first evidence before applying or accepting a patch"
+        )
+    return [
+        {
+            "requirement": behavior,
+            "proof_method": "post_implement_verifier",
+            "status_target": "PASS",
+            "minimum_evidence": "behavioral and regression proof when required",
+            "next_step_if_missing": next_step,
+        }
+        for behavior in intended_behaviors
+    ]
+
+
+def choose_execution_shape(intake: "IntakeData") -> PlannerPolicyDecision:
+    planning_mode = detect_planning_mode(intake.request_text, intake.requested_outcome)
+    design_only = detect_design_only(intake.request_text, intake.requested_outcome)
+    explore_only = not detect_write_intent(
+        intake.request_text, intake.requested_outcome
+    )
+    recurring_bug = recurring_symptom_detected(
+        intake.request_text, intake.requested_outcome
+    )
+    large_refactor = large_refactor_detected(
+        intake.task_type,
+        intake.risk_hint,
+        intake.request_text,
+        intake.requested_outcome,
+    )
+
+    behavior_required = behavior_change_expected(
+        intake.task_type,
+        intake.request_text,
+        intake.requested_outcome,
+    )
+    regression_required = intake.task_type in {"bugfix", "refactor"}
+    observation_first = intake.task_type == "bugfix" and recurring_bug
+
+    if planning_mode == "meta_planning" or design_only:
+        shape = "read_only_design_artifact"
+        write_intent = False
+        split_required = False
+        reasoning = "Planner-policy or design-only request routed to read-only design artifact shape."
+    elif explore_only:
+        shape = "read_only_investigation"
+        write_intent = False
+        split_required = False
+        reasoning = "Read-only research intent detected from intake text."
+    elif large_refactor or observation_first:
+        shape = "serial_packet_chain"
+        write_intent = True
+        split_required = True
+        if observation_first:
+            reasoning = "Recurring interaction or state bug markers detected; biasing to observation-first serial packet chain."
+        else:
+            reasoning = "Large shared-interface refactor signals detected; avoiding one-shot execution."
+    elif intake.risk_hint == "high":
+        shape = "single_packet_with_sidecars"
+        write_intent = True
+        split_required = False
+        reasoning = (
+            "High-risk but bounded work uses one packet with conditional sidecars."
+        )
+    else:
+        shape = "direct_single_packet"
+        write_intent = True
+        split_required = False
+        reasoning = "Bounded task defaults to single direct packet."
+
+    intended = [intake.requested_outcome.strip()]
+    proof_requirements = build_proof_requirements(
+        behavior_required=behavior_required,
+        regression_required=regression_required,
+        observation_first=observation_first,
+    )
+    matrix = build_requirement_targets(
+        intended_behaviors=intended,
+        observation_first=observation_first,
+    )
+
+    completion_state = "partial"
+    if not write_intent:
+        completion_state = "partial"
+
+    return PlannerPolicyDecision(
+        planning_mode=planning_mode,
+        execution_shape=shape,
+        split_required=split_required,
+        observation_first=observation_first,
+        write_intent=write_intent,
+        reasoning=reasoning,
+        intended_behaviors=intended,
+        proof_requirements=proof_requirements,
+        requirement_status_matrix=matrix,
+        completion_state=completion_state,
+    )
 
 
 def default_scope(
@@ -359,6 +628,8 @@ def build_manager_route(
     route_sequence: int,
     route_created_at: datetime,
     selected_path: str,
+    planning_mode: str,
+    execution_shape: str,
     route_reason: str,
     lock_hash: str,
 ) -> Tuple[etree._ElementTree, str]:
@@ -382,6 +653,8 @@ def build_manager_route(
     etree.SubElement(ref, q("relation")).text = "intake"
 
     payload = etree.SubElement(root, q("payload"))
+    etree.SubElement(payload, q("planning_mode")).text = planning_mode
+    etree.SubElement(payload, q("execution_shape")).text = execution_shape
     etree.SubElement(payload, q("selected_path")).text = selected_path
     lane_flags = etree.SubElement(payload, q("lane_flags"))
     etree.SubElement(lane_flags, q("planner")).text = (
@@ -423,6 +696,13 @@ def build_execution_packet(
     checks: Sequence[Dict[str, object]],
     lock_hash: str,
     write_intent: bool,
+    planning_mode: str,
+    execution_shape: str,
+    intended_behaviors: Sequence[str],
+    proof_requirements: Sequence[Dict[str, str]],
+    requirement_status_matrix: Sequence[Dict[str, str]],
+    completion_state: str,
+    observation_first: bool,
 ) -> Tuple[etree._ElementTree, str]:
     in_scope, out_scope, expected_files, localization_targets = default_scope(
         intake.task_type
@@ -451,6 +731,32 @@ def build_execution_packet(
     etree.SubElement(payload, q("write_intent")).text = (
         "true" if write_intent else "false"
     )
+    etree.SubElement(payload, q("planning_mode")).text = planning_mode
+    etree.SubElement(payload, q("execution_shape")).text = execution_shape
+    build_string_list(payload, "intended_behaviors", intended_behaviors)
+
+    proof_node = etree.SubElement(payload, q("proof_requirements"))
+    for proof in proof_requirements:
+        item = etree.SubElement(proof_node, q("proof"))
+        etree.SubElement(item, q("proof_category")).text = proof["proof_category"]
+        etree.SubElement(item, q("required")).text = proof["required"]
+        etree.SubElement(item, q("proof_method")).text = proof["proof_method"]
+        etree.SubElement(item, q("minimum_evidence")).text = proof["minimum_evidence"]
+
+    matrix_node = etree.SubElement(payload, q("requirement_status_matrix"))
+    for requirement in requirement_status_matrix:
+        item = etree.SubElement(matrix_node, q("requirement"))
+        etree.SubElement(item, q("requirement")).text = requirement["requirement"]
+        etree.SubElement(item, q("proof_method")).text = requirement["proof_method"]
+        etree.SubElement(item, q("status_target")).text = requirement["status_target"]
+        etree.SubElement(item, q("minimum_evidence")).text = requirement[
+            "minimum_evidence"
+        ]
+        etree.SubElement(item, q("next_step_if_missing")).text = requirement[
+            "next_step_if_missing"
+        ]
+
+    etree.SubElement(payload, q("completion_state")).text = completion_state
 
     build_string_list(payload, "in_scope", in_scope)
     build_string_list(payload, "out_of_scope", out_scope)
@@ -488,7 +794,11 @@ def build_execution_packet(
         payload,
         "test_guidance",
         [
-            "Run acceptance checks in listed order.",
+            (
+                "Use observation-first sequence: reproduce, instrument, collect evidence, then patch."
+                if observation_first
+                else "Run acceptance checks in listed order."
+            ),
             "Escalate if deterministic check cannot execute.",
         ],
     )
@@ -646,14 +956,39 @@ def main() -> int:
         request_text=intake.request_text,
         requested_outcome=intake.requested_outcome,
     )
-    write_intent = detect_write_intent(
+    planner_decision = choose_execution_shape(intake)
+
+    if (
+        planner_decision.execution_shape == "serial_packet_chain"
+        and selected_path == "direct"
+    ):
+        selected_path = "planner_pre"
+        route_reason = "Serial packet chain selected; planner lane used as conservative stage-gate."
+    elif (
+        planner_decision.execution_shape == "single_packet_with_sidecars"
+        and selected_path == "direct"
+    ):
+        selected_path = (
+            "reviewer_post" if intake.risk_hint == "high" else "verifier_post"
+        )
+        route_reason = (
+            "Single bounded packet needs sidecar evidence; non-direct lane selected."
+        )
+
+    write_intent = planner_decision.write_intent and detect_write_intent(
         request_text=intake.request_text,
         requested_outcome=intake.requested_outcome,
     )
+
+    if planner_decision.execution_shape in {
+        "read_only_investigation",
+        "read_only_design_artifact",
+    }:
+        write_intent = False
+
+    route_reason = f"{route_reason} {planner_decision.reasoning}".strip()
     if not write_intent:
-        route_reason = (
-            route_reason + " Exploration-only request disables implementer writes."
-        )
+        route_reason = route_reason + " Read-only intake disables implementer writes."
 
     checks = default_acceptance_checks(intake.task_type)
     lock_hash = acceptance_lock_hash(checks)
@@ -671,6 +1006,8 @@ def main() -> int:
         route_sequence=route_sequence,
         route_created_at=route_created_at,
         selected_path=selected_path,
+        planning_mode=planner_decision.planning_mode,
+        execution_shape=planner_decision.execution_shape,
         route_reason=route_reason,
         lock_hash=lock_hash,
     )
@@ -686,6 +1023,13 @@ def main() -> int:
         checks=checks,
         lock_hash=lock_hash,
         write_intent=write_intent,
+        planning_mode=planner_decision.planning_mode,
+        execution_shape=planner_decision.execution_shape,
+        intended_behaviors=planner_decision.intended_behaviors,
+        proof_requirements=planner_decision.proof_requirements,
+        requirement_status_matrix=planner_decision.requirement_status_matrix,
+        completion_state=planner_decision.completion_state,
+        observation_first=planner_decision.observation_first,
     )
 
     route_path = runtime_root / "packets" / "manager_route" / f"{route_doc_id}.pxml"
@@ -739,6 +1083,8 @@ def main() -> int:
     print(f"Generated manager_route: {route_path}")
     print(f"Generated execution_packet: {packet_path}")
     print(f"Routing decision: {selected_path}")
+    print(f"Execution shape: {planner_decision.execution_shape}")
+    print(f"Planning mode: {planner_decision.planning_mode}")
     print(f"Acceptance lock hash: {lock_hash}")
     return 0
 

@@ -105,6 +105,49 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="PlanningModeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="meta_planning"/>
+      <xs:enumeration value="task_planning"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExecutionShapeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="direct_single_packet"/>
+      <xs:enumeration value="single_packet_with_sidecars"/>
+      <xs:enumeration value="serial_packet_chain"/>
+      <xs:enumeration value="read_only_investigation"/>
+      <xs:enumeration value="read_only_design_artifact"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ProofCategoryType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="structural"/>
+      <xs:enumeration value="behavioral"/>
+      <xs:enumeration value="regression"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RequirementStatusType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PASS"/>
+      <xs:enumeration value="FAIL"/>
+      <xs:enumeration value="NOT-RUN"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CompletionStateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="completed_and_verified"/>
+      <xs:enumeration value="implemented_but_unverified"/>
+      <xs:enumeration value="partial"/>
+      <xs:enumeration value="blocked"/>
+      <xs:enumeration value="failed"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="RegistryStatusType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="imported"/>

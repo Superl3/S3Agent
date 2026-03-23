@@ -343,6 +343,212 @@ def recommended_action(
     return "Continue execution pipeline with task_executor for remaining phases."
 
 
+def parse_packet_policy_fields(
+    packet_info: Optional[ArtifactRefInfo],
+) -> tuple[bool, Optional[str], Optional[str], List[str], Dict[str, bool]]:
+    required = {"structural": True, "behavioral": False, "regression": False}
+    if packet_info is None:
+        return True, None, None, [], required
+
+    tree = etree.parse(str(packet_info.path))
+    write_text = text_at(tree, "/p:pxml/p:payload/p:write_intent")
+    write_intent = True if write_text is None else write_text == "true"
+    planning_mode = text_at(tree, "/p:pxml/p:payload/p:planning_mode")
+    execution_shape = text_at(tree, "/p:pxml/p:payload/p:execution_shape")
+    intended = tree.xpath(
+        "/p:pxml/p:payload/p:intended_behaviors/p:item/text()",
+        namespaces=XPATH_NS,
+    )
+    intended_behaviors = [item.strip() for item in intended if item and item.strip()]
+
+    proof_nodes = tree.xpath(
+        "/p:pxml/p:payload/p:proof_requirements/p:proof", namespaces=XPATH_NS
+    )
+    for node in proof_nodes:
+        node_tree = etree.ElementTree(node)
+        category = text_at(node_tree, "./p:proof_category")
+        required_text = text_at(node_tree, "./p:required")
+        if category in required and required_text is not None:
+            required[category] = required_text.lower() == "true"
+
+    return write_intent, planning_mode, execution_shape, intended_behaviors, required
+
+
+def parse_proof_status(
+    verification_info: Optional[ArtifactRefInfo],
+) -> Dict[str, str]:
+    default = {
+        "structural": "NOT-RUN",
+        "behavioral": "NOT-RUN",
+        "regression": "NOT-RUN",
+    }
+    if verification_info is None:
+        return default
+    tree = etree.parse(str(verification_info.path))
+
+    explicit_structural = text_at(
+        tree, "/p:pxml/p:payload/p:proof_coverage/p:structural"
+    )
+    explicit_behavioral = text_at(
+        tree, "/p:pxml/p:payload/p:proof_coverage/p:behavioral"
+    )
+    explicit_regression = text_at(
+        tree, "/p:pxml/p:payload/p:proof_coverage/p:regression"
+    )
+    if explicit_structural and explicit_behavioral and explicit_regression:
+        return {
+            "structural": explicit_structural,
+            "behavioral": explicit_behavioral,
+            "regression": explicit_regression,
+        }
+
+    tests = tree.xpath("/p:pxml/p:payload/p:tests_run/p:test", namespaces=XPATH_NS)
+    if not tests:
+        return default
+
+    buckets: Dict[str, List[str]] = {
+        "structural": [],
+        "behavioral": [],
+        "regression": [],
+    }
+    for node in tests:
+        node_tree = etree.ElementTree(node)
+        check_id = (text_at(node_tree, "./p:check_id") or "").lower()
+        command = (text_at(node_tree, "./p:command") or "").lower()
+        check_type = (text_at(node_tree, "./p:check_type") or "").lower()
+        result = (text_at(node_tree, "./p:result") or "skipped").lower()
+        combined = f"{check_id} {command}"
+        if any(token in combined for token in ("regression", "smoke", "adjacent")):
+            category = "regression"
+        elif any(
+            token in combined
+            for token in (
+                "behavior",
+                "runtime",
+                "interaction",
+                "state",
+                "symptom",
+                "repro",
+            )
+        ):
+            category = "behavioral"
+        elif check_type in {"build", "lint", "static_rule", "test"}:
+            category = "structural"
+        else:
+            category = "structural"
+        buckets[category].append(result)
+
+    status = dict(default)
+    for category, values in buckets.items():
+        if not values:
+            continue
+        if any(item in {"fail", "error"} for item in values):
+            status[category] = "FAIL"
+        elif all(item == "pass" for item in values):
+            status[category] = "PASS"
+        else:
+            status[category] = "NOT-RUN"
+    return status
+
+
+def determine_completion_state(
+    write_intent: bool,
+    execution_shape: Optional[str],
+    implementer_status: Optional[str],
+    verification_verdict: Optional[str],
+    escalation_state: str,
+    required_proofs: Dict[str, bool],
+    proof_status: Dict[str, str],
+) -> str:
+    if escalation_state in {"stopped", "escalated"}:
+        return "failed"
+    if implementer_status == "blocked":
+        return "blocked"
+    if implementer_status in {"retry_failed", "escalated"}:
+        return "failed"
+
+    if not write_intent and execution_shape in {
+        "read_only_investigation",
+        "read_only_design_artifact",
+    }:
+        return "completed_and_verified"
+
+    if verification_verdict == "fail":
+        return "failed"
+
+    proofs_satisfied = True
+    for category, required in required_proofs.items():
+        if not required:
+            continue
+        if proof_status.get(category) != "PASS":
+            proofs_satisfied = False
+            break
+
+    if implementer_status in {"applied", "no_op"}:
+        if verification_verdict == "pass" and proofs_satisfied:
+            return "completed_and_verified"
+        return "implemented_but_unverified"
+
+    if verification_verdict == "pass" and proofs_satisfied:
+        return "completed_and_verified"
+    return "partial"
+
+
+def build_requirement_status_matrix(
+    intended_behaviors: Sequence[str],
+    completion_state: str,
+    implementer_status: Optional[str],
+    verification_verdict: Optional[str],
+    proof_status: Dict[str, str],
+) -> List[Dict[str, str]]:
+    behaviors = [item.strip() for item in intended_behaviors if item.strip()]
+    if not behaviors:
+        behaviors = ["Task outcome is satisfied"]
+
+    matrix: List[Dict[str, str]] = []
+    for requirement in behaviors:
+        if completion_state == "completed_and_verified":
+            status = "PASS"
+            reason = "Required proof has been satisfied"
+            current_evidence = (
+                "proof_status="
+                f"structural:{proof_status['structural']},"
+                f"behavioral:{proof_status['behavioral']},"
+                f"regression:{proof_status['regression']}"
+            )
+            next_action = "No additional action required."
+        elif completion_state in {"blocked", "failed"}:
+            status = "FAIL"
+            reason = (
+                f"implementer_status={implementer_status or 'unknown'} "
+                f"verification_verdict={verification_verdict or 'unknown'}"
+            )
+            current_evidence = "execution result indicates unresolved failure or block"
+            next_action = "Resolve failures and rerun required proof checks."
+        else:
+            status = "NOT-RUN"
+            reason = "Behavioral or regression proof is incomplete"
+            current_evidence = (
+                "proof_status="
+                f"structural:{proof_status['structural']},"
+                f"behavioral:{proof_status['behavioral']},"
+                f"regression:{proof_status['regression']}"
+            )
+            next_action = "Run missing proof steps and refresh status report."
+
+        matrix.append(
+            {
+                "requirement": requirement,
+                "proof_method": "status_report_evaluation",
+                "status": status,
+                "reason": reason,
+                "current_evidence": current_evidence,
+                "next_recommended_action": next_action,
+            }
+        )
+    return matrix
+
+
 def append_payload_ref(
     payload: etree._Element,
     tag: str,
@@ -373,6 +579,15 @@ def build_status_report(
 
     selected_path: Optional[str] = None
     acceptance_lock: Optional[str] = None
+    write_intent = True
+    planning_mode: Optional[str] = None
+    execution_shape: Optional[str] = None
+    intended_behaviors: List[str] = []
+    required_proofs: Dict[str, bool] = {
+        "structural": True,
+        "behavioral": False,
+        "regression": False,
+    }
     if route_info is not None:
         route_tree = etree.parse(str(route_info.path))
         selected_path = text_at(route_tree, "/p:pxml/p:payload/p:selected_path")
@@ -381,6 +596,13 @@ def build_status_report(
         acceptance_lock = text_at(
             packet_tree, "/p:pxml/p:payload/p:acceptance_lock_hash"
         )
+    (
+        write_intent,
+        planning_mode,
+        execution_shape,
+        intended_behaviors,
+        required_proofs,
+    ) = parse_packet_policy_fields(packet_info)
 
     implementer_status: Optional[str] = None
     implementer_retry_count = 0
@@ -402,6 +624,8 @@ def build_status_report(
     if verification_info is not None:
         verify_tree = etree.parse(str(verification_info.path))
         verification_verdict = text_at(verify_tree, "/p:pxml/p:payload/p:final_verdict")
+
+    proof_status = parse_proof_status(verification_info)
 
     trace_event_types: List[str] = []
     if trace_info is not None:
@@ -458,6 +682,24 @@ def build_status_report(
         has_reviewer=reviewer_info is not None,
     )
 
+    completion_state = determine_completion_state(
+        write_intent=write_intent,
+        execution_shape=execution_shape,
+        implementer_status=implementer_status,
+        verification_verdict=verification_verdict,
+        escalation_state=escalation_state,
+        required_proofs=required_proofs,
+        proof_status=proof_status,
+    )
+
+    requirement_status_matrix = build_requirement_status_matrix(
+        intended_behaviors=intended_behaviors,
+        completion_state=completion_state,
+        implementer_status=implementer_status,
+        verification_verdict=verification_verdict,
+        proof_status=proof_status,
+    )
+
     verdict_candidate = final_verdict_candidate(
         verification_verdict=verification_verdict,
         implementer_status=implementer_status,
@@ -510,6 +752,10 @@ def build_status_report(
     etree.SubElement(payload, q("current_status")).text = status
     if selected_path:
         etree.SubElement(payload, q("selected_path")).text = selected_path
+    if planning_mode:
+        etree.SubElement(payload, q("planning_mode")).text = planning_mode
+    if execution_shape:
+        etree.SubElement(payload, q("execution_shape")).text = execution_shape
 
     append_payload_ref(payload, "latest_route_ref", route_info, "latest_route")
     append_payload_ref(payload, "latest_packet_ref", packet_info, "latest_packet")
@@ -532,6 +778,28 @@ def build_status_report(
         etree.SubElement(payload, q("acceptance_lock_sha256")).text = acceptance_lock
     etree.SubElement(payload, q("retry_count")).text = str(retry_count)
     etree.SubElement(payload, q("escalation_state")).text = escalation_state
+
+    proof_node = etree.SubElement(payload, q("proof_status"))
+    etree.SubElement(proof_node, q("structural")).text = proof_status["structural"]
+    etree.SubElement(proof_node, q("behavioral")).text = proof_status["behavioral"]
+    etree.SubElement(proof_node, q("regression")).text = proof_status["regression"]
+
+    matrix_node = etree.SubElement(payload, q("requirement_status_matrix"))
+    for row in requirement_status_matrix:
+        requirement_node = etree.SubElement(matrix_node, q("requirement"))
+        etree.SubElement(requirement_node, q("requirement")).text = row["requirement"]
+        etree.SubElement(requirement_node, q("proof_method")).text = row["proof_method"]
+        etree.SubElement(requirement_node, q("status")).text = row["status"]
+        etree.SubElement(requirement_node, q("reason")).text = row["reason"]
+        etree.SubElement(requirement_node, q("current_evidence")).text = row[
+            "current_evidence"
+        ]
+        etree.SubElement(requirement_node, q("next_recommended_action")).text = row[
+            "next_recommended_action"
+        ]
+
+    etree.SubElement(payload, q("completion_state")).text = completion_state
+
     etree.SubElement(payload, q("final_verdict_candidate")).text = verdict_candidate
     etree.SubElement(payload, q("next_recommended_action")).text = next_action
 

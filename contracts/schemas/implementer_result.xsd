@@ -24,6 +24,31 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="ProofStatusSummaryType">
+    <xs:sequence>
+      <xs:element name="structural" type="RequirementStatusType"/>
+      <xs:element name="behavioral" type="RequirementStatusType"/>
+      <xs:element name="regression" type="RequirementStatusType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RequirementStatusItemType">
+    <xs:sequence>
+      <xs:element name="requirement" type="NonEmptyStringType"/>
+      <xs:element name="proof_method" type="NonEmptyStringType"/>
+      <xs:element name="status" type="RequirementStatusType"/>
+      <xs:element name="reason" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="current_evidence" type="NonEmptyStringType"/>
+      <xs:element name="next_recommended_action" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RequirementStatusMatrixType">
+    <xs:sequence>
+      <xs:element name="requirement" type="RequirementStatusItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="ImplementerResultPayloadType">
     <xs:sequence>
       <xs:element name="packet_ref" type="ReferenceItemType"/>
@@ -33,6 +58,9 @@
       <xs:element name="patch_mode_used" type="PatchModeType"/>
       <xs:element name="patch_evidence_refs" type="PatchEvidencePathListType"/>
       <xs:element name="result_status" type="ImplementerResultStatusType"/>
+      <xs:element name="proof_status" type="ProofStatusSummaryType" minOccurs="0"/>
+      <xs:element name="requirement_status_matrix" type="RequirementStatusMatrixType" minOccurs="0"/>
+      <xs:element name="completion_state" type="CompletionStateType" minOccurs="0"/>
       <xs:element name="blocked_reason" type="NonEmptyStringType" minOccurs="0"/>
       <xs:element name="retry_count" type="xs:nonNegativeInteger"/>
       <xs:element name="escalation_requested" type="xs:boolean"/>

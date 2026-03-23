@@ -52,12 +52,39 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:complexType name="TaskProofStatusSummaryType">
+    <xs:sequence>
+      <xs:element name="structural" type="RequirementStatusType"/>
+      <xs:element name="behavioral" type="RequirementStatusType"/>
+      <xs:element name="regression" type="RequirementStatusType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TaskRequirementStatusItemType">
+    <xs:sequence>
+      <xs:element name="requirement" type="NonEmptyStringType"/>
+      <xs:element name="proof_method" type="NonEmptyStringType"/>
+      <xs:element name="status" type="RequirementStatusType"/>
+      <xs:element name="reason" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="current_evidence" type="NonEmptyStringType"/>
+      <xs:element name="next_recommended_action" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TaskRequirementStatusMatrixType">
+    <xs:sequence>
+      <xs:element name="requirement" type="TaskRequirementStatusItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="TaskStatusReportPayloadType">
     <xs:sequence>
       <xs:element name="task_id" type="TaskIdType"/>
       <xs:element name="current_phase" type="TaskCurrentPhaseType"/>
       <xs:element name="current_status" type="TaskCurrentStatusType"/>
       <xs:element name="selected_path" type="RoutePathType" minOccurs="0"/>
+      <xs:element name="planning_mode" type="PlanningModeType" minOccurs="0"/>
+      <xs:element name="execution_shape" type="ExecutionShapeType" minOccurs="0"/>
       <xs:element name="latest_route_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_packet_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_implementer_result_ref" type="ReferenceItemType" minOccurs="0"/>
@@ -67,6 +94,9 @@
       <xs:element name="acceptance_lock_sha256" type="Sha256Type" minOccurs="0"/>
       <xs:element name="retry_count" type="xs:nonNegativeInteger"/>
       <xs:element name="escalation_state" type="TaskEscalationStateType"/>
+      <xs:element name="proof_status" type="TaskProofStatusSummaryType" minOccurs="0"/>
+      <xs:element name="requirement_status_matrix" type="TaskRequirementStatusMatrixType" minOccurs="0"/>
+      <xs:element name="completion_state" type="CompletionStateType" minOccurs="0"/>
       <xs:element name="final_verdict_candidate" type="FinalVerdictCandidateType"/>
       <xs:element name="next_recommended_action" type="NonEmptyStringType"/>
       <xs:element name="failure_reason_codes" type="StringListType"/>

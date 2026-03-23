@@ -34,6 +34,7 @@
       <item>execution_trace event evidence via manager trace appender flow</item>
     </outputs>
     <must_do>
+      <item>Respect manager-selected planning_mode and avoid mutating task-planning packets during meta-planning requests.</item>
       <item>Identify unresolved ambiguity and record it as structured ambiguities entries.</item>
       <item>Provide explicit assumptions and concrete proposed execution steps.</item>
       <item>Provide risk_map entries with target and risk_level.</item>

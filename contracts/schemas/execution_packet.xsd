@@ -51,10 +51,47 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="ProofRequirementType">
+    <xs:sequence>
+      <xs:element name="proof_category" type="ProofCategoryType"/>
+      <xs:element name="required" type="xs:boolean"/>
+      <xs:element name="proof_method" type="NonEmptyStringType"/>
+      <xs:element name="minimum_evidence" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ProofRequirementsType">
+    <xs:sequence>
+      <xs:element name="proof" type="ProofRequirementType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RequirementStatusTargetType">
+    <xs:sequence>
+      <xs:element name="requirement" type="NonEmptyStringType"/>
+      <xs:element name="proof_method" type="NonEmptyStringType"/>
+      <xs:element name="status_target" type="RequirementStatusType"/>
+      <xs:element name="minimum_evidence" type="NonEmptyStringType"/>
+      <xs:element name="next_step_if_missing" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RequirementStatusMatrixType">
+    <xs:sequence>
+      <xs:element name="requirement" type="RequirementStatusTargetType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="ExecutionPacketPayloadType">
     <xs:sequence>
       <xs:element name="task_summary" type="NonEmptyStringType"/>
       <xs:element name="write_intent" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="planning_mode" type="PlanningModeType" minOccurs="0"/>
+      <xs:element name="execution_shape" type="ExecutionShapeType" minOccurs="0"/>
+      <xs:element name="intended_behaviors" type="StringListType" minOccurs="0"/>
+      <xs:element name="proof_requirements" type="ProofRequirementsType" minOccurs="0"/>
+      <xs:element name="requirement_status_matrix" type="RequirementStatusMatrixType" minOccurs="0"/>
+      <xs:element name="completion_state" type="CompletionStateType" minOccurs="0"/>
       <xs:element name="in_scope" type="PathListType"/>
       <xs:element name="out_of_scope" type="PathListType"/>
       <xs:element name="expected_files" type="ExpectedFilesType"/>
