@@ -5,9 +5,14 @@ Default
 
 Read-only parallel exploration allowlist
 - Read-only inspection.
-- Read-only search.
+- Read-only search (only for large-scale discovery).
 - Read-only docs/schema/reference lookup.
 - Read-only repository exploration.
+
+Serial Consolidation Principle:
+- Non-destructive exploration (reading, directory listing, searching) SHOULD be performed by the primary assigned execution agent in a single turn/process.
+- Spawning parallel sub-agents for per-file reading is forbidden unless the search space is exceptionally large.
+- Prioritize token efficiency and sequential context building over parallel sprawl for all "understanding" tasks.
 
 Allow parallel branches only when all conditions hold
 - Module ownership boundaries are independent.

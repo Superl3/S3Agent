@@ -282,6 +282,15 @@ NOT sufficient in any mode:
 * "Looks correct"
 * "No errors observed manually"
 
+### 8.1 Review Gate
+
+A separate `reviewer` handoff is required ONLY when:
+* Mode is STANDARD or DEEP
+* AND Risk is `medium` or `high`
+* AND Task type is not `investigation` (investigation results are emitted directly)
+
+For all other cases (including all MICRO tasks with successful validation), the `orchestrator` should proceed to `DONE` immediately after the primary agent's execution and testing are complete.
+
 ---
 
 ## 9. Planning Escalation (Integrated with MICRO/STANDARD/DEEP)

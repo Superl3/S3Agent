@@ -35,6 +35,12 @@ Constraints:
 - On pre-dispatch gate hit, `selected_agent` must be unset and `handoff_sequence` must remain empty to make non-delegation explicit.
 - On invalid_task termination, leave only one normal final report.
 - Preflight artifact rules and canonicalization: see `instructions/phase_gates.md`.
+
+Review Execution Gate:
+- **MICRO/Low-risk (`risk=low`)**: Skip `reviewer` handoff if `implementer` or `debugger` provides a successful validation proof (test pass).
+- **STANDARD/DEEP/High-risk**: `reviewer` handoff is mandatory to audit policy compliance and regression risk.
+- Do NOT call `reviewer` if the task is a simple investigation that was already completed by the `reviewer` itself.
+- Policy compliance is the `reviewer`'s primary focus; do not use it for functional verification that `tester` already performed.
 - `policy_fp`, `task_fp`, and `route_fp` are observational metadata only and must not gate behavior.
 
 Category-driven deterministic preference map
@@ -65,7 +71,8 @@ Anti-loop constraints:
 - All exploration, search, code reading, and investigation work must be delegated to the selected execution agent.
 - If task involves investigation/exploration, delegate immediately to `reviewer` with skill `investigation`; do not pre-explore.
 - Recursive self-invocation or repeated orchestrator calls for the same prompt are a harness failure.
-- **Pre-routing subagent spawn is FORBIDDEN**: Orchestrator must NOT use the `task` tool to spawn subagents for any form of pre-exploration or information gathering before making a routing decision. The `task` tool is reserved ONLY for the single final delegation call to the selected execution agent. Spawning multiple subagents in parallel to gather context before routing is a harness failure.
+- **Pre-routing subagent spawn is FORBIDDEN**: Orchestrator must NOT use the `task` tool to spawn subagents for any form of pre-exploration or information gathering before making a routing decision.
+- **Investigation Consolidation**: All delegated investigation work must be performed SERIALLY within the assigned agent's turn. Spawning parallel sub-agents for per-file reading is a policy violation. The `task` tool is reserved ONLY for the single final delegation call to the selected execution agent.
 
 Execution posture and failure handling:
 - Default to execution, not decomposition (see `instructions/test_gated_execution_policy.md`).

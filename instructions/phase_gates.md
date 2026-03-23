@@ -29,6 +29,7 @@ Execution packet format
 - Packets must validate against `schemas/packet.schema.json`.
 - `packet_class` enum is minimal: `generic_packet`, `failing_test_repair`.
 - `parallel_mode` enum is minimal: `off`, `read_only`.
+- **Parallelism Constraint**: `parallel_mode: read_only` is allowed ONLY for large-scale codebase discovery. For simple file reading or small-scope investigation, `off` is required to favor serial consolidation and token efficiency.
 - `phase_name` must be a concise slug-style identifier: lowercase letters/numbers with internal hyphens only (example: `phase-01-parser-fix`).
 - `success_check` must be a structured object, not free-form text.
 - `retry_strategy` must be structured and non-blind; it must include `observed_vs_expected`, `next_probe`, and verifier feedback.

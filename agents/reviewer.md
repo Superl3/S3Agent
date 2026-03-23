@@ -26,6 +26,7 @@ Constraints:
 
 Investigation mode (when skill=investigation):
 - Perform all required file reading, directory scanning, grep, and content analysis directly.
+- **DO NOT spawn sub-agents** to assist with reading or searching; consolidate all non-destructive discovery into the primary turn.
 - Follow `instructions/exploration_policy.md` file-open discipline and `instructions/search_policy.md` stage order.
 - Produce a structured findings report covering: task target, files opened, key findings, and recommended next steps.
 - Do not require an orchestrator re-call after completing investigation; emit results directly to the user.
