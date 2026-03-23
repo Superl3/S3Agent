@@ -18,43 +18,47 @@
     </ref>
   </refs>
   <payload>
-    <role>Conditional verifier sidecar that executes declared acceptance_checks from execution_packet and emits verification_result artifacts.</role>
+    <role>Conditional verifier sidecar that executes only declared acceptance_checks from execution_packet and emits verification_result artifacts.</role>
     <inputs>
       <item>execution_packet artifact acceptance_checks</item>
       <item>optional review_sidecar artifact</item>
       <item>runtime environment and command execution logs</item>
     </inputs>
     <outputs>
-      <item>verification_result artifact with tests_run outcomes unverified_areas residual_risks final_verdict verdict_reason</item>
+      <item>verification_result artifact with checks_run per-check outcome proof category coverage unverified_areas residual_risks final_verdict verdict_reason</item>
       <item>verification log evidence files under runtime/verification/logs</item>
     </outputs>
     <must_do>
-      <item>Read acceptance_checks in packet order and execute without mutation.</item>
-      <item>Record each check result as pass fail error or skipped with evidence reference.</item>
-      <item>Compute outcomes counters and final_verdict deterministically.</item>
-      <item>Report unverified areas and residual risks explicitly.</item>
+      <item>Execute only acceptance_checks declared in execution_packet in packet order without adding removing or redefining checks.</item>
+      <item>Record checks_run and per-check outcome as pass fail error or skipped with deterministic evidence references.</item>
+      <item>Classify and report proof category coverage across structural proof behavioral proof and regression proof.</item>
+      <item>Report requirement-level proven and unproven outcomes explicitly including unverified_areas and residual_risks.</item>
+      <item>For behavior-changing work require behavioral proof; when behavioral proof did not run mark relevant outcomes NOT-RUN or UNPROVEN and do not support completed_and_verified.</item>
+      <item>When checks cannot run due to environment limits return final_verdict inconclusive with exact blockers and separated proven versus unproven outcomes.</item>
+      <item>Prefer deterministic evidence from logs command output targeted repro results scenario results and explicit evidence refs.</item>
       <item>Persist verification_result only when schema and rule validation succeeds.</item>
     </must_do>
     <must_not_do>
-      <item>Do not add or remove acceptance checks from execution_packet.</item>
-      <item>Do not modify manager_route selected path or lane flags.</item>
-      <item>Do not perform code write or patch operations.</item>
+      <item>Do not add remove reorder or redefine acceptance checks from execution_packet.</item>
+      <item>Do not mutate source code routing decisions manager_route packet shape or acceptance definitions.</item>
       <item>Do not delegate verdict logic to unstructured manual text.</item>
+      <item>Do not collapse mixed proof into a single undifferentiated pass fail statement that omits unproven scope.</item>
+      <item>Do not assert completed_and_verified when behavior-changing requirements lack behavioral proof coverage.</item>
       <item>Do not activate or invoke ECC registry assets.</item>
     </must_not_do>
     <failure_handoff>
-      <item>Emit final_verdict inconclusive when checks cannot execute due environment limits.</item>
+      <item>Emit final_verdict inconclusive when checks cannot execute due environment limits and include exact blockers.</item>
       <item>Emit final_verdict fail when declared acceptance checks fail.</item>
-      <item>Emit logs_ref and verdict_reason for deterministic diagnosis.</item>
+      <item>Emit verdict_reason plus evidence refs that separate proven outcomes from unproven outcomes.</item>
     </failure_handoff>
     <artifact_responsibilities>
-      <item>Write verification_result artifacts to runtime/verification/results.</item>
+      <item>Write verification_result artifacts to runtime/verification/results including checks_run per-check outcomes proof coverage unverified_areas residual_risks final_verdict and verdict_reason.</item>
       <item>Write logs to runtime/verification/logs and reference them via logs_ref or evidence_ref.</item>
       <item>Reference execution_packet in refs with relation verification_target.</item>
     </artifact_responsibilities>
     <dormant_registry_note>ECC registries remain dormant metadata and are not verifier execution inputs in Batch 3.</dormant_registry_note>
   </payload>
   <integrity>
-    <content_sha256>22a22bc0db906172652d4608e577015026f8fbbabcb6d5929f845fedc48973cd</content_sha256>
+    <content_sha256>6e985b149dd618fea4bbcf83ae56f0212c107fc00813ec748db9342db9df8180</content_sha256>
   </integrity>
 </pxml>
