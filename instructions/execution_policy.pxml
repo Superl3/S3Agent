@@ -153,6 +153,54 @@
         <enforcement_level>hard</enforcement_level>
         <violation_effect>reject</violation_effect>
       </rule>
+      <rule>
+        <policy_id>POL-013</policy_id>
+        <rule_name>manager_ui_bugfix_root_cause_first</rule_name>
+        <applies_to>
+          <item>manager</item>
+          <item>task_intake</item>
+          <item>task_type_ui_bugfix</item>
+        </applies_to>
+        <description>Manager must enforce root-cause-first routing for UI bugfix tasks before approving symptom-level patch execution.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-014</policy_id>
+        <rule_name>manager_ui_state_path_ssot_required</rule_name>
+        <applies_to>
+          <item>manager</item>
+          <item>execution_packet.localization_targets</item>
+          <item>ui_state_paths</item>
+        </applies_to>
+        <description>Manager must designate a single source of truth (SSOT) state path for duplicated UI paths and require packet alignment to that path.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-015</policy_id>
+        <rule_name>manager_requires_state_path_consistency_proof_for_symptom_patch</rule_name>
+        <applies_to>
+          <item>manager</item>
+          <item>execution_packet.acceptance_checks</item>
+          <item>ui_symptom_patch</item>
+        </applies_to>
+        <description>When manager approves symptom-level UI patching, acceptance checks must include explicit state-path consistency proof requirements.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>POL-016</policy_id>
+        <rule_name>manager_runtime_evidence_split_auto_manual_required</rule_name>
+        <applies_to>
+          <item>manager</item>
+          <item>completion_gate</item>
+          <item>runtime_or_interaction_scope</item>
+        </applies_to>
+        <description>Manager completion gating for runtime or interaction behavior must separate automatically verifiable evidence from manual interaction evidence.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
     </rules>
   </payload>
   <integrity>

@@ -133,6 +133,19 @@
         <rationale>Build-only evidence is insufficient for runtime behavior tasks; verifier must collect deterministic runtime evidence.</rationale>
         <enforcement_level>hard</enforcement_level>
       </rule>
+      <rule>
+        <policy_id>POST-VERIFY-010</policy_id>
+        <rule_name>verifier_requires_auto_manual_runtime_evidence_split</rule_name>
+        <applies_to>
+          <item>verifier</item>
+          <item>implementer_result.gate_verification_summary</item>
+          <item>runtime_or_interaction_scope</item>
+        </applies_to>
+        <trigger_condition>runtime_or_interaction_behavior_in_scope_and_result_status_is_applied</trigger_condition>
+        <decision>run_verifier</decision>
+        <rationale>Verifier confirms completion gate integrity by requiring explicit split between automatic runtime evidence and manual interaction evidence.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
     </rules>
   </payload>
   <integrity>

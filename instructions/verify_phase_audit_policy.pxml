@@ -104,6 +104,19 @@
         <rationale>Any override from audit caution or fail must be explicitly logged.</rationale>
         <enforcement_level>hard</enforcement_level>
       </rule>
+      <rule>
+        <policy_id>VPA-B12-001</policy_id>
+        <rule_name>runtime_evidence_split_audit_required</rule_name>
+        <applies_to>
+          <item>verify_phase_audit_report</item>
+          <item>verification_result</item>
+          <item>runtime_or_interaction_scope</item>
+        </applies_to>
+        <trigger_condition>runtime_or_interaction_behavior_in_scope_for_completion_gate</trigger_condition>
+        <decision>pass_requirement</decision>
+        <rationale>Audit must confirm evidence is classified into automatic deterministic checks and manual interaction checks.</rationale>
+        <enforcement_level>hard</enforcement_level>
+      </rule>
     </rules>
   </payload>
   <integrity>

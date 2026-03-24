@@ -164,6 +164,62 @@
         <enforcement_level>hard</enforcement_level>
         <violation_effect>retry</violation_effect>
       </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-013</policy_id>
+        <rule_name>ui_bug_root_cause_first</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>ui_bugfix</item>
+        </applies_to>
+        <description>UI 버그 수정은 증상 우회보다 원인 경로(localization/trace) 확인을 먼저 수행한다. (For UI bugs, root-cause path verification must precede symptom-only mitigation.)</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>retry</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-014</policy_id>
+        <rule_name>ui_path_single_source_of_truth</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>ui_state_paths</item>
+        </applies_to>
+        <description>중복된 UI 경로가 존재하면 단일 진실 원천(SSOT)을 지정하고 모든 분기/파생 경로를 일관되게 정렬해야 한다. (Duplicated UI paths must converge on one source of truth.)</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>retry</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-015</policy_id>
+        <rule_name>minimal_fix_means_minimum_regression_surface</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>patch_scope</item>
+        </applies_to>
+        <description>최소 수정은 패치 개수 최소화가 아니라 회귀 영향면(regression surface) 최소화를 의미한다. (Minimal fix is defined by minimizing regression surface, not patch count.)</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>retry</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-016</policy_id>
+        <rule_name>symptom_patch_requires_state_path_consistency_check</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>ui_symptom_patch</item>
+        </applies_to>
+        <description>z-index, hit-test, visibility 같은 증상 레벨 패치는 상태 경로 일관성 검증(state-path consistency verification)과 반드시 쌍으로 제출되어야 한다.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>retry</violation_effect>
+      </rule>
+      <rule>
+        <policy_id>IMP-RUN-POL-017</policy_id>
+        <rule_name>runtime_scenario_validation_split_auto_vs_manual</rule_name>
+        <applies_to>
+          <item>implementer</item>
+          <item>gate_1_runtime_behavior</item>
+          <item>gate_2_boundary_regression</item>
+        </applies_to>
+        <description>런타임 시나리오는 자동 검증 가능 항목(결정적 상태전이, 로그/트레이스, 재현 가능한 입력-출력)과 수동 상호작용 증거 필요 항목(사용자 제스처 타이밍, 포커스/오버레이 체감, 시각적 겹침 인지)을 구분해 보고해야 한다.</description>
+        <enforcement_level>hard</enforcement_level>
+        <violation_effect>reject</violation_effect>
+      </rule>
     </rules>
   </payload>
   <integrity>
