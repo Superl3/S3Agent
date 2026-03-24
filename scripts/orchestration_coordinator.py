@@ -1380,11 +1380,10 @@ def main() -> int:
             if verdict == "pass":
                 break
 
-            reason = (
-                "verifier_inconclusive"
-                if verdict == "inconclusive"
-                else "verifier_fail"
-            )
+            if verdict == "inconclusive":
+                break
+
+            reason = "verifier_fail"
             append_retry_index(runtime_root, route.task_id, "verifier", reason, attempt)
             append_escalation_index(
                 runtime_root, route.task_id, "verifier", reason, attempt
@@ -1401,12 +1400,6 @@ def main() -> int:
                 attempt=attempt,
                 lineage_lock_sha256=packet.acceptance_lock_hash,
             )
-
-            if (
-                verdict == "inconclusive"
-                and attempt < retry_policy.verifier_max_attempts
-            ):
-                continue
 
             if escalation_policy.stop_after_escalation:
                 append_trace_event(
