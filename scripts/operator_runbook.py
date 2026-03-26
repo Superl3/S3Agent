@@ -21,6 +21,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from runtime_bootstrap import bootstrap_runtime
+
 try:
     from lxml import etree
 except ModuleNotFoundError:
@@ -542,7 +544,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--runtime-root",
         type=Path,
-        default=repo_root / "runtime",
+        default=None,
         help="Runtime root directory.",
     )
     parser.add_argument(
@@ -575,8 +577,21 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(__file__).resolve().parents[1]
 
-    runtime_root = args.runtime_root.resolve()
     workspace_root = args.workspace_root.resolve()
+    if not workspace_root.exists():
+        print(f"ERROR: workspace root not found: {workspace_root}", file=sys.stderr)
+        return 2
+
+    runtime_ready = bootstrap_runtime(
+        cli_runtime_root=args.runtime_root,
+        workspace_root=workspace_root,
+    )
+    if not runtime_ready.ready:
+        print(f"ERROR: {runtime_ready.failure_line()}", file=sys.stderr)
+        return 2
+    runtime_root = runtime_ready.runtime_root
+    print(runtime_ready.success_line("operator_runbook"))
+
     validator = args.validator.resolve()
 
     cleanup_script = repo_root / "scripts" / "cleanup_task_runtime.py"
@@ -584,13 +599,6 @@ def main() -> int:
     preflight_script = repo_root / "scripts" / "operator_preflight.py"
     renderer_script = repo_root / "scripts" / "final_renderer.py"
     harness_script = repo_root / "scripts" / "harness_validator.py"
-
-    if not runtime_root.exists():
-        print(f"ERROR: runtime root not found: {runtime_root}", file=sys.stderr)
-        return 2
-    if not workspace_root.exists():
-        print(f"ERROR: workspace root not found: {workspace_root}", file=sys.stderr)
-        return 2
 
     try:
         policy = load_policy(args.runbook_policy.resolve())

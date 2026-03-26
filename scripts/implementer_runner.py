@@ -21,6 +21,8 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from runtime_bootstrap import bootstrap_runtime
+
 try:
     from lxml import etree
 except ModuleNotFoundError:
@@ -993,7 +995,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--runtime-root",
         type=Path,
-        default=repo_root / "runtime",
+        default=None,
         help="Runtime root directory.",
     )
     parser.add_argument(
@@ -1043,16 +1045,26 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     packet_path = args.packet.resolve()
-    runtime_root = args.runtime_root.resolve()
     workspace_root = args.workspace_root.resolve()
+    if not workspace_root.exists():
+        print(f"ERROR: workspace root not found: {workspace_root}", file=sys.stderr)
+        return 2
+
+    runtime_ready = bootstrap_runtime(
+        cli_runtime_root=args.runtime_root,
+        workspace_root=workspace_root,
+    )
+    if not runtime_ready.ready:
+        print(f"ERROR: {runtime_ready.failure_line()}", file=sys.stderr)
+        return 2
+    runtime_root = runtime_ready.runtime_root
+    print(runtime_ready.success_line("implementer_runner"))
+
     validator_path = args.validator.resolve()
     trace_script_path = args.trace_script.resolve()
 
     if not packet_path.exists():
         print(f"ERROR: execution_packet not found: {packet_path}", file=sys.stderr)
-        return 2
-    if not workspace_root.exists():
-        print(f"ERROR: workspace root not found: {workspace_root}", file=sys.stderr)
         return 2
     if not trace_script_path.exists():
         print(f"ERROR: trace script not found: {trace_script_path}", file=sys.stderr)

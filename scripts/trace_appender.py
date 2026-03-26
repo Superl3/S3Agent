@@ -20,6 +20,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Sequence
 
+from runtime_bootstrap import bootstrap_runtime
+
 try:
     from lxml import etree
 except ModuleNotFoundError:
@@ -450,7 +452,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--runtime-root",
         type=Path,
-        default=repo_root / "runtime",
+        default=None,
         help="Runtime root directory.",
     )
     parser.add_argument(
@@ -467,7 +469,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    runtime_root = args.runtime_root.resolve()
+    runtime_ready = bootstrap_runtime(cli_runtime_root=args.runtime_root)
+    if not runtime_ready.ready:
+        print(f"ERROR: {runtime_ready.failure_line()}", file=sys.stderr)
+        return 2
+    runtime_root = runtime_ready.runtime_root
+    print(runtime_ready.success_line("trace_appender"))
+
     validator = args.validator.resolve()
     ensure_runtime_scaffold(runtime_root)
 
