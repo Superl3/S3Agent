@@ -41,6 +41,28 @@
         <optional_metadata_fields/>
       </event>
       <event>
+        <event_type>explore_start</event_type>
+        <semantic_meaning>Explorer runner began read-only repository scouting for a packet with write_intent=false.</semantic_meaning>
+        <ordering_expectation>Occurs after packet_issued and before explore_done for read-only investigation or design flows.</ordering_expectation>
+        <required_artifact_refs>
+          <item>execution_packet</item>
+        </required_artifact_refs>
+        <optional_metadata_fields>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+      <event>
+        <event_type>explore_done</event_type>
+        <semantic_meaning>Explorer runner emitted exploration_result for a read-only packet.</semantic_meaning>
+        <ordering_expectation>Occurs after explore_start and before any closeout status reporting for read-only flows.</ordering_expectation>
+        <required_artifact_refs>
+          <item>exploration_result</item>
+        </required_artifact_refs>
+        <optional_metadata_fields>
+          <item>lineage_lock_sha256</item>
+        </optional_metadata_fields>
+      </event>
+      <event>
         <event_type>review_done</event_type>
         <semantic_meaning>Reviewer lane produced review_sidecar outcome for gated path.</semantic_meaning>
         <ordering_expectation>Occurs when reviewer lane is active and must include lineage lock.</ordering_expectation>

@@ -30,6 +30,8 @@ except ModuleNotFoundError:
     )
     raise SystemExit(3)
 
+from exploration_guards import ALLOWED_REQUESTERS, is_concrete_hint, looks_broad
+
 
 NS = {"p": "urn:pxml:v1"}
 SVRL_NS = {"svrl": "http://purl.oclc.org/dsdl/svrl"}
@@ -43,6 +45,8 @@ SCHEMA_MAP = {
     "review_sidecar": "review_sidecar.xsd",
     "implementer_result": "implementer_result.xsd",
     "verification_result": "verification_result.xsd",
+    "exploration_request": "exploration_request.xsd",
+    "exploration_result": "exploration_result.xsd",
     "execution_trace": "execution_trace.xsd",
     "hooks_registry": "hooks_registry.xsd",
     "skills_registry": "skills_registry.xsd",
@@ -279,6 +283,10 @@ def semantic_checks(
         issues.extend(_semantic_implementer_result(doc, refs, context_index))
     elif doc.doc_class == "verification_result":
         issues.extend(_semantic_verification_result(doc, refs, context_index))
+    elif doc.doc_class == "exploration_request":
+        issues.extend(_semantic_exploration_request(doc, refs, context_index))
+    elif doc.doc_class == "exploration_result":
+        issues.extend(_semantic_exploration_result(doc, refs, context_index))
     elif doc.doc_class == "execution_trace":
         issues.extend(_semantic_execution_trace(doc))
     elif doc.doc_class == "implementer_runtime_policy":
@@ -490,6 +498,17 @@ def _semantic_execution_packet(
                     message="Bugfix-linked execution_packet must include localization_targets.",
                 )
             )
+
+    exploration_ref_class = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:exploration_notes_ref/p:doc_class"
+    )
+    if exploration_ref_class and exploration_ref_class != "exploration_result":
+        issues.append(
+            ValidationIssue(
+                code="E703_PACKET_EXPLORATION_REF_CLASS_REQUIRED",
+                message="exploration_notes_ref doc_class must be exploration_result when present.",
+            )
+        )
 
     return issues
 
@@ -716,6 +735,285 @@ def _semantic_failure_reason_taxonomy(doc: ParsedDoc) -> List[ValidationIssue]:
     return issues
 
 
+def _semantic_exploration_request(
+    doc: ParsedDoc,
+    refs: List[Tuple[str, Optional[str], Optional[str]]],
+    context_index: Dict[str, ParsedDoc],
+) -> List[ValidationIssue]:
+    assert doc.tree is not None
+    issues: List[ValidationIssue] = []
+
+    requester_agent = xpath_text(doc.tree, "/p:pxml/p:payload/p:requester_agent")
+    if requester_agent not in ALLOWED_REQUESTERS:
+        issues.append(
+            ValidationIssue(
+                code="E780_EXPLORATION_REQUEST_REQUESTER_INVALID",
+                message="exploration_request requester_agent must be manager/planner/implementer/verifier.",
+            )
+        )
+
+    writer_agent = xpath_text(doc.tree, "/p:pxml/p:meta/p:writer_agent")
+    if writer_agent != "manager":
+        issues.append(
+            ValidationIssue(
+                code="E781_EXPLORATION_REQUEST_WRITER_MANAGER_REQUIRED",
+                message="exploration_request meta.writer_agent must be manager.",
+            )
+        )
+
+    packet_refs = [item for item in refs if item[2] == "request_packet"]
+    baseline_refs = [item for item in refs if item[2] == "baseline_context"]
+    route_refs = [item for item in refs if item[2] == "route_context"]
+    context_refs = [item for item in refs if item[2] == "request_context"]
+    if len(packet_refs) != 1 or packet_refs[0][1] != "execution_packet":
+        issues.append(
+            ValidationIssue(
+                code="E782_EXPLORATION_REQUEST_PACKET_REF_REQUIRED",
+                message="exploration_request must reference exactly one execution_packet with relation request_packet.",
+            )
+        )
+    if len(baseline_refs) != 1 or baseline_refs[0][1] != "exploration_result":
+        issues.append(
+            ValidationIssue(
+                code="E783_EXPLORATION_REQUEST_BASELINE_REF_REQUIRED",
+                message="exploration_request must reference exactly one exploration_result with relation baseline_context.",
+            )
+        )
+    if len(route_refs) > 1:
+        issues.append(
+            ValidationIssue(
+                code="E784_EXPLORATION_REQUEST_ROUTE_REF_COUNT",
+                message="exploration_request may reference at most one manager_route route_context artifact.",
+            )
+        )
+    if len(context_refs) > 1:
+        issues.append(
+            ValidationIssue(
+                code="E785_EXPLORATION_REQUEST_CONTEXT_REF_COUNT",
+                message="exploration_request may reference at most one requester context artifact.",
+            )
+        )
+    elif context_refs and context_refs[0][1] not in {
+        "plan_sidecar",
+        "implementer_result",
+        "verification_result",
+    }:
+        issues.append(
+            ValidationIssue(
+                code="E786_EXPLORATION_REQUEST_CONTEXT_REF_CLASS",
+                message="exploration_request request_context must be plan_sidecar, implementer_result, or verification_result.",
+            )
+        )
+
+    focus_questions = [
+        item.strip()
+        for item in doc.tree.xpath(
+            "/p:pxml/p:payload/p:focus_questions/p:item/text()", namespaces=NS
+        )
+        if item and item.strip()
+    ]
+    target_hints = [
+        item.strip()
+        for item in doc.tree.xpath(
+            "/p:pxml/p:payload/p:target_hints/p:item/text()", namespaces=NS
+        )
+        if item and item.strip()
+    ]
+    if len(focus_questions) < 1 or len(focus_questions) > 3:
+        issues.append(
+            ValidationIssue(
+                code="E787_EXPLORATION_REQUEST_FOCUS_COUNT",
+                message="exploration_request focus_questions must contain 1 to 3 items.",
+            )
+        )
+    if len(target_hints) < 1 or len(target_hints) > 5:
+        issues.append(
+            ValidationIssue(
+                code="E788_EXPLORATION_REQUEST_HINT_COUNT",
+                message="exploration_request target_hints must contain 1 to 5 items.",
+            )
+        )
+    if target_hints and not any(is_concrete_hint(item) for item in target_hints):
+        issues.append(
+            ValidationIssue(
+                code="E789_EXPLORATION_REQUEST_CONCRETE_HINT_REQUIRED",
+                message="exploration_request requires at least one concrete target_hint.",
+            )
+        )
+    if any(looks_broad(item) for item in focus_questions + target_hints):
+        issues.append(
+            ValidationIssue(
+                code="E799_EXPLORATION_REQUEST_BROAD_FORBIDDEN",
+                message="exploration_request cannot ask for broad repo rediscovery.",
+            )
+        )
+
+    meta_task_id = xpath_text(doc.tree, "/p:pxml/p:meta/p:task_id")
+    for ref_doc_id, _ref_class, _relation in (
+        packet_refs + baseline_refs + route_refs + context_refs
+    ):
+        target = context_index.get(ref_doc_id)
+        if target is None or target.tree is None:
+            continue
+        target_task_id = xpath_text(target.tree, "/p:pxml/p:meta/p:task_id")
+        if meta_task_id and target_task_id and meta_task_id != target_task_id:
+            issues.append(
+                ValidationIssue(
+                    code="E798_EXPLORATION_REQUEST_TASK_ID_MISMATCH",
+                    message="exploration_request task_id must match all referenced task artifacts.",
+                )
+            )
+            break
+
+    return issues
+
+
+def _semantic_exploration_result(
+    doc: ParsedDoc,
+    refs: List[Tuple[str, Optional[str], Optional[str]]],
+    context_index: Dict[str, ParsedDoc],
+) -> List[ValidationIssue]:
+    assert doc.tree is not None
+    issues: List[ValidationIssue] = []
+
+    payload_task_id = xpath_text(doc.tree, "/p:pxml/p:payload/p:task_id")
+    meta_task_id = xpath_text(doc.tree, "/p:pxml/p:meta/p:task_id")
+    if payload_task_id != meta_task_id:
+        issues.append(
+            ValidationIssue(
+                code="E790_EXPLORATION_RESULT_TASK_ID_MISMATCH",
+                message="exploration_result payload task_id must match meta task_id.",
+            )
+        )
+
+    packet_refs = [item for item in refs if item[1] == "execution_packet"]
+    request_refs = [item for item in refs if item[2] == "request"]
+    parent_refs = [item for item in refs if item[2] == "parent_exploration"]
+    if len(packet_refs) != 1:
+        issues.append(
+            ValidationIssue(
+                code="E791_EXPLORATION_RESULT_PACKET_REF_REQUIRED",
+                message="exploration_result must reference exactly one execution_packet artifact.",
+            )
+        )
+
+    payload_packet_ref = xpath_text(doc.tree, "/p:pxml/p:payload/p:packet_ref/p:doc_id")
+    payload_packet_class = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:packet_ref/p:doc_class"
+    )
+    if payload_packet_class != "execution_packet":
+        issues.append(
+            ValidationIssue(
+                code="E792_EXPLORATION_RESULT_PACKET_REF_CLASS_REQUIRED",
+                message="exploration_result payload packet_ref doc_class must be execution_packet.",
+            )
+        )
+    if packet_refs and payload_packet_ref != packet_refs[0][0]:
+        issues.append(
+            ValidationIssue(
+                code="E793_EXPLORATION_RESULT_PACKET_REF_MISMATCH",
+                message="exploration_result payload packet_ref must match top-level execution_packet ref.",
+            )
+        )
+
+    exploration_scope = xpath_text(doc.tree, "/p:pxml/p:payload/p:exploration_scope")
+    actionability = xpath_text(doc.tree, "/p:pxml/p:payload/p:actionability")
+    if exploration_scope == "focused_refresh" and len(request_refs) != 1:
+        issues.append(
+            ValidationIssue(
+                code="E797_EXPLORATION_RESULT_REQUEST_REF_REQUIRED",
+                message="focused exploration_result must reference exactly one exploration_request artifact.",
+            )
+        )
+    elif request_refs and request_refs[0][1] != "exploration_request":
+        issues.append(
+            ValidationIssue(
+                code="E798_EXPLORATION_RESULT_REQUEST_REF_CLASS",
+                message="exploration_result request relation must reference exploration_request.",
+            )
+        )
+    if len(parent_refs) > 1:
+        issues.append(
+            ValidationIssue(
+                code="E799_EXPLORATION_RESULT_PARENT_REF_COUNT",
+                message="exploration_result may reference at most one parent exploration_result artifact.",
+            )
+        )
+    elif parent_refs and parent_refs[0][1] != "exploration_result":
+        issues.append(
+            ValidationIssue(
+                code="E800_EXPLORATION_RESULT_PARENT_REF_CLASS",
+                message="exploration_result parent_exploration relation must reference exploration_result.",
+            )
+        )
+
+    completion_state = xpath_text(doc.tree, "/p:pxml/p:payload/p:completion_state")
+    blocked_reason = xpath_text(doc.tree, "/p:pxml/p:payload/p:blocked_reason")
+    if completion_state in {"blocked", "failed"} and blocked_reason is None:
+        issues.append(
+            ValidationIssue(
+                code="E794_EXPLORATION_RESULT_BLOCKED_REASON_REQUIRED",
+                message="exploration_result blocked/failed completion_state requires blocked_reason.",
+            )
+        )
+
+    findings = doc.tree.xpath(
+        "/p:pxml/p:payload/p:key_findings/p:item/text()", namespaces=NS
+    )
+    evidence_items = doc.tree.xpath(
+        "/p:pxml/p:payload/p:evidence_items/p:evidence", namespaces=NS
+    )
+    if (
+        completion_state == "completed_and_verified"
+        and not findings
+        and not evidence_items
+    ):
+        issues.append(
+            ValidationIssue(
+                code="E795_EXPLORATION_RESULT_EVIDENCE_REQUIRED",
+                message="exploration_result completed_and_verified requires findings or evidence_items.",
+            )
+        )
+
+    if actionability == "contract_refresh_required" and not (
+        blocked_reason
+        or findings
+        or doc.tree.xpath("/p:pxml/p:payload/p:open_questions/p:item", namespaces=NS)
+    ):
+        issues.append(
+            ValidationIssue(
+                code="E801_EXPLORATION_RESULT_REFRESH_BASIS_REQUIRED",
+                message="contract_refresh_required exploration_result must carry a blocker, findings, or open questions.",
+            )
+        )
+
+    if payload_packet_ref:
+        packet_doc = context_index.get(payload_packet_ref)
+        if packet_doc is not None and packet_doc.tree is not None:
+            packet_task_id = xpath_text(packet_doc.tree, "/p:pxml/p:meta/p:task_id")
+            if packet_task_id and meta_task_id and packet_task_id != meta_task_id:
+                issues.append(
+                    ValidationIssue(
+                        code="E796_EXPLORATION_RESULT_PACKET_TASK_ID_MISMATCH",
+                        message="Referenced execution_packet task_id must match exploration_result task_id.",
+                    )
+                )
+
+    if request_refs:
+        request_doc = context_index.get(request_refs[0][0])
+        if request_doc is not None and request_doc.tree is not None:
+            request_task_id = xpath_text(request_doc.tree, "/p:pxml/p:meta/p:task_id")
+            if request_task_id and meta_task_id and request_task_id != meta_task_id:
+                issues.append(
+                    ValidationIssue(
+                        code="E802_EXPLORATION_RESULT_REQUEST_TASK_ID_MISMATCH",
+                        message="Referenced exploration_request task_id must match exploration_result task_id.",
+                    )
+                )
+
+    return issues
+
+
 def _semantic_task_status_report(
     doc: ParsedDoc,
     refs: List[Tuple[str, Optional[str], Optional[str]]],
@@ -759,6 +1057,16 @@ def _semantic_task_status_report(
     verification_ref = xpath_text(
         doc.tree, "/p:pxml/p:payload/p:latest_verification_ref/p:doc_id"
     )
+    exploration_ref_class = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:latest_exploration_result_ref/p:doc_class"
+    )
+    if exploration_ref_class and exploration_ref_class != "exploration_result":
+        issues.append(
+            ValidationIssue(
+                code="E799_STATUS_REPORT_EXPLORATION_REF_CLASS_REQUIRED",
+                message="latest_exploration_result_ref doc_class must be exploration_result when present.",
+            )
+        )
     if current_phase == "verifying" and selected_path in {"verifier_post", "full_lane"}:
         if current_status == "running" and verification_ref is not None:
             verification_doc = context_index.get(verification_ref)
@@ -4011,6 +4319,14 @@ def _semantic_execution_trace(doc: ParsedDoc) -> List[ValidationIssue]:
                     message="packet_issued event must reference execution_packet artifact.",
                 )
             )
+        if event_type == "explore_start":
+            if "execution_packet" not in ref_classes:
+                issues.append(
+                    ValidationIssue(
+                        code="E725_TRACE_EXPLORE_START_PACKET_REF_REQUIRED",
+                        message="explore_start event must reference execution_packet artifact.",
+                    )
+                )
         if event_type == "implement_start":
             if "execution_packet" not in ref_classes:
                 issues.append(
@@ -4157,6 +4473,21 @@ def _semantic_execution_trace(doc: ParsedDoc) -> List[ValidationIssue]:
                         ),
                     )
                 )
+        if event_type == "explore_done":
+            if "exploration_result" not in ref_classes:
+                issues.append(
+                    ValidationIssue(
+                        code="E726_TRACE_EXPLORE_DONE_RESULT_REF_REQUIRED",
+                        message="explore_done event must reference exploration_result artifact.",
+                    )
+                )
+            if not lineage_lock:
+                issues.append(
+                    ValidationIssue(
+                        code="E727_TRACE_EXPLORE_DONE_LINEAGE_REQUIRED",
+                        message="explore_done event must include lineage_lock_sha256.",
+                    )
+                )
         if event_type == "escalation":
             if not reason_code:
                 issues.append(
@@ -4203,6 +4534,7 @@ def _semantic_plan_sidecar(
 
     intake_refs = [item for item in refs if item[1] == "task_intake"]
     route_refs = [item for item in refs if item[1] == "manager_route"]
+    exploration_refs = [item for item in refs if item[1] == "exploration_result"]
     if len(intake_refs) != 1:
         issues.append(
             ValidationIssue(
@@ -4215,6 +4547,13 @@ def _semantic_plan_sidecar(
             ValidationIssue(
                 code="E621_PLAN_REF_MANAGER_ROUTE",
                 message="plan_sidecar must reference exactly one manager_route artifact.",
+            )
+        )
+    if len(exploration_refs) > 1:
+        issues.append(
+            ValidationIssue(
+                code="E624_PLAN_REF_EXPLORATION_COUNT",
+                message="plan_sidecar may reference at most one exploration_result artifact.",
             )
         )
 

@@ -292,6 +292,9 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
         route_path = _latest_artifact(runtime_root, spec.task_id, "manager_route")
         packet_path = _latest_artifact(runtime_root, spec.task_id, "execution_packet")
         trace_path = _latest_artifact(runtime_root, spec.task_id, "execution_trace")
+        exploration_path = _latest_artifact(
+            runtime_root, spec.task_id, "exploration_result"
+        )
         impl_path = _latest_artifact(runtime_root, spec.task_id, "implementer_result")
 
         assert route_path.exists(), f"missing manager_route for {spec.name}"
@@ -314,8 +317,14 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             assert not impl_path.exists(), (
                 f"unexpected implementer_result for {spec.name}"
             )
+            assert exploration_path.exists(), (
+                f"missing exploration_result for {spec.name}"
+            )
         else:
             assert impl_path.exists(), f"missing implementer_result for {spec.name}"
+            assert not exploration_path.exists(), (
+                f"unexpected exploration_result for {spec.name}"
+            )
             impl_tree = etree.parse(str(impl_path))
             impl_status = _text(impl_tree, "/p:pxml/p:payload/p:result_status")
             assert impl_status == spec.expected_impl_status
@@ -336,6 +345,12 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             actor="verifier",
             verify_phase="lane",
         ) == (1 if spec.expect_verifier_lane_call else 0)
+        assert _count_events(events, "explore_start", actor="explorer") == (
+            0 if spec.expected_write_intent else 1
+        )
+        assert _count_events(events, "explore_done", actor="explorer") == (
+            0 if spec.expected_write_intent else 1
+        )
 
         expected_patch_applied = 1 if spec.expected_impl_status == "applied" else 0
         assert (

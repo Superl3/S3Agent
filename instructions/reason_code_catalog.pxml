@@ -272,6 +272,36 @@
         <recommended_operator_action>Rebuild missing runtime artifact chain and rerun refresh plus gate checks.</recommended_operator_action>
         <source_layer>session_report_refresh</source_layer>
       </reason>
+      <reason>
+        <code>system_exploration_runner_error</code>
+        <category>system</category>
+        <severity>major</severity>
+        <description>Explorer runner failed before it could emit exploration_result.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>true</affects_gate_default>
+        <recommended_operator_action>Inspect explorer runner stderr and rerun the read-only packet.</recommended_operator_action>
+        <source_layer>explorer_runner</source_layer>
+      </reason>
+      <reason>
+        <code>system_exploration_result_missing</code>
+        <category>system</category>
+        <severity>major</severity>
+        <description>Read-only execution completed without a matching exploration_result artifact.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>false</affects_gate_default>
+        <recommended_operator_action>Re-run explorer runner and ensure exploration_result is generated before closeout.</recommended_operator_action>
+        <source_layer>task_status_report</source_layer>
+      </reason>
+      <reason>
+        <code>system_exploration_unresolved</code>
+        <category>system</category>
+        <severity>minor</severity>
+        <description>Read-only scouting completed only partially and left unresolved questions.</description>
+        <default_classification>warning</default_classification>
+        <affects_gate_default>false</affects_gate_default>
+        <recommended_operator_action>Provide narrower localization targets or additional context and rerun RepoScout.</recommended_operator_action>
+        <source_layer>repo_scout</source_layer>
+      </reason>
     </reasons>
     <notes>
       <item>This catalog standardizes reason-code vocabulary used across RC gate harness and coordinator outputs.</item>

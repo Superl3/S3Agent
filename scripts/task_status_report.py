@@ -167,6 +167,9 @@ def latest_map(
         "execution_packet": latest_for_task(
             runtime_root / "packets" / "execution_packet", "execution_packet", task_id
         ),
+        "exploration_result": latest_for_task(
+            runtime_root / "exploration" / "results", "exploration_result", task_id
+        ),
         "plan_sidecar": latest_for_task(
             runtime_root / "sidecars" / "planner", "plan_sidecar", task_id
         ),
@@ -255,13 +258,33 @@ def determine_phase_status(
     escalation_state: str,
     has_route: bool,
     has_packet: bool,
+    has_exploration: bool,
     has_planner: bool,
     has_reviewer: bool,
+    write_intent: bool,
+    execution_shape: Optional[str],
+    exploration_completion: Optional[str],
 ) -> Tuple[str, str]:
     if escalation_state == "stopped":
         return "stopped", "escalated"
     if escalation_state == "escalated":
         return "escalated", "escalated"
+
+    if not write_intent and execution_shape in {
+        "read_only_investigation",
+        "read_only_design_artifact",
+    }:
+        if exploration_completion == "blocked":
+            return "exploring", "blocked"
+        if exploration_completion == "failed":
+            return "completed", "failed"
+        if exploration_completion == "completed_and_verified":
+            return "completed", "passed"
+        if has_exploration or has_packet:
+            return "exploring", "running"
+        if has_route:
+            return "routing", "running"
+        return "intake", "pending"
 
     if implementer_status == "blocked":
         return "implementing", "blocked"
@@ -307,9 +330,21 @@ def final_verdict_candidate(
     verification_verdict: Optional[str],
     implementer_status: Optional[str],
     escalation_state: str,
+    write_intent: bool,
+    execution_shape: Optional[str],
+    exploration_completion: Optional[str],
 ) -> str:
     if escalation_state in {"escalated", "stopped"}:
         return "fail"
+    if not write_intent and execution_shape in {
+        "read_only_investigation",
+        "read_only_design_artifact",
+    }:
+        if exploration_completion == "completed_and_verified":
+            return "pass"
+        if exploration_completion in {"blocked", "failed"}:
+            return "fail"
+        return "inconclusive"
     if implementer_status in {"blocked", "retry_failed", "escalated"}:
         return "fail"
     if verification_verdict in {"pass", "fail", "inconclusive"}:
@@ -320,10 +355,31 @@ def final_verdict_candidate(
 
 
 def recommended_action(
-    status: str, escalation_state: str, selected_path: Optional[str]
+    status: str,
+    escalation_state: str,
+    selected_path: Optional[str],
+    write_intent: bool,
+    execution_shape: Optional[str],
+    exploration_completion: Optional[str],
+    exploration_next_action: Optional[str],
 ) -> str:
     if escalation_state == "stopped":
         return "Escalate to manager and refresh packet before further execution."
+    if not write_intent and execution_shape in {
+        "read_only_investigation",
+        "read_only_design_artifact",
+    }:
+        if exploration_next_action:
+            return exploration_next_action
+        if exploration_completion == "completed_and_verified":
+            return "Exploration artifact is ready for downstream planning or manual review."
+        if status == "blocked":
+            return "Resolve the exploration blocker and rerun explorer_runner."
+        if status == "failed":
+            return (
+                "Inspect explorer_runner failure details and rerun the read-only flow."
+            )
+        return "Expand scout scope or provide localization targets, then rerun explorer_runner."
     if status == "blocked":
         return "Fix packet expected_files or missing targets, then rerun implementer runner."
     if status == "retry_failed":
@@ -374,6 +430,27 @@ def parse_packet_policy_fields(
     return write_intent, planning_mode, execution_shape, intended_behaviors, required
 
 
+def parse_exploration_state(
+    exploration_info: Optional[ArtifactRefInfo],
+) -> tuple[Optional[str], Optional[str], Optional[str]]:
+    if exploration_info is None:
+        return None, None, None
+    tree = etree.parse(str(exploration_info.path))
+    completion_state = text_at(tree, "/p:pxml/p:payload/p:completion_state")
+    blocked_reason = text_at(tree, "/p:pxml/p:payload/p:blocked_reason")
+    next_actions = tree.xpath(
+        "/p:pxml/p:payload/p:recommended_next_actions/p:item/text()",
+        namespaces=XPATH_NS,
+    )
+    next_action = None
+    for item in next_actions:
+        normalized = item.strip()
+        if normalized:
+            next_action = normalized
+            break
+    return completion_state, blocked_reason, next_action
+
+
 def parse_proof_status(
     verification_info: Optional[ArtifactRefInfo],
 ) -> Dict[str, str]:
@@ -418,7 +495,9 @@ def parse_proof_status(
         check_type = (text_at(node_tree, "./p:check_type") or "").lower()
         result = (text_at(node_tree, "./p:result") or "skipped").lower()
         combined = f"{check_id} {command}"
-        if any(token in combined for token in ("regression", "smoke", "adjacent")):
+        if check_type in {"build", "lint", "static_rule"}:
+            category = "structural"
+        elif any(token in combined for token in ("regression", "smoke", "adjacent")):
             category = "regression"
         elif any(
             token in combined
@@ -432,7 +511,7 @@ def parse_proof_status(
             )
         ):
             category = "behavioral"
-        elif check_type in {"build", "lint", "static_rule", "test"}:
+        elif check_type == "test":
             category = "structural"
         else:
             category = "structural"
@@ -459,6 +538,7 @@ def determine_completion_state(
     escalation_state: str,
     required_proofs: Dict[str, bool],
     proof_status: Dict[str, str],
+    exploration_completion: Optional[str],
 ) -> str:
     if escalation_state in {"stopped", "escalated"}:
         return "failed"
@@ -471,7 +551,7 @@ def determine_completion_state(
         "read_only_investigation",
         "read_only_design_artifact",
     }:
-        return "completed_and_verified"
+        return exploration_completion or "partial"
 
     if verification_verdict == "fail":
         return "failed"
@@ -573,6 +653,7 @@ def build_status_report(
     packet_info = refs_map["execution_packet"]
     planner_info = refs_map["plan_sidecar"]
     reviewer_info = refs_map["review_sidecar"]
+    exploration_info = refs_map["exploration_result"]
     implementer_info = refs_map["implementer_result"]
     verification_info = refs_map["verification_result"]
     trace_info = refs_map["execution_trace"]
@@ -603,6 +684,9 @@ def build_status_report(
         intended_behaviors,
         required_proofs,
     ) = parse_packet_policy_fields(packet_info)
+    exploration_completion, exploration_blocked_reason, exploration_next_action = (
+        parse_exploration_state(exploration_info)
+    )
 
     implementer_status: Optional[str] = None
     implementer_retry_count = 0
@@ -626,6 +710,14 @@ def build_status_report(
         verification_verdict = text_at(verify_tree, "/p:pxml/p:payload/p:final_verdict")
 
     proof_status = parse_proof_status(verification_info)
+    if not write_intent and execution_shape in {
+        "read_only_investigation",
+        "read_only_design_artifact",
+    }:
+        if exploration_completion == "completed_and_verified":
+            proof_status["structural"] = "PASS"
+        elif exploration_completion in {"blocked", "failed"}:
+            proof_status["structural"] = "FAIL"
 
     trace_event_types: List[str] = []
     if trace_info is not None:
@@ -645,6 +737,20 @@ def build_status_report(
 
     failure_entries = load_failure_entries(runtime_root, task_id)
     failure_codes: List[str] = []
+    if (
+        not write_intent
+        and execution_shape in {"read_only_investigation", "read_only_design_artifact"}
+        and exploration_info is None
+    ):
+        failure_codes.append("system_exploration_result_missing")
+    if (
+        not write_intent
+        and execution_shape in {"read_only_investigation", "read_only_design_artifact"}
+        and exploration_completion == "partial"
+    ):
+        failure_codes.append("system_exploration_unresolved")
+    if exploration_blocked_reason:
+        failure_codes.append(exploration_blocked_reason)
     if implementer_blocked_reason:
         failure_codes.append(implementer_blocked_reason)
     failure_codes.extend(collect_trace_reason_codes(trace_info))
@@ -678,8 +784,12 @@ def build_status_report(
         escalation_state=escalation_state,
         has_route=route_info is not None,
         has_packet=packet_info is not None,
+        has_exploration=exploration_info is not None,
         has_planner=planner_info is not None,
         has_reviewer=reviewer_info is not None,
+        write_intent=write_intent,
+        execution_shape=execution_shape,
+        exploration_completion=exploration_completion,
     )
 
     completion_state = determine_completion_state(
@@ -690,6 +800,7 @@ def build_status_report(
         escalation_state=escalation_state,
         required_proofs=required_proofs,
         proof_status=proof_status,
+        exploration_completion=exploration_completion,
     )
 
     requirement_status_matrix = build_requirement_status_matrix(
@@ -704,11 +815,18 @@ def build_status_report(
         verification_verdict=verification_verdict,
         implementer_status=implementer_status,
         escalation_state=escalation_state,
+        write_intent=write_intent,
+        execution_shape=execution_shape,
+        exploration_completion=exploration_completion,
     )
     next_action = recommended_action(
         status=status,
         escalation_state=escalation_state,
         selected_path=selected_path,
+        write_intent=write_intent,
+        execution_shape=execution_shape,
+        exploration_completion=exploration_completion,
+        exploration_next_action=exploration_next_action,
     )
 
     sequence = next_sequence(runtime_root, task_id)
@@ -733,6 +851,7 @@ def build_status_report(
     for key, relation in [
         ("manager_route", "latest_route"),
         ("execution_packet", "latest_packet"),
+        ("exploration_result", "latest_exploration_result"),
         ("implementer_result", "latest_implementer_result"),
         ("review_sidecar", "latest_review"),
         ("verification_result", "latest_verification"),
@@ -759,6 +878,12 @@ def build_status_report(
 
     append_payload_ref(payload, "latest_route_ref", route_info, "latest_route")
     append_payload_ref(payload, "latest_packet_ref", packet_info, "latest_packet")
+    append_payload_ref(
+        payload,
+        "latest_exploration_result_ref",
+        exploration_info,
+        "latest_exploration_result",
+    )
     append_payload_ref(
         payload,
         "latest_implementer_result_ref",

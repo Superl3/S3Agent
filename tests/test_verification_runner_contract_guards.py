@@ -17,6 +17,7 @@ def _build_packet(
     checks: list[dict[str, object]],
     intended_behaviors: list[str] | None = None,
     proof_requirements: list[dict[str, object]] | None = None,
+    acceptance_lock_hash_override: str | None = None,
 ) -> None:
     normalized_checks = [
         {
@@ -34,6 +35,8 @@ def _build_packet(
             "utf-8"
         )
     ).hexdigest()
+    if acceptance_lock_hash_override is not None:
+        lock_hash = acceptance_lock_hash_override
 
     root = etree.Element("{urn:pxml:v1}pxml", nsmap={None: "urn:pxml:v1"})
     meta = etree.SubElement(root, "{urn:pxml:v1}meta")
@@ -292,3 +295,38 @@ def test_environment_limited_behavioral_verification_is_inconclusive(
     )
     assert any("category=behavioral" in item for item in unverified)
     assert any("blocked=dry_run_skipped" in item for item in unverified)
+
+
+def test_acceptance_lock_mismatch_is_rejected(
+    tmp_path: Path,
+    run_python,
+) -> None:
+    runtime_root = tmp_path / "runtime"
+    packet_path = tmp_path / "packet_lock_mismatch.pxml"
+    _build_packet(
+        packet_path,
+        task_id="task_verifier_guard_lock_001",
+        run_id="run_verifier_guard_004",
+        checks=[
+            {
+                "check_id": "build_structural_only",
+                "check_type": "build",
+                "command": 'python -c "import sys; raise SystemExit(0)"',
+                "pass_condition": "exit_code==0",
+                "deterministic": True,
+                "timeout_sec": 30,
+            }
+        ],
+        acceptance_lock_hash_override="f" * 64,
+    )
+
+    result = run_python(
+        "scripts/verification_runner.py",
+        "--packet",
+        packet_path,
+        "--runtime-root",
+        runtime_root,
+        "--skip-validate",
+    )
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "acceptance_lock_hash does not match" in (result.stdout + result.stderr)

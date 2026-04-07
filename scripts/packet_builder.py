@@ -515,27 +515,72 @@ def default_scope(
     return in_scope, out_scope, expected, localization
 
 
-def default_acceptance_checks(task_type: str) -> List[Dict[str, object]]:
+def default_acceptance_checks(
+    task_type: str,
+    *,
+    behavior_required: bool,
+    regression_required: bool,
+    observation_first: bool,
+) -> List[Dict[str, object]]:
     compile_cmd = (
         "python -m py_compile "
-        "scripts/pxml_validator.py scripts/packet_builder.py scripts/trace_appender.py"
+        "scripts/context_refresh_runtime.py scripts/exploration_request_builder.py "
+        "scripts/explorer_runner.py scripts/harness_validator.py "
+        "scripts/implementer_runner.py scripts/packet_builder.py "
+        "scripts/task_executor.py scripts/trace_appender.py "
+        "scripts/verification_runner.py"
     )
-    if task_type == "docs":
-        command = compile_cmd
-        check_type = "static_rule"
-    else:
-        command = compile_cmd
-        check_type = "test"
-    return [
+    checks: List[Dict[str, object]] = [
         {
-            "check_id": f"check_{task_type}_core_001",
-            "check_type": check_type,
-            "command": command,
+            "check_id": f"check_{task_type}_structural_suite_001",
+            "check_type": "static_rule" if task_type == "docs" else "build",
+            "command": compile_cmd,
             "pass_condition": "exit_code==0",
             "deterministic": True,
             "timeout_sec": 300,
         }
     ]
+    if not behavior_required:
+        return checks
+
+    behavioral_targets = [
+        "tests/test_explorer_routing_guard.py::test_task_executor_read_only_flow_validates_exploration_result",
+    ]
+    if observation_first:
+        behavioral_targets.insert(
+            0,
+            "tests/test_context_refresh_phase2.py::test_implementer_modify_target_missing_creates_context_refresh",
+        )
+    behavior_suffix = (
+        "behavior_observation" if observation_first else "behavior_runtime"
+    )
+    checks.append(
+        {
+            "check_id": f"check_{task_type}_{behavior_suffix}_suite_001",
+            "check_type": "test",
+            "command": "python -m pytest " + " ".join(behavioral_targets) + " -q",
+            "pass_condition": "exit_code==0",
+            "deterministic": True,
+            "timeout_sec": 600,
+        }
+    )
+
+    if regression_required:
+        checks.append(
+            {
+                "check_id": f"check_{task_type}_regression_smoke_suite_001",
+                "check_type": "test",
+                "command": (
+                    "python -m pytest "
+                    "tests/test_verification_runner_contract_guards.py::test_behavior_changing_structural_only_stays_unproven "
+                    "tests/test_verification_runner_contract_guards.py::test_acceptance_lock_mismatch_is_rejected -q"
+                ),
+                "pass_condition": "exit_code==0",
+                "deterministic": True,
+                "timeout_sec": 600,
+            }
+        )
+    return checks
 
 
 @dataclass
@@ -551,6 +596,19 @@ class IntakeData:
     task_type: str
     risk_hint: str
     content_sha256: str
+
+
+@dataclass
+class PriorExplorationInfo:
+    path: Path
+    doc_id: str
+    content_sha256: str
+    completion_state: str
+    exploration_scope: Optional[str]
+    actionability: Optional[str]
+    key_findings: List[str]
+    open_questions: List[str]
+    evidence_paths: List[str]
 
 
 def read_intake(path: Path) -> IntakeData:
@@ -615,6 +673,9 @@ def create_runtime_scaffold(runtime_root: Path) -> None:
         runtime_root / "inbox" / "task_intake",
         runtime_root / "packets" / "manager_route",
         runtime_root / "packets" / "execution_packet",
+        runtime_root / "exploration" / "requests",
+        runtime_root / "exploration" / "results",
+        runtime_root / "exploration" / "cache",
         runtime_root / "traces" / "by_task",
         runtime_root / "latest",
         runtime_root / "index" / "tasks",
@@ -634,6 +695,7 @@ def build_manager_route(
     execution_shape: str,
     route_reason: str,
     lock_hash: str,
+    prior_exploration: Optional[PriorExplorationInfo],
 ) -> Tuple[etree._ElementTree, str]:
     planner_flag, reviewer_flag, verifier_flag = LANE_FLAGS[selected_path]
 
@@ -653,6 +715,11 @@ def build_manager_route(
     etree.SubElement(ref, q("doc_id")).text = intake.doc_id
     etree.SubElement(ref, q("doc_class")).text = "task_intake"
     etree.SubElement(ref, q("relation")).text = "intake"
+    if prior_exploration is not None:
+        exp_ref = etree.SubElement(refs, q("ref"))
+        etree.SubElement(exp_ref, q("doc_id")).text = prior_exploration.doc_id
+        etree.SubElement(exp_ref, q("doc_class")).text = "exploration_result"
+        etree.SubElement(exp_ref, q("relation")).text = "prior_exploration"
 
     payload = etree.SubElement(root, q("payload"))
     etree.SubElement(payload, q("planning_mode")).text = planning_mode
@@ -705,6 +772,7 @@ def build_execution_packet(
     requirement_status_matrix: Sequence[Dict[str, str]],
     completion_state: str,
     observation_first: bool,
+    prior_exploration: Optional[PriorExplorationInfo],
 ) -> Tuple[etree._ElementTree, str]:
     in_scope, out_scope, expected_files, localization_targets = default_scope(
         intake.task_type
@@ -726,6 +794,11 @@ def build_execution_packet(
     etree.SubElement(route_ref, q("doc_id")).text = route_doc_id
     etree.SubElement(route_ref, q("doc_class")).text = "manager_route"
     etree.SubElement(route_ref, q("relation")).text = "route"
+    if prior_exploration is not None:
+        exploration_ref = etree.SubElement(refs, q("ref"))
+        etree.SubElement(exploration_ref, q("doc_id")).text = prior_exploration.doc_id
+        etree.SubElement(exploration_ref, q("doc_class")).text = "exploration_result"
+        etree.SubElement(exploration_ref, q("relation")).text = "prior_exploration"
 
     payload = etree.SubElement(root, q("payload"))
     summary = f"{intake.task_type} task via {selected_path}: {intake.request_text}"
@@ -792,18 +865,20 @@ def build_execution_packet(
 
     etree.SubElement(payload, q("acceptance_lock_hash")).text = lock_hash
 
-    build_string_list(
-        payload,
-        "test_guidance",
-        [
-            (
-                "Use observation-first sequence: reproduce, instrument, collect evidence, then patch."
-                if observation_first
-                else "Run acceptance checks in listed order."
-            ),
-            "Escalate if deterministic check cannot execute.",
-        ],
-    )
+    guidance_items = [
+        (
+            "Use observation-first sequence: reproduce, instrument, collect evidence, then patch."
+            if observation_first
+            else "Run acceptance checks in listed order."
+        ),
+        "Escalate if deterministic check cannot execute.",
+    ]
+    if prior_exploration is not None and prior_exploration.evidence_paths:
+        guidance_items.append(
+            "Review prior exploration_result before patching: "
+            + ", ".join(prior_exploration.evidence_paths[:3])
+        )
+    build_string_list(payload, "test_guidance", guidance_items)
     build_string_list(
         payload,
         "escalation_triggers",
@@ -828,6 +903,18 @@ def build_execution_packet(
             localization_targets = ["src/target_bugfix.py:target_function"]
         build_string_list(payload, "localization_targets", localization_targets)
 
+    if prior_exploration is not None:
+        exploration_notes_ref = etree.SubElement(payload, q("exploration_notes_ref"))
+        etree.SubElement(
+            exploration_notes_ref, q("doc_id")
+        ).text = prior_exploration.doc_id
+        etree.SubElement(
+            exploration_notes_ref, q("doc_class")
+        ).text = "exploration_result"
+        etree.SubElement(
+            exploration_notes_ref, q("relation")
+        ).text = "prior_exploration"
+
     integrity = etree.SubElement(root, q("integrity"))
     content_hash = compute_content_hash(meta, refs, payload)
     etree.SubElement(integrity, q("content_sha256")).text = content_hash
@@ -835,6 +922,93 @@ def build_execution_packet(
 
     _ = route_reason  # keep route_reason for deterministic builder evolution
     return etree.ElementTree(root), content_hash
+
+
+def latest_task_artifact(
+    runtime_root: Path, task_id: str, suffix: str
+) -> Optional[Path]:
+    candidate = runtime_root / "latest" / f"{sanitize_token(task_id)}_{suffix}.pxml"
+    if candidate.exists():
+        return candidate
+    return None
+
+
+def discover_pxml_files(path: Path) -> List[Path]:
+    if not path.exists():
+        return []
+    files = [candidate for candidate in path.rglob("*.pxml") if candidate.is_file()]
+    files.sort()
+    return files
+
+
+def load_prior_exploration(
+    runtime_root: Path, task_id: str
+) -> Optional[PriorExplorationInfo]:
+    candidates: List[Tuple[int, str, Path]] = []
+    for artifact_path in discover_pxml_files(runtime_root / "exploration" / "results"):
+        try:
+            tree = etree.parse(str(artifact_path))
+        except etree.XMLSyntaxError:
+            continue
+        if text_at(tree, "/p:pxml/p:meta/p:doc_class") != "exploration_result":
+            continue
+        if text_at(tree, "/p:pxml/p:meta/p:task_id") != task_id:
+            continue
+        seq_text = text_at(tree, "/p:pxml/p:meta/p:sequence") or "0"
+        created_at = text_at(tree, "/p:pxml/p:meta/p:created_at") or ""
+        try:
+            sequence = int(seq_text)
+        except ValueError:
+            sequence = 0
+        candidates.append((sequence, created_at, artifact_path))
+
+    for _sequence, _created_at, artifact_path in sorted(candidates, reverse=True):
+        tree = etree.parse(str(artifact_path))
+        doc_id = text_at(tree, "/p:pxml/p:meta/p:doc_id")
+        content_sha256 = text_at(tree, "/p:pxml/p:integrity/p:content_sha256")
+        completion_state = (
+            text_at(tree, "/p:pxml/p:payload/p:completion_state") or "partial"
+        )
+        exploration_scope = text_at(tree, "/p:pxml/p:payload/p:exploration_scope")
+        actionability = text_at(tree, "/p:pxml/p:payload/p:actionability")
+        if not doc_id or not content_sha256:
+            continue
+        if actionability == "advisory_only":
+            continue
+        key_findings = [
+            item.strip()
+            for item in tree.xpath(
+                "/p:pxml/p:payload/p:key_findings/p:item/text()", namespaces=XPATH_NS
+            )
+            if item and item.strip()
+        ]
+        open_questions = [
+            item.strip()
+            for item in tree.xpath(
+                "/p:pxml/p:payload/p:open_questions/p:item/text()", namespaces=XPATH_NS
+            )
+            if item and item.strip()
+        ]
+        evidence_paths = [
+            item.strip()
+            for item in tree.xpath(
+                "/p:pxml/p:payload/p:evidence_items/p:evidence/p:path/text()",
+                namespaces=XPATH_NS,
+            )
+            if item and item.strip()
+        ]
+        return PriorExplorationInfo(
+            path=artifact_path,
+            doc_id=doc_id,
+            content_sha256=content_sha256,
+            completion_state=completion_state,
+            exploration_scope=exploration_scope,
+            actionability=actionability,
+            key_findings=key_findings,
+            open_questions=open_questions,
+            evidence_paths=evidence_paths,
+        )
+    return None
 
 
 def write_xml(tree: etree._ElementTree, path: Path) -> None:
@@ -955,6 +1129,7 @@ def main() -> int:
         return 2
 
     create_runtime_scaffold(runtime_root)
+    prior_exploration = load_prior_exploration(runtime_root, intake.task_id)
 
     inbox_intake_path = runtime_root / "inbox" / "task_intake" / f"{intake.doc_id}.pxml"
     shutil.copy2(intake_path, inbox_intake_path)
@@ -997,8 +1172,28 @@ def main() -> int:
     route_reason = f"{route_reason} {planner_decision.reasoning}".strip()
     if not write_intent:
         route_reason = route_reason + " Read-only intake disables implementer writes."
+    if prior_exploration is not None:
+        route_reason = (
+            route_reason
+            + " Prior exploration_result is available and should inform manager scoping."
+        )
 
-    checks = default_acceptance_checks(intake.task_type)
+    behavior_required = any(
+        item.get("proof_category") == "behavioral"
+        and str(item.get("required", "")).lower() == "true"
+        for item in planner_decision.proof_requirements
+    )
+    regression_required = any(
+        item.get("proof_category") == "regression"
+        and str(item.get("required", "")).lower() == "true"
+        for item in planner_decision.proof_requirements
+    )
+    checks = default_acceptance_checks(
+        intake.task_type,
+        behavior_required=behavior_required,
+        regression_required=regression_required,
+        observation_first=planner_decision.observation_first,
+    )
     lock_hash = acceptance_lock_hash(checks)
 
     route_sequence = intake.sequence + 1
@@ -1018,6 +1213,7 @@ def main() -> int:
         execution_shape=planner_decision.execution_shape,
         route_reason=route_reason,
         lock_hash=lock_hash,
+        prior_exploration=prior_exploration,
     )
     packet_tree, _packet_hash = build_execution_packet(
         intake=intake,
@@ -1038,6 +1234,7 @@ def main() -> int:
         requirement_status_matrix=planner_decision.requirement_status_matrix,
         completion_state=planner_decision.completion_state,
         observation_first=planner_decision.observation_first,
+        prior_exploration=prior_exploration,
     )
 
     route_path = runtime_root / "packets" / "manager_route" / f"{route_doc_id}.pxml"
@@ -1082,6 +1279,11 @@ def main() -> int:
                 shutil.copy2(inbox_intake_path, intake_for_validation)
                 shutil.copy2(route_path, route_for_validation)
                 shutil.copy2(packet_path, packet_for_validation)
+                if prior_exploration is not None:
+                    shutil.copy2(
+                        prior_exploration.path,
+                        temp_root / prior_exploration.path.name,
+                    )
                 run_validation(validator_path, route_for_validation, temp_root)
                 run_validation(validator_path, packet_for_validation, temp_root)
         except RuntimeError as exc:

@@ -134,6 +134,11 @@ def packet_write_intent(packet_path: Path) -> bool:
     return value.lower() == "true"
 
 
+def packet_execution_shape(packet_path: Path) -> Optional[str]:
+    tree = etree.parse(str(packet_path))
+    return text_at(tree, "/p:pxml/p:payload/p:execution_shape")
+
+
 def should_run_verifier_auto(
     policy: PolicyConfig,
     result_status: Optional[str],
@@ -245,6 +250,7 @@ def main() -> int:
     packet_builder = repo_root / "scripts" / "packet_builder.py"
     coordinator = repo_root / "scripts" / "orchestration_coordinator.py"
     implementer = repo_root / "scripts" / "implementer_runner.py"
+    explorer = repo_root / "scripts" / "explorer_runner.py"
     verifier = repo_root / "scripts" / "verification_runner.py"
     status_report = repo_root / "scripts" / "task_status_report.py"
     cleanup = repo_root / "scripts" / "cleanup_task_runtime.py"
@@ -303,6 +309,8 @@ def main() -> int:
         task_id,
         "--runtime-root",
         str(runtime_root),
+        "--workspace-root",
+        str(workspace_root),
     ]
     if args.skip_validate:
         coord_cmd.append("--skip-validate")
@@ -317,9 +325,10 @@ def main() -> int:
 
     try:
         write_intent = packet_write_intent(packet_path)
+        execution_shape = packet_execution_shape(packet_path)
     except Exception as exc:
         print(
-            f"ERROR: failed to parse execution_packet write_intent: {exc}",
+            f"ERROR: failed to parse execution_packet policy fields: {exc}",
             file=sys.stderr,
         )
         return 2
@@ -339,10 +348,31 @@ def main() -> int:
             impl_cmd.append("--skip-validate")
         impl_proc = run_command(impl_cmd, "implementer_runner")
     else:
-        print(
-            "[task_executor] stage=explorer_handoff"
-            " write_intent=false -> skipping implementer runner"
+        explorer_cmd = [
+            sys.executable,
+            str(explorer),
+            "--packet",
+            str(packet_path),
+            "--runtime-root",
+            str(runtime_root),
+            "--workspace-root",
+            str(workspace_root),
+        ]
+        if args.skip_validate:
+            explorer_cmd.append("--skip-validate")
+        explorer_proc = run_command(explorer_cmd, "explorer_runner")
+        if explorer_proc.returncode != 0:
+            return explorer_proc.returncode
+
+        exploration_path = latest_task_artifact(
+            runtime_root, task_id, "exploration_result"
         )
+        if exploration_path is None:
+            print(
+                "ERROR: exploration_result missing after explorer runner",
+                file=sys.stderr,
+            )
+            return 1
 
     result_status = (
         latest_implementer_status(runtime_root, task_id)
@@ -361,7 +391,9 @@ def main() -> int:
     policy_reason = ""
     if not write_intent:
         run_verifier = False
-        policy_reason = "write_intent=false"
+        policy_reason = (
+            f"write_intent=false execution_shape={execution_shape or 'unknown'}"
+        )
     elif args.verify_policy == "always":
         run_verifier = True
         policy_reason = "override=always"
@@ -396,6 +428,8 @@ def main() -> int:
             str(packet_path),
             "--runtime-root",
             str(runtime_root),
+            "--workspace-root",
+            str(workspace_root),
             "--append-trace",
             "--verify-phase",
             "post_implement",

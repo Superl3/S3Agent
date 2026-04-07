@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ExplorationResultRefsType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExplorationProviderType">
+    <xs:sequence>
+      <xs:element name="name" type="NonEmptyStringType"/>
+      <xs:element name="used" type="xs:boolean"/>
+      <xs:element name="success" type="xs:boolean"/>
+      <xs:element name="notes" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExplorationProvidersType">
+    <xs:sequence>
+      <xs:element name="provider" type="ExplorationProviderType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExplorationEvidenceItemType">
+    <xs:sequence>
+      <xs:element name="source_provider" type="NonEmptyStringType"/>
+      <xs:element name="path" type="PathStringType"/>
+      <xs:element name="line_start" type="xs:positiveInteger" minOccurs="0"/>
+      <xs:element name="line_end" type="xs:positiveInteger" minOccurs="0"/>
+      <xs:element name="symbol" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="summary" type="NonEmptyStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExplorationEvidenceListType">
+    <xs:sequence>
+      <xs:element name="evidence" type="ExplorationEvidenceItemType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExplorationResultPayloadType">
+    <xs:sequence>
+      <xs:element name="packet_ref" type="ReferenceItemType"/>
+      <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="exploration_kind" type="ExplorationKindType"/>
+      <xs:element name="exploration_scope" type="ExplorationScopeType" minOccurs="0"/>
+      <xs:element name="actionability" type="ExplorationActionabilityType" minOccurs="0"/>
+      <xs:element name="target_root" type="NonEmptyStringType"/>
+      <xs:element name="providers" type="ExplorationProvidersType"/>
+      <xs:element name="focus_questions" type="StringListType"/>
+      <xs:element name="key_findings" type="StringListType"/>
+      <xs:element name="evidence_items" type="ExplorationEvidenceListType"/>
+      <xs:element name="open_questions" type="StringListType" minOccurs="0"/>
+      <xs:element name="recommended_next_actions" type="StringListType"/>
+      <xs:element name="cache_refs" type="StringListType" minOccurs="0"/>
+      <xs:element name="completion_state" type="CompletionStateType"/>
+      <xs:element name="blocked_reason" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="escalation_requested" type="xs:boolean"/>
+      <xs:element name="notes" type="StringListType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExplorationResultDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="ExplorationResultRefsType"/>
+      <xs:element name="payload" type="ExplorationResultPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ExplorationResultDocumentType"/>
+
+</xs:schema>

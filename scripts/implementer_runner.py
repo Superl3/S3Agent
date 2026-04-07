@@ -32,6 +32,8 @@ except ModuleNotFoundError:
     )
     raise SystemExit(3)
 
+from context_refresh_runtime import run_manager_mediated_refresh
+
 
 NS = "urn:pxml:v1"
 NSMAP = {None: NS}
@@ -95,6 +97,8 @@ class PacketInfo:
     proof_requirements: List[ProofRequirement]
     requirement_targets: List[RequirementTarget]
     completion_state: Optional[str]
+    baseline_exploration_doc_id: Optional[str]
+    localization_targets: List[str]
 
 
 @dataclass
@@ -117,6 +121,8 @@ class RunResult:
     created_files: List[str]
     evidence_paths: List[str]
     notes: List[str]
+    context_refs: List[Tuple[str, str, str]]
+    context_files: List[Path]
 
 
 def q(tag: str) -> str:
@@ -259,6 +265,9 @@ def parse_packet(path: Path) -> PacketInfo:
     acceptance_nodes = tree.xpath(
         "/p:pxml/p:payload/p:acceptance_checks/p:check", namespaces=XPATH_NS
     )
+    localization_nodes = tree.xpath(
+        "/p:pxml/p:payload/p:localization_targets/p:item/text()", namespaces=XPATH_NS
+    )
     intended_behavior_nodes = tree.xpath(
         "/p:pxml/p:payload/p:intended_behaviors/p:item", namespaces=XPATH_NS
     )
@@ -376,6 +385,12 @@ def parse_packet(path: Path) -> PacketInfo:
     write_intent = True
     if write_intent_text is not None:
         write_intent = write_intent_text.lower() == "true"
+    baseline_exploration_doc_id = text_at(
+        tree, "/p:pxml/p:payload/p:exploration_notes_ref/p:doc_id"
+    )
+    localization_targets = [
+        item.strip() for item in localization_nodes if item and item.strip()
+    ]
     return PacketInfo(
         path=path,
         doc_id=doc_id,
@@ -398,6 +413,8 @@ def parse_packet(path: Path) -> PacketInfo:
         proof_requirements=proof_requirements,
         requirement_targets=requirement_targets,
         completion_state=packet_completion_state,
+        baseline_exploration_doc_id=baseline_exploration_doc_id,
+        localization_targets=localization_targets,
     )
 
 
@@ -653,6 +670,8 @@ def execute_packet(
             evidence_paths=evidence_paths,
             notes=notes
             or ["implementer execution blocked by packet/runtime conformance guard"],
+            context_refs=[],
+            context_files=[],
         )
 
     changes_made = False
@@ -703,6 +722,8 @@ def execute_packet(
         created_files=created_files,
         evidence_paths=evidence_paths,
         notes=notes,
+        context_refs=[],
+        context_files=[],
     )
 
 
@@ -811,6 +832,11 @@ def build_implementer_result(
     etree.SubElement(packet_ref, q("doc_id")).text = packet.doc_id
     etree.SubElement(packet_ref, q("doc_class")).text = "execution_packet"
     etree.SubElement(packet_ref, q("relation")).text = "implementation_target"
+    for ref_doc_id, ref_doc_class, ref_relation in result.context_refs:
+        extra_ref = etree.SubElement(refs, q("ref"))
+        etree.SubElement(extra_ref, q("doc_id")).text = ref_doc_id
+        etree.SubElement(extra_ref, q("doc_class")).text = ref_doc_class
+        etree.SubElement(extra_ref, q("relation")).text = ref_relation
 
     payload = etree.SubElement(root, q("payload"))
     payload_packet_ref = etree.SubElement(payload, q("packet_ref"))
@@ -984,6 +1010,58 @@ def append_trace_event(
         raise RuntimeError(f"trace append failed for event {event_type}")
 
 
+def maybe_request_context_refresh(
+    *,
+    repo_root: Path,
+    packet: PacketInfo,
+    result: RunResult,
+    workspace_root: Path,
+    runtime_root: Path,
+    skip_validate: bool,
+) -> RunResult:
+    if result.blocked_reason != "implementer_modify_target_missing":
+        return result
+    focus_questions = [
+        "Which existing file or symbol owns the intended modify target?",
+        "Does the current packet localization point to the wrong ownership boundary?",
+    ]
+    target_hints = [
+        item.path for item in packet.expected_files if item.mode == "modify"
+    ] + list(packet.localization_targets)
+    outcome = run_manager_mediated_refresh(
+        repo_root=repo_root,
+        runtime_root=runtime_root,
+        workspace_root=workspace_root,
+        packet_path=packet.path,
+        task_id=packet.task_id,
+        baseline_exploration_doc_id=packet.baseline_exploration_doc_id,
+        requester_agent="implementer",
+        request_kind="ownership_trace",
+        reason_code=result.blocked_reason,
+        focus_questions=focus_questions,
+        target_hints=target_hints,
+        contract_change_suspected=True,
+        request_context_path=None,
+        blocking=True,
+        skip_validate=skip_validate,
+    )
+    result.notes.extend(outcome.notes)
+    if outcome.request_ref is not None:
+        result.context_refs.append(outcome.request_ref)
+    if outcome.result_ref is not None:
+        result.context_refs.append(outcome.result_ref)
+    if outcome.request_path is not None:
+        result.context_files.append(outcome.request_path)
+    if outcome.result_path is not None:
+        result.context_files.append(outcome.result_path)
+    if outcome.actionability == "contract_refresh_required":
+        result.escalation_requested = True
+        result.notes.append(
+            "Focused context refresh indicates manager packet reissue is required before implementation can continue."
+        )
+    return result
+
+
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(
@@ -1044,6 +1122,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    repo_root = Path(__file__).resolve().parents[1]
     packet_path = args.packet.resolve()
     workspace_root = args.workspace_root.resolve()
     if not workspace_root.exists():
@@ -1114,6 +1193,14 @@ def main() -> int:
         runtime_root=runtime_root,
         retry_policy=retry_policy,
     )
+    result = maybe_request_context_refresh(
+        repo_root=repo_root,
+        packet=packet,
+        result=result,
+        workspace_root=workspace_root,
+        runtime_root=runtime_root,
+        skip_validate=args.skip_validate,
+    )
 
     result_doc_id = make_result_doc_id(
         packet.task_id, packet.sequence, result.retry_count
@@ -1144,7 +1231,11 @@ def main() -> int:
             print(f"ERROR: validator not found: {validator_path}", file=sys.stderr)
             return 2
         try:
-            run_validation(validator_path, result_path, context_files=[packet.path])
+            run_validation(
+                validator_path,
+                result_path,
+                context_files=[packet.path] + result.context_files,
+            )
         except RuntimeError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
@@ -1172,6 +1263,18 @@ def main() -> int:
                 reason_code=result.blocked_reason,
                 attempt=result.retry_count,
             )
+            if result.escalation_requested:
+                append_trace_event(
+                    trace_script=trace_script_path,
+                    runtime_root=runtime_root,
+                    task_id=packet.task_id,
+                    event_type="escalation",
+                    message="Implementer requested escalation after focused context refresh required packet reissue.",
+                    artifact_files=[result_path] + result.context_files,
+                    lineage_lock_sha256=packet.acceptance_lock_hash,
+                    reason_code=result.blocked_reason,
+                    attempt=result.retry_count,
+                )
         elif result.status == "retry_failed":
             append_trace_event(
                 trace_script=trace_script_path,

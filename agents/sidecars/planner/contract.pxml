@@ -28,6 +28,7 @@
       <item>task_intake artifact</item>
       <item>manager_route artifact with planner lane flag</item>
       <item>execution_policy guardrails</item>
+      <item>optional exploration_result artifact from prior read-only scouting for same task_id</item>
     </inputs>
     <outputs>
       <item>plan_sidecar artifact with ambiguities assumptions proposed_steps risk_map plan_status</item>
@@ -55,6 +56,7 @@
     <artifact_responsibilities>
       <item>Write plan_sidecar artifacts to runtime/sidecars/planner.</item>
       <item>Reference task_intake and manager_route artifacts in refs.</item>
+      <item>Reuse prior exploration_result evidence when present to reduce repeated ambiguity.</item>
       <item>Do not write execution_packet or code artifacts.</item>
     </artifact_responsibilities>
     <dormant_registry_note>ECC registries remain dormant metadata and are not planner execution inputs in Batch 3.</dormant_registry_note>

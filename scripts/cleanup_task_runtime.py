@@ -82,6 +82,8 @@ def collect_task_paths(runtime_root: Path, task_id: str) -> List[Path]:
         runtime_root / "inbox" / "task_intake",
         runtime_root / "packets" / "manager_route",
         runtime_root / "packets" / "execution_packet",
+        runtime_root / "exploration" / "requests",
+        runtime_root / "exploration" / "results",
         runtime_root / "implementer" / "results",
         runtime_root / "sidecars" / "planner",
         runtime_root / "sidecars" / "reviewer",

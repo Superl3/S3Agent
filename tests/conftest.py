@@ -16,6 +16,8 @@ TASK_ARTIFACT_DIRS = [
     "inbox/task_intake",
     "packets/manager_route",
     "packets/execution_packet",
+    "exploration/requests",
+    "exploration/results",
     "implementer/results",
     "sidecars/planner",
     "sidecars/reviewer",

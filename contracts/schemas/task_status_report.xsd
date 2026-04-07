@@ -11,6 +11,7 @@
       <xs:enumeration value="intake"/>
       <xs:enumeration value="routing"/>
       <xs:enumeration value="planning"/>
+      <xs:enumeration value="exploring"/>
       <xs:enumeration value="implementing"/>
       <xs:enumeration value="reviewing"/>
       <xs:enumeration value="verifying"/>
@@ -87,6 +88,7 @@
       <xs:element name="execution_shape" type="ExecutionShapeType" minOccurs="0"/>
       <xs:element name="latest_route_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_packet_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="latest_exploration_result_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_implementer_result_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_review_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_verification_ref" type="ReferenceItemType" minOccurs="0"/>

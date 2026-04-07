@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pxml:v1"
+           xmlns="urn:pxml:v1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="../pxml/core_syntax.xsd"/>
+
+  <xs:complexType name="ExplorationRequestRefsType">
+    <xs:sequence>
+      <xs:element name="ref" type="ReferenceItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExplorationRequestPayloadType">
+    <xs:sequence>
+      <xs:element name="requester_agent" type="ExplorationRequesterType"/>
+      <xs:element name="request_kind" type="ExplorationRequestKindType"/>
+      <xs:element name="blocking" type="xs:boolean"/>
+      <xs:element name="reason_code" type="NonEmptyStringType"/>
+      <xs:element name="focus_questions" type="StringListType"/>
+      <xs:element name="target_hints" type="StringListType"/>
+      <xs:element name="contract_change_suspected" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExplorationRequestDocumentType">
+    <xs:sequence>
+      <xs:element name="meta" type="MetaType"/>
+      <xs:element name="refs" type="ExplorationRequestRefsType"/>
+      <xs:element name="payload" type="ExplorationRequestPayloadType"/>
+      <xs:element name="integrity" type="IntegrityType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="pxml" type="ExplorationRequestDocumentType"/>
+
+</xs:schema>

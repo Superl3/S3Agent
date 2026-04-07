@@ -103,6 +103,7 @@
       <xs:element name="stop_conditions" type="StringListType"/>
       <xs:element name="localization_targets" type="PathListType" minOccurs="0"/>
       <xs:element name="planner_notes_ref" type="ReferenceItemType" minOccurs="0"/>
+      <xs:element name="exploration_notes_ref" type="ReferenceItemType" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

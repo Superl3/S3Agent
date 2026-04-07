@@ -45,6 +45,8 @@ EVENT_TYPES = {
     "retry_failed",
     "review_done",
     "verify_done",
+    "explore_start",
+    "explore_done",
     "escalation",
     "stop",
     "reject",
@@ -403,7 +405,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--actor",
         default="manager",
-        choices=["manager", "implementer", "planner", "reviewer", "verifier", "system"],
+        choices=[
+            "manager",
+            "implementer",
+            "planner",
+            "reviewer",
+            "verifier",
+            "explorer",
+            "system",
+        ],
         help="Event actor.",
     )
     parser.add_argument(

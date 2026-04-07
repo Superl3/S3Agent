@@ -13,6 +13,8 @@
       <xs:enumeration value="review_sidecar"/>
       <xs:enumeration value="implementer_result"/>
       <xs:enumeration value="verification_result"/>
+      <xs:enumeration value="exploration_request"/>
+      <xs:enumeration value="exploration_result"/>
       <xs:enumeration value="execution_trace"/>
       <xs:enumeration value="task_status_report"/>
       <xs:enumeration value="compaction_checkpoint"/>
@@ -64,6 +66,7 @@
       <xs:enumeration value="planner"/>
       <xs:enumeration value="reviewer"/>
       <xs:enumeration value="verifier"/>
+      <xs:enumeration value="explorer"/>
       <xs:enumeration value="system"/>
     </xs:restriction>
   </xs:simpleType>
@@ -261,9 +264,55 @@
       <xs:enumeration value="retry_failed"/>
       <xs:enumeration value="review_done"/>
       <xs:enumeration value="verify_done"/>
+      <xs:enumeration value="explore_start"/>
+      <xs:enumeration value="explore_done"/>
       <xs:enumeration value="escalation"/>
       <xs:enumeration value="stop"/>
       <xs:enumeration value="reject"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExplorationKindType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="investigation"/>
+      <xs:enumeration value="design"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExplorationRequesterType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="manager"/>
+      <xs:enumeration value="planner"/>
+      <xs:enumeration value="implementer"/>
+      <xs:enumeration value="verifier"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExplorationRequestKindType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="symbol_reference_trace"/>
+      <xs:enumeration value="ownership_trace"/>
+      <xs:enumeration value="impact_boundary"/>
+      <xs:enumeration value="test_discovery"/>
+      <xs:enumeration value="config_lookup"/>
+      <xs:enumeration value="external_api_doc"/>
+      <xs:enumeration value="repro_context"/>
+      <xs:enumeration value="design_constraints"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExplorationScopeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="baseline"/>
+      <xs:enumeration value="focused_refresh"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExplorationActionabilityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="advisory_only"/>
+      <xs:enumeration value="manager_reusable"/>
+      <xs:enumeration value="contract_refresh_required"/>
     </xs:restriction>
   </xs:simpleType>
 

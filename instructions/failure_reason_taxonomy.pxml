@@ -179,6 +179,33 @@
         <recommended_next_action>Inspect command stderr, repair environment, and rerun task executor.</recommended_next_action>
         <escalation_default>false</escalation_default>
       </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>system_exploration_runner_error</code>
+        <category>system</category>
+        <severity>major</severity>
+        <description>Explorer runner failed before exploration_result generation completed.</description>
+        <recommended_next_action>Inspect explorer runner stderr, repair environment or inputs, and rerun read-only execution.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>system_exploration_result_missing</code>
+        <category>system</category>
+        <severity>major</severity>
+        <description>Read-only execution did not leave behind the required exploration_result artifact.</description>
+        <recommended_next_action>Regenerate exploration_result before claiming read-only completion.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
+      <reason>
+        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
+        <code>system_exploration_unresolved</code>
+        <category>system</category>
+        <severity>minor</severity>
+        <description>RepoScout could not resolve enough evidence for a complete read-only answer.</description>
+        <recommended_next_action>Provide tighter localization hints or symbol names and rerun the exploration step.</recommended_next_action>
+        <escalation_default>false</escalation_default>
+      </reason>
     </reasons>
   </payload>
   <integrity>

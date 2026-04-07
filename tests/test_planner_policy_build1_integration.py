@@ -78,6 +78,90 @@ def _write_task_intake(
     )
 
 
+def _write_exploration_result(
+    runtime_root: Path,
+    *,
+    task_id: str,
+    doc_id: str,
+    findings: list[str],
+    open_questions: list[str],
+    evidence_paths: list[str],
+) -> None:
+    root = etree.Element(q("pxml"), nsmap={None: NS_URI})
+
+    meta = etree.SubElement(root, q("meta"))
+    etree.SubElement(meta, q("doc_id")).text = doc_id
+    etree.SubElement(meta, q("doc_class")).text = "exploration_result"
+    etree.SubElement(meta, q("schema_version")).text = "1.0.0"
+    etree.SubElement(meta, q("task_id")).text = task_id
+    etree.SubElement(meta, q("run_id")).text = f"run_{task_id[5:]}"
+    etree.SubElement(meta, q("sequence")).text = "3"
+    etree.SubElement(meta, q("writer_agent")).text = "explorer"
+    etree.SubElement(meta, q("created_at")).text = "2026-03-23T00:00:03Z"
+
+    refs = etree.SubElement(root, q("refs"))
+    ref = etree.SubElement(refs, q("ref"))
+    etree.SubElement(ref, q("doc_id")).text = f"doc_packet_{task_id[5:]}"
+    etree.SubElement(ref, q("doc_class")).text = "execution_packet"
+    etree.SubElement(ref, q("relation")).text = "exploration_target"
+
+    payload = etree.SubElement(root, q("payload"))
+    packet_ref = etree.SubElement(payload, q("packet_ref"))
+    etree.SubElement(packet_ref, q("doc_id")).text = f"doc_packet_{task_id[5:]}"
+    etree.SubElement(packet_ref, q("doc_class")).text = "execution_packet"
+    etree.SubElement(packet_ref, q("relation")).text = "exploration_target"
+    etree.SubElement(payload, q("task_id")).text = task_id
+    etree.SubElement(payload, q("exploration_kind")).text = "investigation"
+    etree.SubElement(payload, q("target_root")).text = "C:/tmp/workspace"
+    providers = etree.SubElement(payload, q("providers"))
+    provider = etree.SubElement(providers, q("provider"))
+    etree.SubElement(provider, q("name")).text = "text_search"
+    etree.SubElement(provider, q("used")).text = "true"
+    etree.SubElement(provider, q("success")).text = "true"
+    etree.SubElement(provider, q("notes")).text = "seeded exploration result"
+    focus_questions = etree.SubElement(payload, q("focus_questions"))
+    etree.SubElement(focus_questions, q("item")).text = "Which files are relevant?"
+    key_findings = etree.SubElement(payload, q("key_findings"))
+    for item in findings:
+        etree.SubElement(key_findings, q("item")).text = item
+    evidence_items = etree.SubElement(payload, q("evidence_items"))
+    for item in evidence_paths:
+        evidence = etree.SubElement(evidence_items, q("evidence"))
+        etree.SubElement(evidence, q("source_provider")).text = "text_search"
+        etree.SubElement(evidence, q("path")).text = item
+        etree.SubElement(evidence, q("summary")).text = "seeded evidence"
+    if open_questions:
+        open_node = etree.SubElement(payload, q("open_questions"))
+        for item in open_questions:
+            etree.SubElement(open_node, q("item")).text = item
+    next_actions = etree.SubElement(payload, q("recommended_next_actions"))
+    etree.SubElement(next_actions, q("item")).text = "Inspect seeded evidence first."
+    etree.SubElement(payload, q("completion_state")).text = "completed_and_verified"
+    etree.SubElement(payload, q("escalation_requested")).text = "false"
+    notes = etree.SubElement(payload, q("notes"))
+    etree.SubElement(notes, q("item")).text = "seeded exploration"
+
+    integrity = etree.SubElement(root, q("integrity"))
+    etree.SubElement(integrity, q("content_sha256")).text = "1" * 64
+    etree.SubElement(integrity, q("parent_sha256")).text = "2" * 64
+
+    results_dir = runtime_root / "exploration" / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    result_path = results_dir / f"{doc_id}.pxml"
+    etree.ElementTree(root).write(
+        str(result_path), encoding="UTF-8", xml_declaration=True, pretty_print=True
+    )
+
+    latest_dir = runtime_root / "latest"
+    latest_dir.mkdir(parents=True, exist_ok=True)
+    etree.ElementTree(root).write(
+        str(latest_dir / f"{task_id}_exploration_result.pxml"),
+        encoding="UTF-8",
+        xml_declaration=True,
+        pretty_print=True,
+    )
+
+
 def _run_packet_builder(
     run_python,
     *,
@@ -95,8 +179,26 @@ def _run_packet_builder(
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def _run_coordinator(run_python, *, task_id: str, runtime_root: Path) -> None:
+    result = run_python(
+        "scripts/orchestration_coordinator.py",
+        "--task-id",
+        task_id,
+        "--runtime-root",
+        runtime_root,
+        "--skip-validate",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def _latest(runtime_root: Path, task_id: str, suffix: str) -> Path:
     return runtime_root / "latest" / f"{task_id}_{suffix}.pxml"
+
+
+def _latest_sidecar(runtime_root: Path, sidecar_dir: str) -> Path:
+    candidates = sorted((runtime_root / "sidecars" / sidecar_dir).glob("*.pxml"))
+    assert candidates, f"missing sidecar artifact in {sidecar_dir}"
+    return candidates[-1]
 
 
 def test_mode_routing_distinguishes_meta_planning_and_task_planning(
@@ -268,7 +370,7 @@ def test_research_and_design_only_requests_use_read_only_shapes(
     )
 
 
-def test_behavior_changing_bugfix_with_structural_only_proof_is_not_completed_verified(
+def test_behavior_changing_bugfix_default_acceptance_can_complete_verified(
     tmp_path: Path,
     run_python,
 ) -> None:
@@ -307,15 +409,11 @@ def test_behavior_changing_bugfix_with_structural_only_proof_is_not_completed_ve
     status_tree = etree.parse(str(_latest(runtime_root, task_id, "task_status_report")))
     assert (
         _text(status_tree, "/p:pxml/p:payload/p:completion_state")
-        == "implemented_but_unverified"
+        == "completed_and_verified"
     )
     assert _text(status_tree, "/p:pxml/p:payload/p:proof_status/p:structural") == "PASS"
-    assert (
-        _text(status_tree, "/p:pxml/p:payload/p:proof_status/p:behavioral") == "NOT-RUN"
-    )
-    assert (
-        _text(status_tree, "/p:pxml/p:payload/p:proof_status/p:regression") == "NOT-RUN"
-    )
+    assert _text(status_tree, "/p:pxml/p:payload/p:proof_status/p:behavioral") == "PASS"
+    assert _text(status_tree, "/p:pxml/p:payload/p:proof_status/p:regression") == "PASS"
 
 
 def test_requirement_status_matrix_supports_pass_fail_and_not_run(
@@ -382,7 +480,7 @@ def test_requirement_status_matrix_supports_pass_fail_and_not_run(
     )
     assert "FAIL" in fail_statuses
 
-    # NOT-RUN: behavior-changing bugfix with only structural proof
+    # NOT-RUN: behavior-changing bugfix awaiting verifier execution
     not_run_task = "task_matrix_not_run_001"
     not_run_intake = tmp_path / "intake" / f"{not_run_task}.pxml"
     not_run_runtime = tmp_path / "runtime" / "not_run"
@@ -407,7 +505,7 @@ def test_requirement_status_matrix_supports_pass_fail_and_not_run(
         "--workspace-root",
         not_run_workspace,
         "--verify-policy",
-        "always",
+        "never",
         "--skip-validate",
     )
     assert not_run_result.returncode == 0, not_run_result.stdout + not_run_result.stderr
@@ -455,3 +553,99 @@ def test_repeated_symptom_bug_biases_observation_first(
     )
     assert behavioral_methods
     assert any("observation-first" in item.lower() for item in behavioral_methods)
+
+
+def test_bugfix_packet_includes_behavioral_and_regression_acceptance_suites(
+    tmp_path: Path, run_python
+) -> None:
+    task_id = "task_acceptance_suites_001"
+    intake = tmp_path / "intake" / f"{task_id}.pxml"
+    runtime_root = tmp_path / "runtime"
+    _write_task_intake(
+        intake,
+        task_id=task_id,
+        task_type="bugfix",
+        risk_hint="medium",
+        request_text="Fix runtime interaction bug symptom.",
+        requested_outcome="Remove bug symptom and keep behavior stable.",
+    )
+
+    _run_packet_builder(run_python, intake_path=intake, runtime_root=runtime_root)
+    packet_tree = etree.parse(str(_latest(runtime_root, task_id, "execution_packet")))
+    check_ids = _items(
+        packet_tree, "/p:pxml/p:payload/p:acceptance_checks/p:check/p:check_id/text()"
+    )
+    commands = _items(
+        packet_tree, "/p:pxml/p:payload/p:acceptance_checks/p:check/p:command/text()"
+    )
+
+    assert any("structural" in item for item in check_ids)
+    assert any("behavior" in item for item in check_ids)
+    assert any("regression" in item for item in check_ids)
+    assert any("python -m py_compile" in item for item in commands)
+    assert any("python -m pytest" in item for item in commands)
+
+
+def test_prior_exploration_result_informs_packet_and_planner_sidecar(
+    tmp_path: Path, run_python
+) -> None:
+    task_id = "task_prior_exploration_001"
+    intake = tmp_path / "intake" / f"{task_id}.pxml"
+    runtime_root = tmp_path / "runtime"
+
+    _write_exploration_result(
+        runtime_root,
+        task_id=task_id,
+        doc_id="doc_exploration_seed_0001",
+        findings=[
+            "Top evidence indicates src/auth/router.py owns the routing boundary."
+        ],
+        open_questions=[
+            "Confirm whether state ownership still lives in src/auth/store.py."
+        ],
+        evidence_paths=["src/auth/router.py", "tests/test_auth_router.py"],
+    )
+
+    _write_task_intake(
+        intake,
+        task_id=task_id,
+        task_type="feature",
+        risk_hint="medium",
+        request_text="Unclear boundary? update auth routing flow safely.",
+        requested_outcome="Implement a bounded auth routing improvement.",
+    )
+
+    _run_packet_builder(run_python, intake_path=intake, runtime_root=runtime_root)
+
+    route_tree = etree.parse(str(_latest(runtime_root, task_id, "manager_route")))
+    packet_tree = etree.parse(str(_latest(runtime_root, task_id, "execution_packet")))
+
+    route_ref_classes = _items(route_tree, "/p:pxml/p:refs/p:ref/p:doc_class/text()")
+    packet_ref_classes = _items(packet_tree, "/p:pxml/p:refs/p:ref/p:doc_class/text()")
+    assert "exploration_result" in route_ref_classes
+    assert "exploration_result" in packet_ref_classes
+    assert (
+        _text(packet_tree, "/p:pxml/p:payload/p:exploration_notes_ref/p:doc_class")
+        == "exploration_result"
+    )
+    guidance = _items(packet_tree, "/p:pxml/p:payload/p:test_guidance/p:item/text()")
+    assert any("prior exploration_result" in item.lower() for item in guidance)
+    assert any("src/auth/router.py" in item for item in guidance)
+
+    _run_coordinator(run_python, task_id=task_id, runtime_root=runtime_root)
+    planner_tree = etree.parse(str(_latest_sidecar(runtime_root, "planner")))
+
+    planner_ref_classes = _items(
+        planner_tree, "/p:pxml/p:refs/p:ref/p:doc_class/text()"
+    )
+    assert "exploration_result" in planner_ref_classes
+    assumptions = _items(planner_tree, "/p:pxml/p:payload/p:assumptions/p:item/text()")
+    steps = _items(planner_tree, "/p:pxml/p:payload/p:proposed_steps/p:item/text()")
+    open_questions = _items(
+        planner_tree, "/p:pxml/p:payload/p:open_questions/p:item/text()"
+    )
+    assert any(
+        "prior exploration_result findings" in item.lower() for item in assumptions
+    )
+    assert any("src/auth/router.py" in item for item in steps)
+    assert any("state ownership" in item.lower() for item in open_questions)

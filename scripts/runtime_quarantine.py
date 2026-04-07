@@ -134,6 +134,8 @@ def gather_task_artifacts(runtime_root: Path, task_id: str) -> List[Artifact]:
     scan_dirs = [
         runtime_root / "packets" / "manager_route",
         runtime_root / "packets" / "execution_packet",
+        runtime_root / "exploration" / "requests",
+        runtime_root / "exploration" / "results",
         runtime_root / "implementer" / "results",
         runtime_root / "sidecars" / "planner",
         runtime_root / "sidecars" / "reviewer",

@@ -77,6 +77,17 @@ class PacketInfo:
 
 
 @dataclass
+class ExplorationInfo:
+    path: Path
+    doc_id: str
+    task_id: str
+    completion_state: str
+    key_findings: List[str]
+    open_questions: List[str]
+    evidence_paths: List[str]
+
+
+@dataclass
 class RetryPolicy:
     implementer_max_attempts: int = 2
     reviewer_max_attempts: int = 2
@@ -327,6 +338,55 @@ def find_artifact_by_doc_id(runtime_root: Path, doc_id: str) -> Optional[Path]:
             continue
         return path
     return None
+
+
+def latest_exploration_for_task(
+    runtime_root: Path, task_id: str
+) -> Optional[ExplorationInfo]:
+    latest_path = (
+        runtime_root / "latest" / f"{sanitize(task_id)}_exploration_result.pxml"
+    )
+    if not latest_path.exists():
+        return None
+    tree = etree.parse(str(latest_path))
+    if text_at(tree, "/p:pxml/p:meta/p:doc_class") != "exploration_result":
+        return None
+    doc_id = text_at(tree, "/p:pxml/p:meta/p:doc_id")
+    parsed_task_id = text_at(tree, "/p:pxml/p:meta/p:task_id")
+    completion_state = text_at(tree, "/p:pxml/p:payload/p:completion_state")
+    if not doc_id or not parsed_task_id or not completion_state:
+        return None
+    key_findings = [
+        item.strip()
+        for item in tree.xpath(
+            "/p:pxml/p:payload/p:key_findings/p:item/text()", namespaces=XPATH_NS
+        )
+        if item and item.strip()
+    ]
+    open_questions = [
+        item.strip()
+        for item in tree.xpath(
+            "/p:pxml/p:payload/p:open_questions/p:item/text()", namespaces=XPATH_NS
+        )
+        if item and item.strip()
+    ]
+    evidence_paths = [
+        item.strip()
+        for item in tree.xpath(
+            "/p:pxml/p:payload/p:evidence_items/p:evidence/p:path/text()",
+            namespaces=XPATH_NS,
+        )
+        if item and item.strip()
+    ]
+    return ExplorationInfo(
+        path=latest_path,
+        doc_id=doc_id,
+        task_id=parsed_task_id,
+        completion_state=completion_state,
+        key_findings=key_findings,
+        open_questions=open_questions,
+        evidence_paths=evidence_paths,
+    )
 
 
 def make_doc_id(prefix: str, task_id: str, sequence: int) -> str:
@@ -580,6 +640,7 @@ def build_plan_sidecar(
     sequence = next_sidecar_sequence(runtime_root, route.task_id)
     doc_id = make_doc_id("plan_sidecar", route.task_id, sequence)
     created_at = now_iso()
+    prior_exploration = latest_exploration_for_task(runtime_root, route.task_id)
 
     root = etree.Element(q("pxml"), nsmap=NSMAP)
     meta = etree.SubElement(root, q("meta"))
@@ -601,28 +662,53 @@ def build_plan_sidecar(
     etree.SubElement(ref_route, q("doc_id")).text = route.doc_id
     etree.SubElement(ref_route, q("doc_class")).text = "manager_route"
     etree.SubElement(ref_route, q("relation")).text = "route"
+    if prior_exploration is not None:
+        ref_exploration = etree.SubElement(refs, q("ref"))
+        etree.SubElement(ref_exploration, q("doc_id")).text = prior_exploration.doc_id
+        etree.SubElement(ref_exploration, q("doc_class")).text = "exploration_result"
+        etree.SubElement(ref_exploration, q("relation")).text = "prior_exploration"
 
     payload = etree.SubElement(root, q("payload"))
     ambiguities = etree.SubElement(payload, q("ambiguities"))
-    etree.SubElement(
-        ambiguities, q("item")
-    ).text = "Planner lane selected; scope assumptions were clarified for execution packet safety."
+    if prior_exploration is not None and prior_exploration.open_questions:
+        for item in prior_exploration.open_questions[:3]:
+            etree.SubElement(ambiguities, q("item")).text = item
+    else:
+        etree.SubElement(
+            ambiguities, q("item")
+        ).text = "Planner lane selected; scope assumptions were clarified for execution packet safety."
     assumptions = etree.SubElement(payload, q("assumptions"))
     etree.SubElement(
         assumptions, q("item")
     ).text = "Execution remains bound by existing packet in_scope and out_of_scope constraints."
+    if prior_exploration is not None and prior_exploration.key_findings:
+        etree.SubElement(assumptions, q("item")).text = (
+            "Prior exploration_result findings remain relevant: "
+            + "; ".join(prior_exploration.key_findings[:2])
+        )
     steps = etree.SubElement(payload, q("proposed_steps"))
     etree.SubElement(
         steps, q("item")
     ).text = "Apply packet-defined implementation path after ambiguity resolution."
+    if prior_exploration is not None and prior_exploration.evidence_paths:
+        etree.SubElement(steps, q("item")).text = (
+            "Start review or implementation from exploration-backed files: "
+            + ", ".join(prior_exploration.evidence_paths[:3])
+        )
     risk_map = etree.SubElement(payload, q("risk_map"))
     risk = etree.SubElement(risk_map, q("risk"))
     etree.SubElement(risk, q("target")).text = "execution_packet"
     etree.SubElement(risk, q("risk_level")).text = route.risk_level
-    etree.SubElement(
-        risk, q("rationale")
-    ).text = "Planner confirms manager route assumptions before downstream lanes."
+    etree.SubElement(risk, q("rationale")).text = (
+        "Planner confirms manager route assumptions before downstream lanes."
+        if prior_exploration is None
+        else "Planner reused prior exploration_result to reduce ambiguity before downstream lanes."
+    )
     etree.SubElement(payload, q("plan_status")).text = "ready"
+    if prior_exploration is not None and prior_exploration.open_questions:
+        open_questions = etree.SubElement(payload, q("open_questions"))
+        for item in prior_exploration.open_questions[:3]:
+            etree.SubElement(open_questions, q("item")).text = item
 
     integrity = etree.SubElement(root, q("integrity"))
     content_hash = compute_content_hash(meta, refs, payload)
@@ -636,6 +722,8 @@ def build_plan_sidecar(
     context = [route.path, packet.path]
     if intake_path is not None:
         context.append(intake_path)
+    if prior_exploration is not None:
+        context.append(prior_exploration.path)
     if validate_artifacts:
         run_validator(validator_path, output_path, context)
     return output_path
@@ -816,6 +904,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help="Runtime root directory.",
+    )
+    parser.add_argument(
+        "--workspace-root",
+        type=Path,
+        default=repo_root,
+        help="Workspace root to pass to focused verifier context refresh.",
     )
     parser.add_argument(
         "--validator",
@@ -1240,6 +1334,8 @@ def main() -> int:
                 str(packet.path),
                 "--runtime-root",
                 str(runtime_root),
+                "--workspace-root",
+                str(args.workspace_root.resolve()),
                 "--validator",
                 str(validator_path),
                 "--verify-phase",

@@ -43,6 +43,7 @@
       <item>task_intake artifact</item>
       <item>routing_policy artifact</item>
       <item>execution_policy artifact</item>
+      <item>optional prior exploration_result artifact for same task_id when re-issuing route or packet after scouting</item>
     </inputs>
     <outputs>
       <item>manager_route artifact</item>
@@ -63,6 +64,7 @@
       <item>Populate intended_behaviors, proof_requirements, and requirement_status_matrix in execution_packet for proof-aware reporting.</item>
       <item>Author acceptance checks at observable requirement granularity so each requirement can be independently verified with concrete evidence.</item>
       <item>Record route rationale and include stop and escalation conditions in execution_packet.</item>
+      <item>Reuse prior exploration_result evidence when available to improve packet scoping and planner handoff quality.</item>
       <item>Decide sidecar need and trigger conditional sidecar artifact generation only when lane flags require it.</item>
       <item>Keep sidecars default-off and enable only when explicit triggers are present, including unresolved planning ambiguity, high-risk review need, or independent verification requirement.</item>
       <item>For recurring interaction or state symptoms, bias packet guidance toward observation-first debugging before additional patch attempts.</item>

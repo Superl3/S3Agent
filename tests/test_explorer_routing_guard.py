@@ -47,6 +47,21 @@ def _packet_write_intent(packet_path: Path) -> str | None:
     return str(values[0]).strip()
 
 
+def _text(tree: etree._ElementTree, expr: str) -> str | None:
+    values = tree.xpath(expr, namespaces=NS)
+    if not values:
+        return None
+    value = values[0]
+    if isinstance(value, etree._Element):
+        text = value.text
+    else:
+        text = str(value)
+    if text is None:
+        return None
+    normalized = text.strip()
+    return normalized or None
+
+
 def test_packet_builder_marks_exploration_intake_as_read_only(
     tmp_path: Path,
     run_python,
@@ -99,10 +114,18 @@ def test_task_executor_skips_implementer_when_write_intent_is_false(
         "--skip-validate",
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "stage=explorer_handoff" in result.stdout
+    assert "stage=explorer_runner" in result.stdout
 
     latest_impl = runtime_root / "latest" / f"{task_id}_implementer_result.pxml"
+    latest_exploration = runtime_root / "latest" / f"{task_id}_exploration_result.pxml"
     assert not latest_impl.exists()
+    assert latest_exploration.exists()
+
+    exploration_tree = etree.parse(str(latest_exploration))
+    assert (
+        _text(exploration_tree, "/p:pxml/p:payload/p:completion_state")
+        == "completed_and_verified"
+    )
 
 
 def test_implementer_rejects_packet_with_disabled_write_intent(
@@ -144,3 +167,48 @@ def test_implementer_rejects_packet_with_disabled_write_intent(
     )
     assert impl_result.returncode == 1, impl_result.stdout + impl_result.stderr
     assert "blocked_reason=implementer_write_intent_disabled" in impl_result.stdout
+
+
+def test_task_executor_read_only_flow_validates_exploration_result(
+    tmp_path: Path,
+    run_python,
+) -> None:
+    runtime_root = tmp_path / "runtime_validated"
+    intake_path = tmp_path / "intake_validated.pxml"
+    task_id = "task_explorer_validated_001"
+
+    (tmp_path / "src").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "src" / "module.py").write_text(
+        "def investigate_me():\n    return 'ok'\n",
+        encoding="utf-8",
+    )
+
+    _write_task_intake(
+        intake_path,
+        task_id,
+        request_text="Read-only exploration only; investigate module ownership without edits",
+        outcome="Summarize likely touch points",
+    )
+
+    result = run_python(
+        "scripts/task_executor.py",
+        "--intake",
+        intake_path,
+        "--runtime-root",
+        runtime_root,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    latest_exploration = runtime_root / "latest" / f"{task_id}_exploration_result.pxml"
+    latest_status = runtime_root / "latest" / f"{task_id}_task_status_report.pxml"
+    assert latest_exploration.exists()
+    assert latest_status.exists()
+
+    status_tree = etree.parse(str(latest_status))
+    assert _text(status_tree, "/p:pxml/p:payload/p:current_status") == "passed"
+    assert (
+        _text(
+            status_tree, "/p:pxml/p:payload/p:latest_exploration_result_ref/p:doc_class"
+        )
+        == "exploration_result"
+    )

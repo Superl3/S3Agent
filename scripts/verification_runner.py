@@ -33,6 +33,8 @@ except ModuleNotFoundError:
     )
     raise SystemExit(3)
 
+from context_refresh_runtime import run_manager_mediated_refresh
+
 
 NS = "urn:pxml:v1"
 NSMAP = {None: NS}
@@ -77,6 +79,7 @@ class PacketInfo:
     checks: List[AcceptanceCheck]
     intended_behaviors: List[str]
     required_proofs: Dict[str, bool]
+    baseline_exploration_doc_id: Optional[str]
 
 
 def q(tag: str) -> str:
@@ -109,6 +112,22 @@ def text_at(tree: etree._ElementTree, xpath_expr: str) -> Optional[str]:
 
 def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def acceptance_lock_hash(checks: Sequence[AcceptanceCheck]) -> str:
+    normalized_checks = [
+        {
+            "check_id": item.check_id,
+            "check_type": item.check_type,
+            "command": item.command,
+            "pass_condition": item.pass_condition,
+            "deterministic": item.deterministic,
+            "timeout_sec": item.timeout_sec,
+        }
+        for item in checks
+    ]
+    encoded = json.dumps(normalized_checks, sort_keys=True, separators=(",", ":"))
+    return sha256_hex(encoded.encode("utf-8"))
 
 
 def ensure_dir(path: Path) -> None:
@@ -217,23 +236,17 @@ def parse_packet(path: Path) -> PacketInfo:
     assert created_at is not None
     assert content_sha is not None
 
+    computed_lock_hash = acceptance_lock_hash(checks)
     if packet_lock_hash is None:
-        normalized_checks = [
-            {
-                "check_id": item.check_id,
-                "check_type": item.check_type,
-                "command": item.command,
-                "pass_condition": item.pass_condition,
-                "deterministic": item.deterministic,
-                "timeout_sec": item.timeout_sec,
-            }
-            for item in checks
-        ]
-        packet_lock_hash = hashlib.sha256(
-            json.dumps(normalized_checks, sort_keys=True, separators=(",", ":")).encode(
-                "utf-8"
-            )
-        ).hexdigest()
+        packet_lock_hash = computed_lock_hash
+    elif packet_lock_hash != computed_lock_hash:
+        raise ValueError(
+            "execution_packet acceptance_lock_hash does not match normalized acceptance_checks"
+        )
+
+    baseline_exploration_doc_id = text_at(
+        tree, "/p:pxml/p:payload/p:exploration_notes_ref/p:doc_id"
+    )
 
     return PacketInfo(
         path=path,
@@ -247,6 +260,7 @@ def parse_packet(path: Path) -> PacketInfo:
         checks=checks,
         intended_behaviors=intended_behaviors,
         required_proofs=required_proofs,
+        baseline_exploration_doc_id=baseline_exploration_doc_id,
     )
 
 
@@ -407,11 +421,13 @@ def infer_proof_category(test: Dict[str, object]) -> str:
     check_type = str(test.get("check_type", "")).lower()
     combined = f"{check_id} {command}"
 
+    if check_type in {"build", "lint", "static_rule"}:
+        return "structural"
     if any(marker in combined for marker in REGRESSION_PROOF_MARKERS):
         return "regression"
     if any(marker in combined for marker in BEHAVIOR_PROOF_MARKERS):
         return "behavioral"
-    if check_type in {"build", "lint", "static_rule", "test"}:
+    if check_type == "test":
         return "structural"
     return "structural"
 
@@ -516,6 +532,7 @@ def build_verification_result(
     logs_ref: Optional[str],
     environment_fingerprint: str,
     review_sidecar_ref: Optional[Tuple[str, str]],
+    extra_refs: Sequence[Tuple[str, str, str]],
     acceptance_lock_sha256: str,
     verify_phase: Optional[str],
 ) -> etree._ElementTree:
@@ -542,6 +559,11 @@ def build_verification_result(
         etree.SubElement(review_ref, q("doc_id")).text = review_sidecar_ref[0]
         etree.SubElement(review_ref, q("doc_class")).text = review_sidecar_ref[1]
         etree.SubElement(review_ref, q("relation")).text = "review_context"
+    for ref_doc_id, ref_doc_class, ref_relation in extra_refs:
+        extra_ref = etree.SubElement(refs, q("ref"))
+        etree.SubElement(extra_ref, q("doc_id")).text = ref_doc_id
+        etree.SubElement(extra_ref, q("doc_class")).text = ref_doc_class
+        etree.SubElement(extra_ref, q("relation")).text = ref_relation
 
     payload = etree.SubElement(root, q("payload"))
     tests_run = etree.SubElement(payload, q("tests_run"))
@@ -679,6 +701,12 @@ def parse_args() -> argparse.Namespace:
         help="Runtime root directory.",
     )
     parser.add_argument(
+        "--workspace-root",
+        type=Path,
+        default=repo_root,
+        help="Workspace root to use for focused context refresh exploration.",
+    )
+    parser.add_argument(
         "--validator",
         type=Path,
         default=repo_root / "scripts" / "pxml_validator.py",
@@ -714,8 +742,71 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def maybe_request_context_refresh(
+    *,
+    repo_root: Path,
+    packet: PacketInfo,
+    verdict: str,
+    unverified_areas: Sequence[str],
+    workspace_root: Path,
+    runtime_root: Path,
+    skip_validate: bool,
+) -> tuple[List[Tuple[str, str, str]], List[Path], List[str]]:
+    if verdict != "inconclusive":
+        return [], [], []
+    blocked_checks = [item for item in unverified_areas if ":blocked=" in item]
+    proof_gaps = [item for item in unverified_areas if item.startswith("proof.")]
+    if not blocked_checks and not proof_gaps:
+        return [], [], []
+
+    if any(item.startswith("proof.behavioral") for item in proof_gaps):
+        request_kind = "repro_context"
+        focus_questions = [
+            "Which existing repro path or runtime scenario can satisfy the missing behavioral proof?"
+        ]
+        target_hints = list(packet.intended_behaviors[:3]) or ["behavioral_proof"]
+    else:
+        request_kind = "test_discovery"
+        focus_questions = [
+            "Which existing tests or repro paths map to the blocked acceptance checks?"
+        ]
+        target_hints = [item.split(":", 1)[0] for item in blocked_checks[:3]] or [
+            item.split(":", 1)[0] for item in proof_gaps[:3]
+        ]
+
+    outcome = run_manager_mediated_refresh(
+        repo_root=repo_root,
+        runtime_root=runtime_root,
+        workspace_root=workspace_root,
+        packet_path=packet.path,
+        task_id=packet.task_id,
+        baseline_exploration_doc_id=packet.baseline_exploration_doc_id,
+        requester_agent="verifier",
+        request_kind=request_kind,
+        reason_code="verifier_inconclusive",
+        focus_questions=focus_questions,
+        target_hints=target_hints,
+        contract_change_suspected=False,
+        request_context_path=None,
+        blocking=False,
+        skip_validate=skip_validate,
+    )
+    refs: List[Tuple[str, str, str]] = []
+    context_files: List[Path] = []
+    if outcome.request_ref is not None:
+        refs.append(outcome.request_ref)
+    if outcome.result_ref is not None:
+        refs.append(outcome.result_ref)
+    if outcome.request_path is not None:
+        context_files.append(outcome.request_path)
+    if outcome.result_path is not None:
+        context_files.append(outcome.result_path)
+    return refs, context_files, outcome.notes
+
+
 def main() -> int:
     args = parse_args()
+    repo_root = Path(__file__).resolve().parents[1]
     packet_path = args.packet.resolve()
     runtime_ready = bootstrap_runtime(cli_runtime_root=args.runtime_root)
     if not runtime_ready.ready:
@@ -723,7 +814,7 @@ def main() -> int:
         return 2
     runtime_root = runtime_ready.runtime_root
     print(runtime_ready.success_line("verification_runner"))
-
+    workspace_root = args.workspace_root.resolve()
     validator_path = args.validator.resolve()
     trace_script_path = args.trace_script.resolve()
 
@@ -816,6 +907,18 @@ def main() -> int:
         context_files.append(review_path)
 
     logs_ref = shared_log_refs[-1] if shared_log_refs else None
+    extra_refs, refresh_context_files, refresh_notes = maybe_request_context_refresh(
+        repo_root=repo_root,
+        packet=packet,
+        verdict=verdict,
+        unverified_areas=unverified_areas,
+        workspace_root=workspace_root,
+        runtime_root=runtime_root,
+        skip_validate=args.skip_validate,
+    )
+    if refresh_notes:
+        verdict_reason = verdict_reason + " " + " ".join(refresh_notes)
+    context_files.extend(refresh_context_files)
     result_tree = build_verification_result(
         packet=packet,
         doc_id=doc_id,
@@ -829,19 +932,13 @@ def main() -> int:
         logs_ref=logs_ref,
         environment_fingerprint=environment_fingerprint,
         review_sidecar_ref=review_ref,
+        extra_refs=extra_refs,
         acceptance_lock_sha256=packet.acceptance_lock_hash,
         verify_phase=args.verify_phase,
     )
 
     result_path = results_dir / f"{doc_id}.pxml"
     write_xml(result_tree, result_path)
-
-    latest_path = (
-        runtime_root / "latest" / f"{sanitize(packet.task_id)}_verification_result.pxml"
-    )
-    ensure_dir(latest_path.parent)
-    shutil.copy2(result_path, latest_path)
-    update_indexes(runtime_root, packet.task_id, doc_id, result_path)
 
     if not args.skip_validate:
         if not validator_path.exists():
@@ -852,6 +949,13 @@ def main() -> int:
         except RuntimeError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
+
+    latest_path = (
+        runtime_root / "latest" / f"{sanitize(packet.task_id)}_verification_result.pxml"
+    )
+    ensure_dir(latest_path.parent)
+    shutil.copy2(result_path, latest_path)
+    update_indexes(runtime_root, packet.task_id, doc_id, result_path)
 
     if args.append_trace:
         if not trace_script_path.exists():

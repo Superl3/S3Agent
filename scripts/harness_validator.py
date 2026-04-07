@@ -35,10 +35,12 @@ FLOW_DOC_CLASSES = {
     "task_intake",
     "manager_route",
     "execution_packet",
+    "exploration_request",
     "plan_sidecar",
     "review_sidecar",
     "implementer_result",
     "verification_result",
+    "exploration_result",
     "execution_trace",
     "task_status_report",
     "compaction_checkpoint",
@@ -145,6 +147,8 @@ def collect_task_artifacts(runtime_root: Path, task_id: str) -> List[Artifact]:
         runtime_root / "inbox" / "task_intake",
         runtime_root / "packets" / "manager_route",
         runtime_root / "packets" / "execution_packet",
+        runtime_root / "exploration" / "requests",
+        runtime_root / "exploration" / "results",
         runtime_root / "implementer" / "results",
         runtime_root / "sidecars" / "planner",
         runtime_root / "sidecars" / "reviewer",
@@ -513,6 +517,7 @@ def main() -> int:
     planner = latest_by_class(artifacts, "plan_sidecar")
     reviewer = latest_by_class(artifacts, "review_sidecar")
     verification = latest_by_class(artifacts, "verification_result")
+    exploration = latest_by_class(artifacts, "exploration_result")
     status_report = latest_by_class(artifacts, "task_status_report")
     compaction_checkpoint = latest_by_class(artifacts, "compaction_checkpoint")
     preflight_report = latest_by_class(artifacts, "operator_preflight_report")
@@ -672,6 +677,28 @@ def main() -> int:
         inconclusive.append(
             "Route requires verification_result but verifier artifact was not found."
         )
+    execution_shape = (
+        text_at(packet.tree, "/p:pxml/p:payload/p:execution_shape")
+        if packet is not None
+        else None
+    )
+    write_intent = (
+        text_at(packet.tree, "/p:pxml/p:payload/p:write_intent")
+        if packet is not None
+        else None
+    )
+    if (
+        write_intent == "false"
+        and execution_shape
+        in {
+            "read_only_investigation",
+            "read_only_design_artifact",
+        }
+        and exploration is None
+    ):
+        inconclusive.append(
+            "Read-only exploration route requires exploration_result but no artifact was found."
+        )
 
     if status_report is not None:
         report_task_id = text_at(status_report.tree, "/p:pxml/p:payload/p:task_id")
@@ -685,6 +712,15 @@ def main() -> int:
         if implementer is not None and report_impl_ref != implementer.doc_id:
             hard_failures.append(
                 "task_status_report latest_implementer_result_ref must match latest implementer_result."
+            )
+
+        report_exploration_ref = text_at(
+            status_report.tree,
+            "/p:pxml/p:payload/p:latest_exploration_result_ref/p:doc_id",
+        )
+        if exploration is not None and report_exploration_ref != exploration.doc_id:
+            hard_failures.append(
+                "task_status_report latest_exploration_result_ref must match latest exploration_result."
             )
 
         report_verify_ref = text_at(
