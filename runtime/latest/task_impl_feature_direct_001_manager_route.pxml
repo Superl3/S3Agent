@@ -18,13 +18,14 @@
     </ref>
   </refs>
   <payload>
+    <planning_mode>task_planning</planning_mode>
+    <execution_shape>direct_single_packet</execution_shape>
     <selected_path>direct</selected_path>
     <lane_flags>
       <planner>false</planner>
-      <reviewer>false</reviewer>
       <verifier>false</verifier>
     </lane_flags>
-    <route_reason>Clear low-complexity intake defaults to direct path.</route_reason>
+    <route_reason>[rule:default_direct] No higher-risk routing signal matched; use the minimal direct lane. Bounded task defaults to single direct packet.</route_reason>
     <risk_level>medium</risk_level>
     <acceptance_lock>
       <lock_id>lock_task_impl_feature_direct_001_0002</lock_id>

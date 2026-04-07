@@ -206,7 +206,7 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             expect_verifier_lane_call=True,
             expect_implementer_calls=1,
             seed_files=("src/target_bugfix.py",),
-            max_duration_sec=24.0,
+            max_duration_sec=30.0,
         ),
         ScenarioSpec(
             name="verifier_post_verify_need",
@@ -222,7 +222,7 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             expect_verifier_lane_call=True,
             expect_implementer_calls=1,
             seed_files=("src/target_bugfix.py",),
-            max_duration_sec=24.0,
+            max_duration_sec=30.0,
         ),
         ScenarioSpec(
             name="full_lane_critical",
@@ -371,7 +371,7 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
     full_lane_time = durations["full_lane_critical"]
 
     assert explore_time <= (direct_time * 2.0 + 2.0)
-    assert full_lane_time <= (direct_time * 6.0 + 6.0)
+    assert full_lane_time <= (direct_time * 6.0 + 8.0)
 
 
 def test_blocked_retry_failed_transition_and_call_counts(

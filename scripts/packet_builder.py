@@ -182,6 +182,11 @@ def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def contains_any_marker(value: str, markers: Sequence[str]) -> bool:
+    lowered = value.lower()
+    return any(marker in lowered for marker in markers)
+
+
 def is_sha256(value: Optional[str]) -> bool:
     if value is None:
         return False
@@ -252,69 +257,151 @@ def compute_content_hash(
     return sha256_hex(content)
 
 
-def select_route(
-    risk_hint: str, request_text: str, requested_outcome: str
-) -> Tuple[str, str]:
-    combined = f"{request_text} {requested_outcome}".lower()
-    ambiguous = any(marker in combined for marker in AMBIGUOUS_MARKERS)
-    verify_need = any(marker in combined for marker in VERIFY_MARKERS)
+@dataclass(frozen=True)
+class RoutingSignals:
+    ambiguous: bool
+    verify_need: bool
+    meta_planning: bool
+    design_only: bool
+    read_only: bool
+    recurring_symptom: bool
+    large_refactor: bool
+    behavior_change_expected: bool
 
-    if risk_hint == "critical":
-        return "full_lane", "Critical risk task uses full lane."
-    if risk_hint == "high" and (ambiguous or verify_need):
-        return (
+
+@dataclass(frozen=True)
+class RouteDecision:
+    selected_path: str
+    matched_rule: str
+    reason: str
+
+
+def select_route(intake: "IntakeData", signals: RoutingSignals) -> RouteDecision:
+    rules = [
+        (
+            "critical_risk_full_lane",
+            intake.risk_hint == "critical",
             "full_lane",
-            "High risk task with ambiguity or verification need uses full lane.",
-        )
-    if ambiguous:
-        return "planner_pre", "Ambiguity markers detected in intake text."
-    if risk_hint == "high":
-        return "verifier_post", "High risk task routes to verifier-backed path."
-    if verify_need:
-        return "verifier_post", "Verification requirement detected from intake text."
-    return "direct", "Clear low-complexity intake defaults to direct path."
+            "Critical risk requires planner and verifier controls.",
+        ),
+        (
+            "high_risk_ambiguous_full_lane",
+            intake.risk_hint == "high" and signals.ambiguous,
+            "full_lane",
+            "High-risk ambiguous work requires both planning and verification lanes.",
+        ),
+        (
+            "high_risk_verify_full_lane",
+            intake.risk_hint == "high" and signals.verify_need,
+            "full_lane",
+            "High-risk work with explicit verification demand uses full lane.",
+        ),
+        (
+            "ambiguity_requires_planner_pre",
+            signals.ambiguous,
+            "planner_pre",
+            "Ambiguity signal requires planner pre-lane before execution.",
+        ),
+        (
+            "high_risk_requires_verifier_post",
+            intake.risk_hint == "high",
+            "verifier_post",
+            "High-risk bounded work uses verifier-backed routing.",
+        ),
+        (
+            "verification_signal_requires_verifier_post",
+            signals.verify_need,
+            "verifier_post",
+            "Explicit verification signal requires verifier post-lane.",
+        ),
+    ]
+    for rule_id, matched, selected_path, explanation in rules:
+        if matched:
+            return RouteDecision(
+                selected_path=selected_path,
+                matched_rule=rule_id,
+                reason=f"[rule:{rule_id}] {explanation}",
+            )
+    return RouteDecision(
+        selected_path="direct",
+        matched_rule="default_direct",
+        reason=(
+            "[rule:default_direct] No higher-risk routing signal matched; "
+            "use the minimal direct lane."
+        ),
+    )
 
 
 def detect_write_intent(request_text: str, requested_outcome: str) -> bool:
-    combined = f"{request_text} {requested_outcome}".lower()
-    return not any(marker in combined for marker in EXPLORE_MARKERS)
+    combined = f"{request_text} {requested_outcome}"
+    return not contains_any_marker(combined, EXPLORE_MARKERS)
 
 
 def detect_planning_mode(request_text: str, requested_outcome: str) -> str:
-    combined = f"{request_text} {requested_outcome}".lower()
-    if any(marker in combined for marker in META_PLANNING_MARKERS):
+    combined = f"{request_text} {requested_outcome}"
+    if contains_any_marker(combined, META_PLANNING_MARKERS):
         return "meta_planning"
     return "task_planning"
 
 
 def detect_design_only(request_text: str, requested_outcome: str) -> bool:
-    combined = f"{request_text} {requested_outcome}".lower()
-    return any(marker in combined for marker in DESIGN_ONLY_MARKERS)
+    combined = f"{request_text} {requested_outcome}"
+    return contains_any_marker(combined, DESIGN_ONLY_MARKERS)
 
 
 def behavior_change_expected(
     task_type: str, request_text: str, requested_outcome: str
 ) -> bool:
-    combined = f"{request_text} {requested_outcome}".lower()
+    combined = f"{request_text} {requested_outcome}"
     if task_type in {"bugfix", "feature", "refactor"}:
         return True
-    return any(marker in combined for marker in BEHAVIOR_CHANGE_MARKERS)
+    return contains_any_marker(combined, BEHAVIOR_CHANGE_MARKERS)
 
 
 def recurring_symptom_detected(request_text: str, requested_outcome: str) -> bool:
-    combined = f"{request_text} {requested_outcome}".lower()
-    return any(marker in combined for marker in RECURRING_SYMPTOM_MARKERS)
+    combined = f"{request_text} {requested_outcome}"
+    return contains_any_marker(combined, RECURRING_SYMPTOM_MARKERS)
 
 
 def large_refactor_detected(
     task_type: str, risk_hint: str, request_text: str, requested_outcome: str
 ) -> bool:
-    combined = f"{request_text} {requested_outcome}".lower()
+    combined = f"{request_text} {requested_outcome}"
     if task_type != "refactor":
         return False
     if risk_hint in {"high", "critical"}:
         return True
-    return any(marker in combined for marker in LARGE_REFACTOR_MARKERS)
+    return contains_any_marker(combined, LARGE_REFACTOR_MARKERS)
+
+
+def build_routing_signals(intake: "IntakeData") -> RoutingSignals:
+    combined = f"{intake.request_text} {intake.requested_outcome}"
+    return RoutingSignals(
+        ambiguous=contains_any_marker(combined, AMBIGUOUS_MARKERS),
+        verify_need=contains_any_marker(combined, VERIFY_MARKERS),
+        meta_planning=(
+            detect_planning_mode(intake.request_text, intake.requested_outcome)
+            == "meta_planning"
+        ),
+        design_only=detect_design_only(intake.request_text, intake.requested_outcome),
+        read_only=not detect_write_intent(
+            intake.request_text, intake.requested_outcome
+        ),
+        recurring_symptom=recurring_symptom_detected(
+            intake.request_text, intake.requested_outcome
+        ),
+        large_refactor=large_refactor_detected(
+            intake.task_type,
+            intake.risk_hint,
+            intake.request_text,
+            intake.requested_outcome,
+        ),
+        behavior_change_expected=behavior_change_expected(
+            intake.task_type,
+            intake.request_text,
+            intake.requested_outcome,
+        ),
+    )
 
 
 @dataclass
@@ -401,27 +488,16 @@ def build_requirement_targets(
     ]
 
 
-def choose_execution_shape(intake: "IntakeData") -> PlannerPolicyDecision:
-    planning_mode = detect_planning_mode(intake.request_text, intake.requested_outcome)
-    design_only = detect_design_only(intake.request_text, intake.requested_outcome)
-    explore_only = not detect_write_intent(
-        intake.request_text, intake.requested_outcome
-    )
-    recurring_bug = recurring_symptom_detected(
-        intake.request_text, intake.requested_outcome
-    )
-    large_refactor = large_refactor_detected(
-        intake.task_type,
-        intake.risk_hint,
-        intake.request_text,
-        intake.requested_outcome,
-    )
+def choose_execution_shape(
+    intake: "IntakeData", signals: RoutingSignals
+) -> PlannerPolicyDecision:
+    planning_mode = "meta_planning" if signals.meta_planning else "task_planning"
+    design_only = signals.design_only
+    explore_only = signals.read_only
+    recurring_bug = signals.recurring_symptom
+    large_refactor = signals.large_refactor
 
-    behavior_required = behavior_change_expected(
-        intake.task_type,
-        intake.request_text,
-        intake.requested_outcome,
-    )
+    behavior_required = signals.behavior_change_expected
     regression_required = intake.task_type in {"bugfix", "refactor"}
     observation_first = intake.task_type == "bugfix" and recurring_bug
 
@@ -1029,12 +1105,18 @@ def update_indexes(
     ensure_dir(artifacts_dir)
 
     task_index_path = tasks_dir / f"{sanitize_token(task_id)}.json"
-    task_index = {
-        "task_id": task_id,
-        "latest_manager_route": str(route_path.relative_to(runtime_root)),
-        "latest_execution_packet": str(packet_path.relative_to(runtime_root)),
-        "updated_at": now_utc_iso(),
-    }
+    task_index: Dict[str, object] = {}
+    if task_index_path.exists():
+        try:
+            loaded = json.loads(task_index_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                task_index = loaded
+        except json.JSONDecodeError:
+            task_index = {}
+    task_index["task_id"] = task_id
+    task_index["latest_manager_route"] = str(route_path.relative_to(runtime_root))
+    task_index["latest_execution_packet"] = str(packet_path.relative_to(runtime_root))
+    task_index["updated_at"] = now_utc_iso()
     task_index_path.write_text(
         json.dumps(task_index, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -1133,30 +1215,35 @@ def main() -> int:
     inbox_intake_path = runtime_root / "inbox" / "task_intake" / f"{intake.doc_id}.pxml"
     shutil.copy2(intake_path, inbox_intake_path)
 
-    selected_path, route_reason = select_route(
-        risk_hint=intake.risk_hint,
-        request_text=intake.request_text,
-        requested_outcome=intake.requested_outcome,
-    )
-    planner_decision = choose_execution_shape(intake)
+    routing_signals = build_routing_signals(intake)
+    route_decision = select_route(intake, routing_signals)
+    selected_path = route_decision.selected_path
+    matched_rule = route_decision.matched_rule
+    route_reason = route_decision.reason
+    planner_decision = choose_execution_shape(intake, routing_signals)
 
     if (
         planner_decision.execution_shape == "serial_packet_chain"
         and selected_path == "direct"
     ):
         selected_path = "planner_pre"
-        route_reason = "Serial packet chain selected; planner lane used as conservative stage-gate."
+        matched_rule = "shape_serial_packet_chain_requires_planner_pre"
+        route_reason = (
+            f"[rule:{matched_rule}] Execution shape serial_packet_chain "
+            "requires planner stage-gate before implementation."
+        )
     elif (
         planner_decision.execution_shape == "single_packet_with_sidecars"
         and selected_path == "direct"
     ):
         selected_path = "verifier_post"
-        route_reason = "Single bounded packet needs sidecar evidence; verifier-backed lane selected."
+        matched_rule = "shape_sidecar_packet_requires_verifier_post"
+        route_reason = (
+            f"[rule:{matched_rule}] Execution shape single_packet_with_sidecars "
+            "requires verifier-backed routing for bounded evidence collection."
+        )
 
-    write_intent = planner_decision.write_intent and detect_write_intent(
-        request_text=intake.request_text,
-        requested_outcome=intake.requested_outcome,
-    )
+    write_intent = planner_decision.write_intent and not routing_signals.read_only
 
     if planner_decision.execution_shape in {
         "read_only_investigation",
@@ -1244,17 +1331,6 @@ def main() -> int:
     latest_packet_path = (
         runtime_root / "latest" / f"{latest_task}_execution_packet.pxml"
     )
-    shutil.copy2(route_path, latest_route_path)
-    shutil.copy2(packet_path, latest_packet_path)
-
-    update_indexes(
-        runtime_root=runtime_root,
-        task_id=intake.task_id,
-        route_doc_id=route_doc_id,
-        route_path=route_path,
-        packet_doc_id=packet_doc_id,
-        packet_path=packet_path,
-    )
 
     if not args.skip_validate:
         if not validator_path.exists():
@@ -1285,9 +1361,22 @@ def main() -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
 
+    shutil.copy2(route_path, latest_route_path)
+    shutil.copy2(packet_path, latest_packet_path)
+
+    update_indexes(
+        runtime_root=runtime_root,
+        task_id=intake.task_id,
+        route_doc_id=route_doc_id,
+        route_path=route_path,
+        packet_doc_id=packet_doc_id,
+        packet_path=packet_path,
+    )
+
     print(f"Generated manager_route: {route_path}")
     print(f"Generated execution_packet: {packet_path}")
     print(f"Routing decision: {selected_path}")
+    print(f"Routing rule: {matched_rule}")
     print(f"Execution shape: {planner_decision.execution_shape}")
     print(f"Planning mode: {planner_decision.planning_mode}")
     print(f"Acceptance lock hash: {lock_hash}")

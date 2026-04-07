@@ -1,6 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "manager",
+  // Active desktop harness topology is manager -> implementer/planner/verifier.
+  // Reviewer remains dormant and is intentionally not wired into runtime permissions.
   "agent": {
     "default": {
       "mode": "subagent",

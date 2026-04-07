@@ -21,12 +21,14 @@
     <default_path>direct</default_path>
     <minimal_complexity_first>true</minimal_complexity_first>
     <decision_basis>
+      <item>structured intake signal evaluation</item>
       <item>planning_mode classification</item>
       <item>execution_shape selection</item>
       <item>risk_level</item>
       <item>task ambiguity</item>
       <item>explicit verification need</item>
       <item>write_intent classification</item>
+      <item>active sidecars are limited to planner and verifier; reviewer remains dormant.</item>
       <item>UI bugfix routing preserves root-cause-first sequencing before symptom-level mitigation packets are issued.</item>
       <item>When duplicate or competing UI paths exist, manager_route must carry declared UI state-path SSOT.</item>
       <item>If symptom-level patching is selected, acceptance lock must include state-path consistency proof checks.</item>
@@ -102,7 +104,7 @@
       <path>
         <path_id>full_lane</path_id>
         <entry_condition>
-          <item>Risk critical or high risk combined with ambiguity and verification need.</item>
+          <item>Risk critical or high risk combined with ambiguity or explicit verification need.</item>
         </entry_condition>
         <reject_condition>
           <item>Low-risk clear tasks that satisfy direct path conditions.</item>

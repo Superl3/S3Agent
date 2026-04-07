@@ -18,13 +18,14 @@
     </ref>
   </refs>
   <payload>
+    <planning_mode>task_planning</planning_mode>
+    <execution_shape>direct_single_packet</execution_shape>
     <selected_path>verifier_post</selected_path>
     <lane_flags>
       <planner>false</planner>
-      <reviewer>false</reviewer>
       <verifier>true</verifier>
     </lane_flags>
-    <route_reason>Verification requirement detected from intake text.</route_reason>
+    <route_reason>[rule:verification_signal_requires_verifier_post] Explicit verification signal requires verifier post-lane. Bounded task defaults to single direct packet.</route_reason>
     <risk_level>medium</risk_level>
     <acceptance_lock>
       <lock_id>lock_task_verify_post_smoke_001_0002</lock_id>

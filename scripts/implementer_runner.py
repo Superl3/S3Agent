@@ -1209,6 +1209,20 @@ def main() -> int:
     result_path = runtime_root / "implementer" / "results" / f"{result_doc_id}.pxml"
     write_xml(result_tree, result_path)
 
+    if not args.skip_validate:
+        if not validator_path.exists():
+            print(f"ERROR: validator not found: {validator_path}", file=sys.stderr)
+            return 2
+        try:
+            run_validation(
+                validator_path,
+                result_path,
+                context_files=[packet.path] + result.context_files,
+            )
+        except RuntimeError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+
     latest_path = (
         runtime_root / "latest" / f"{sanitize(packet.task_id)}_implementer_result.pxml"
     )
@@ -1225,20 +1239,6 @@ def main() -> int:
         retry_count=result.retry_count,
         escalation_requested=result.escalation_requested,
     )
-
-    if not args.skip_validate:
-        if not validator_path.exists():
-            print(f"ERROR: validator not found: {validator_path}", file=sys.stderr)
-            return 2
-        try:
-            run_validation(
-                validator_path,
-                result_path,
-                context_files=[packet.path] + result.context_files,
-            )
-        except RuntimeError as exc:
-            print(f"ERROR: {exc}", file=sys.stderr)
-            return 1
 
     try:
         if result.status in {"applied", "no_op"}:

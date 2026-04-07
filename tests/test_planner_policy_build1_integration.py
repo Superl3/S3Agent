@@ -252,6 +252,77 @@ def test_mode_routing_distinguishes_meta_planning_and_task_planning(
     )
 
 
+def test_route_reason_records_structured_rule_selection(
+    tmp_path: Path,
+    run_python,
+) -> None:
+    scenarios = [
+        (
+            "task_route_rule_critical_001",
+            "bugfix",
+            "critical",
+            "Patch critical auth boundary.",
+            "Deliver a safe bounded fix.",
+            "full_lane",
+            "[rule:critical_risk_full_lane]",
+        ),
+        (
+            "task_route_rule_ambiguous_001",
+            "refactor",
+            "medium",
+            "Refactor ownership is unclear and ambiguous.",
+            "Resolve the boundary safely.",
+            "planner_pre",
+            "[rule:ambiguity_requires_planner_pre]",
+        ),
+        (
+            "task_route_rule_direct_001",
+            "feature",
+            "low",
+            "Add one small helper in a single module.",
+            "Deliver a local feature update.",
+            "direct",
+            "[rule:default_direct]",
+        ),
+        (
+            "task_route_rule_shape_override_001",
+            "bugfix",
+            "medium",
+            "Login focus issue is still happening again in production.",
+            "Apply a safe bounded bugfix.",
+            "planner_pre",
+            "[rule:shape_serial_packet_chain_requires_planner_pre]",
+        ),
+    ]
+
+    for (
+        task_id,
+        task_type,
+        risk_hint,
+        request_text,
+        outcome,
+        path_id,
+        rule_prefix,
+    ) in scenarios:
+        runtime_root = tmp_path / "runtime" / task_id
+        intake_path = tmp_path / "intake" / f"{task_id}.pxml"
+        _write_task_intake(
+            intake_path,
+            task_id=task_id,
+            task_type=task_type,
+            risk_hint=risk_hint,
+            request_text=request_text,
+            requested_outcome=outcome,
+        )
+        _run_packet_builder(
+            run_python, intake_path=intake_path, runtime_root=runtime_root
+        )
+        route_tree = etree.parse(str(_latest(runtime_root, task_id, "manager_route")))
+        assert _text(route_tree, "/p:pxml/p:payload/p:selected_path") == path_id
+        reason = _text(route_tree, "/p:pxml/p:payload/p:route_reason") or ""
+        assert reason.startswith(rule_prefix), reason
+
+
 def test_bounded_tasks_default_to_direct_single_packet(
     tmp_path: Path, run_python
 ) -> None:
