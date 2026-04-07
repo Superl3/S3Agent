@@ -42,7 +42,6 @@ SCHEMA_MAP = {
     "manager_route": "manager_route.xsd",
     "execution_packet": "execution_packet.xsd",
     "plan_sidecar": "plan_sidecar.xsd",
-    "review_sidecar": "review_sidecar.xsd",
     "implementer_result": "implementer_result.xsd",
     "verification_result": "verification_result.xsd",
     "exploration_request": "exploration_request.xsd",
@@ -55,7 +54,6 @@ SCHEMA_MAP = {
     "manager_contract": "manager_contract.xsd",
     "implementer_contract": "implementer_contract.xsd",
     "planner_contract": "planner_contract.xsd",
-    "reviewer_contract": "reviewer_contract.xsd",
     "verifier_contract": "verifier_contract.xsd",
     "routing_policy": "routing_policy.xsd",
     "execution_policy": "execution_policy.xsd",
@@ -277,8 +275,6 @@ def semantic_checks(
         issues.extend(_semantic_execution_packet(doc, refs, context_index, strict_refs))
     elif doc.doc_class == "plan_sidecar":
         issues.extend(_semantic_plan_sidecar(doc, refs))
-    elif doc.doc_class == "review_sidecar":
-        issues.extend(_semantic_review_sidecar(doc, refs))
     elif doc.doc_class == "implementer_result":
         issues.extend(_semantic_implementer_result(doc, refs, context_index))
     elif doc.doc_class == "verification_result":
@@ -364,21 +360,16 @@ def _semantic_manager_route(
 
     selected_path = xpath_text(doc.tree, "/p:pxml/p:payload/p:selected_path")
     planner = xpath_text(doc.tree, "/p:pxml/p:payload/p:lane_flags/p:planner")
-    reviewer = xpath_text(doc.tree, "/p:pxml/p:payload/p:lane_flags/p:reviewer")
     verifier = xpath_text(doc.tree, "/p:pxml/p:payload/p:lane_flags/p:verifier")
 
     expected = {
-        "direct": ("false", "false", "false"),
-        "planner_pre": ("true", "false", "false"),
-        "reviewer_post": ("false", "true", "false"),
-        "verifier_post": ("false", "false", "true"),
-        "full_lane": ("true", "true", "true"),
+        "direct": {("false", "false")},
+        "planner_pre": {("true", "false")},
+        "verifier_post": {("false", "true")},
+        "full_lane": {("true", "true")},
     }
 
-    if (
-        selected_path in expected
-        and (planner, reviewer, verifier) != expected[selected_path]
-    ):
+    if selected_path in expected and (planner, verifier) not in expected[selected_path]:
         issues.append(
             ValidationIssue(
                 code="E320_ROUTE_LANE_MISMATCH",
@@ -1639,7 +1630,6 @@ def _semantic_trace_event_semantics(doc: ParsedDoc) -> List[ValidationIssue]:
         "patch_applied",
         "blocked",
         "retry_failed",
-        "review_done",
         "verify_done",
         "escalation",
         "stop",
@@ -3175,7 +3165,6 @@ def _semantic_reason_code_catalog(doc: ParsedDoc) -> List[ValidationIssue]:
         "verifier": 0,
         "coordinator": 0,
         "planner": 0,
-        "reviewer": 0,
         "system": 0,
     }
 
@@ -3235,18 +3224,6 @@ def _semantic_reason_code_catalog(doc: ParsedDoc) -> List[ValidationIssue]:
                 ValidationIssue(
                     code="E1115_REASON_CODE_CATALOG_PREFIX_MISMATCH",
                     message=f"planner category code must start with planner_: {code}",
-                )
-            )
-        if category == "reviewer" and not (
-            code.startswith("reviewer_") or code.startswith("review_")
-        ):
-            issues.append(
-                ValidationIssue(
-                    code="E1115_REASON_CODE_CATALOG_PREFIX_MISMATCH",
-                    message=(
-                        "reviewer category code must start with reviewer_ or review_: "
-                        f"{code}"
-                    ),
                 )
             )
         if category == "system" and not code.startswith("system_"):
@@ -4429,21 +4406,6 @@ def _semantic_execution_trace(doc: ParsedDoc) -> List[ValidationIssue]:
                         message="retry_failed event requires at least one prior blocked event.",
                     )
                 )
-        if event_type == "review_done":
-            if "review_sidecar" not in ref_classes:
-                issues.append(
-                    ValidationIssue(
-                        code="E722_TRACE_REVIEW_REF_REQUIRED",
-                        message="review_done event must reference review_sidecar artifact.",
-                    )
-                )
-            if not lineage_lock:
-                issues.append(
-                    ValidationIssue(
-                        code="E704_TRACE_REVIEW_DONE_LINEAGE_REQUIRED",
-                        message="review_done event must include lineage_lock_sha256.",
-                    )
-                )
         if event_type == "verify_done":
             if "verification_result" not in ref_classes:
                 issues.append(
@@ -4575,64 +4537,6 @@ def _semantic_plan_sidecar(
             ValidationIssue(
                 code="E623_PLAN_STEPS_REQUIRED",
                 message="plan_sidecar must include proposed_steps entries.",
-            )
-        )
-
-    return issues
-
-
-def _semantic_review_sidecar(
-    doc: ParsedDoc, refs: List[Tuple[str, Optional[str], Optional[str]]]
-) -> List[ValidationIssue]:
-    assert doc.tree is not None
-    issues: List[ValidationIssue] = []
-
-    packet_refs = [item for item in refs if item[1] == "execution_packet"]
-    if len(packet_refs) != 1:
-        issues.append(
-            ValidationIssue(
-                code="E624_REVIEW_REF_EXEC_PACKET",
-                message="review_sidecar must reference exactly one execution_packet artifact.",
-            )
-        )
-
-    target_packet_refs = doc.tree.xpath(
-        "/p:pxml/p:payload/p:review_target_refs/p:ref[p:doc_class='execution_packet']",
-        namespaces=NS,
-    )
-    if len(target_packet_refs) == 0:
-        issues.append(
-            ValidationIssue(
-                code="E625_REVIEW_TARGET_EXEC_PACKET",
-                message="review_sidecar review_target_refs must include execution_packet reference.",
-            )
-        )
-
-    decision = xpath_text(doc.tree, "/p:pxml/p:payload/p:decision")
-    blocking_count_text = xpath_text(doc.tree, "/p:pxml/p:payload/p:blocking_count")
-    blocker_findings = doc.tree.xpath(
-        "/p:pxml/p:payload/p:findings/p:finding[p:severity='blocker']",
-        namespaces=NS,
-    )
-    try:
-        blocking_count = (
-            int(blocking_count_text) if blocking_count_text is not None else 0
-        )
-    except ValueError:
-        blocking_count = 0
-
-    if decision == "approve" and (blocking_count > 0 or len(blocker_findings) > 0):
-        issues.append(
-            ValidationIssue(
-                code="E627_REVIEW_APPROVE_BLOCKING_INVALID",
-                message="approve decision cannot include blocking findings.",
-            )
-        )
-    if decision == "escalate" and blocking_count == 0 and len(blocker_findings) == 0:
-        issues.append(
-            ValidationIssue(
-                code="E628_REVIEW_ESCALATE_BASIS_MISSING",
-                message="escalate decision requires at least one blocking basis.",
             )
         )
 

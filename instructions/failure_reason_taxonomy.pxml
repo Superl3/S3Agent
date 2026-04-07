@@ -126,33 +126,6 @@
       </reason>
       <reason>
         <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
-        <code>review_sidecar_generation_failed</code>
-        <category>reviewer</category>
-        <severity>major</severity>
-        <description>Reviewer sidecar artifact generation failed in coordinator lane.</description>
-        <recommended_next_action>Fix reviewer artifact generation inputs and retry lane.</recommended_next_action>
-        <escalation_default>false</escalation_default>
-      </reason>
-      <reason>
-        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
-        <code>reviewer_decision_requires_escalation</code>
-        <category>reviewer</category>
-        <severity>major</severity>
-        <description>Reviewer decision remained non-approvable and required escalation.</description>
-        <recommended_next_action>Address reviewer blockers or revise packet scope before retry.</recommended_next_action>
-        <escalation_default>true</escalation_default>
-      </reason>
-      <reason>
-        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
-        <code>reviewer_revise</code>
-        <category>reviewer</category>
-        <severity>minor</severity>
-        <description>Reviewer requested revision on current attempt.</description>
-        <recommended_next_action>Apply requested revisions and retry reviewer lane.</recommended_next_action>
-        <escalation_default>false</escalation_default>
-      </reason>
-      <reason>
-        <taxonomy_id>FAIL-TAX-B6-001</taxonomy_id>
         <code>verification_runner_error</code>
         <category>coordinator</category>
         <severity>major</severity>

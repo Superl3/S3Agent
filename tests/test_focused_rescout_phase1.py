@@ -332,7 +332,7 @@ def test_request_validator_rejects_unsupported_requester_agent(
         task_id=task_id,
         packet_doc_id=packet_doc_id,
         baseline_doc_id=baseline_doc_id,
-        requester_agent="reviewer",
+        requester_agent="observer",
         target_hints=["src/router.py"],
     )
     result = run_python(

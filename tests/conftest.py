@@ -20,7 +20,6 @@ TASK_ARTIFACT_DIRS = [
     "exploration/results",
     "implementer/results",
     "sidecars/planner",
-    "sidecars/reviewer",
     "sidecars/verifier",
     "verification/results",
     "traces/by_task",
@@ -92,6 +91,33 @@ def copy_runtime_file(
     target = sandbox_runtime / relative
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source_path, target)
+
+    if target.suffix == ".pxml":
+        try:
+            tree = etree.parse(str(target))
+        except etree.XMLSyntaxError:
+            return target
+        doc_class = xpath_text(tree, "/p:pxml/p:meta/p:doc_class")
+        if doc_class == "manager_route":
+            lane_flag_nodes = tree.xpath(
+                "/p:pxml/p:payload/p:lane_flags/*",
+                namespaces=NS,
+            )
+            changed = False
+            for node in lane_flag_nodes:
+                if etree.QName(node).localname in {"planner", "verifier"}:
+                    continue
+                parent = node.getparent()
+                if parent is not None:
+                    parent.remove(node)
+                    changed = True
+            if changed:
+                tree.write(
+                    str(target),
+                    encoding="UTF-8",
+                    xml_declaration=True,
+                    pretty_print=True,
+                )
     return target
 
 

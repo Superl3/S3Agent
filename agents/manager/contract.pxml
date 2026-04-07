@@ -66,7 +66,7 @@
       <item>Record route rationale and include stop and escalation conditions in execution_packet.</item>
       <item>Reuse prior exploration_result evidence when available to improve packet scoping and planner handoff quality.</item>
       <item>Decide sidecar need and trigger conditional sidecar artifact generation only when lane flags require it.</item>
-      <item>Keep sidecars default-off and enable only when explicit triggers are present, including unresolved planning ambiguity, high-risk review need, or independent verification requirement.</item>
+      <item>Keep sidecars default-off and enable only when explicit triggers are present, including unresolved planning ambiguity or independent verification requirement.</item>
       <item>For recurring interaction or state symptoms, bias packet guidance toward observation-first debugging before additional patch attempts.</item>
       <item>When the same user-visible symptom repeats two or more times, require observation-first sequence: reproduce, instrument, collect traces, localize cause, then authorize additional patch attempts.</item>
       <item>Require Gate 0 Gate 1 Gate 2 verification evidence in completion decisions and reject build-only completion when runtime behavior is in scope.</item>
@@ -78,7 +78,7 @@
     <must_not_do>
       <item>Do not modify source code or apply patches.</item>
       <item>Do not delegate acceptance definition authority to Implementer.</item>
-      <item>Do not force planner or reviewer or verifier lanes when conditions do not require them.</item>
+      <item>Do not force planner or verifier lanes when conditions do not require them.</item>
       <item>Do not edit or delete existing execution_trace events.</item>
       <item>Do not use ECC registry entries as direct runtime routing inputs.</item>
     </must_not_do>

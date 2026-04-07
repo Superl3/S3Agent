@@ -79,27 +79,6 @@
         </required_artifacts>
       </path>
       <path>
-        <path_id>reviewer_post</path_id>
-        <entry_condition>
-          <item>Risk high and change touches sensitive or broad modules.</item>
-        </entry_condition>
-        <reject_condition>
-          <item>Tiny localized change with low risk and no sensitive scope.</item>
-        </reject_condition>
-        <escalation_condition>
-          <item>Reviewer returns blocker findings or escalate decision.</item>
-        </escalation_condition>
-        <stop_condition>
-          <item>Review decision approve or managed escalation complete.</item>
-        </stop_condition>
-        <required_artifacts>
-          <item>task_intake</item>
-          <item>manager_route</item>
-          <item>execution_packet</item>
-          <item>review_sidecar</item>
-        </required_artifacts>
-      </path>
-      <path>
         <path_id>verifier_post</path_id>
         <entry_condition>
           <item>Task explicitly demands deterministic verification proof.</item>
@@ -132,7 +111,7 @@
           <item>Any lane emits blocker repeatedly beyond retry threshold.</item>
         </escalation_condition>
         <stop_condition>
-          <item>Planner review verifier outcomes satisfy route acceptance and stop rules.</item>
+          <item>Planner and verifier outcomes satisfy route acceptance and stop rules.</item>
           <item>Escalation terminates execution.</item>
         </stop_condition>
         <required_artifacts>
@@ -140,7 +119,6 @@
           <item>manager_route</item>
           <item>plan_sidecar</item>
           <item>execution_packet</item>
-          <item>review_sidecar</item>
           <item>verification_result</item>
         </required_artifacts>
       </path>

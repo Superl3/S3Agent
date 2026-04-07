@@ -21,7 +21,6 @@
     <role>Conditional verifier sidecar that executes only declared acceptance_checks from execution_packet and emits verification_result artifacts.</role>
     <inputs>
       <item>execution_packet artifact acceptance_checks</item>
-      <item>optional review_sidecar artifact</item>
       <item>runtime environment and command execution logs</item>
     </inputs>
     <outputs>

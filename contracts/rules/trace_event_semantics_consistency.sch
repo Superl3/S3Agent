@@ -10,7 +10,6 @@
       <sch:assert test="count(p:payload/p:events/p:event[p:event_type='patch_applied']) &gt;= 1">E821_TRACE_SEMANTICS_EVENT_REQUIRED: patch_applied semantics entry is required.</sch:assert>
       <sch:assert test="count(p:payload/p:events/p:event[p:event_type='blocked']) &gt;= 1">E822_TRACE_SEMANTICS_EVENT_REQUIRED: blocked semantics entry is required.</sch:assert>
       <sch:assert test="count(p:payload/p:events/p:event[p:event_type='retry_failed']) &gt;= 1">E823_TRACE_SEMANTICS_EVENT_REQUIRED: retry_failed semantics entry is required.</sch:assert>
-      <sch:assert test="count(p:payload/p:events/p:event[p:event_type='review_done']) &gt;= 1">E824_TRACE_SEMANTICS_EVENT_REQUIRED: review_done semantics entry is required.</sch:assert>
       <sch:assert test="count(p:payload/p:events/p:event[p:event_type='verify_done']) &gt;= 1">E825_TRACE_SEMANTICS_EVENT_REQUIRED: verify_done semantics entry is required.</sch:assert>
       <sch:assert test="count(p:payload/p:events/p:event[p:event_type='escalation']) &gt;= 1">E826_TRACE_SEMANTICS_EVENT_REQUIRED: escalation semantics entry is required.</sch:assert>
       <sch:assert test="count(p:payload/p:events/p:event[p:event_type='stop']) &gt;= 1">E827_TRACE_SEMANTICS_EVENT_REQUIRED: stop semantics entry is required.</sch:assert>

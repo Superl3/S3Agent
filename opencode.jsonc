@@ -18,7 +18,6 @@
           "*": "deny",
           "implementer": "allow",
           "planner": "allow",
-          "reviewer": "allow",
           "verifier": "allow"
         }
       }
@@ -39,17 +38,6 @@
       "hidden": true,
       "description": "Conditional planner sidecar",
       "prompt": "{file:./agents/sidecars/planner/contract.pxml}",
-      "permission": {
-        "task": {
-          "*": "deny"
-        }
-      }
-    },
-    "reviewer": {
-      "mode": "subagent",
-      "hidden": true,
-      "description": "Conditional reviewer sidecar",
-      "prompt": "{file:./agents/sidecars/reviewer/contract.pxml}",
       "permission": {
         "task": {
           "*": "deny"

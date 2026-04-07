@@ -52,6 +52,5 @@ def test_reason_code_catalog_has_required_category_coverage(repo_root: Path) -> 
         "verifier",
         "coordinator",
         "planner",
-        "reviewer",
         "system",
     }

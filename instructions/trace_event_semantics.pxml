@@ -63,17 +63,6 @@
         </optional_metadata_fields>
       </event>
       <event>
-        <event_type>review_done</event_type>
-        <semantic_meaning>Reviewer lane produced review_sidecar outcome for gated path.</semantic_meaning>
-        <ordering_expectation>Occurs when reviewer lane is active and must include lineage lock.</ordering_expectation>
-        <required_artifact_refs>
-          <item>review_sidecar</item>
-        </required_artifact_refs>
-        <optional_metadata_fields>
-          <item>lineage_lock_sha256</item>
-        </optional_metadata_fields>
-      </event>
-      <event>
         <event_type>verify_done</event_type>
         <semantic_meaning>Verification result was recorded either as lane verifier or post-implement verifier.</semantic_meaning>
         <ordering_expectation>Lane verify_done can appear before implement_start while post-implement verify_done should appear after patch_applied.</ordering_expectation>

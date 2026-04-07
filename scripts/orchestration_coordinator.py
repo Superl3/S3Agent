@@ -38,11 +38,10 @@ NS = "urn:pxml:v1"
 NSMAP = {None: NS}
 XPATH_NS = {"p": NS}
 LANE_MAP = {
-    "direct": (False, False, False),
-    "planner_pre": (True, False, False),
-    "reviewer_post": (False, True, False),
-    "verifier_post": (False, False, True),
-    "full_lane": (True, True, True),
+    "direct": {(False, False)},
+    "planner_pre": {(True, False)},
+    "verifier_post": {(False, True)},
+    "full_lane": {(True, True)},
 }
 
 
@@ -56,7 +55,6 @@ class RouteInfo:
     created_at: str
     selected_path: str
     planner_lane: bool
-    reviewer_lane: bool
     verifier_lane: bool
     risk_level: str
     acceptance_lock_sha256: str
@@ -90,7 +88,6 @@ class ExplorationInfo:
 @dataclass
 class RetryPolicy:
     implementer_max_attempts: int = 2
-    reviewer_max_attempts: int = 2
     verifier_max_attempts: int = 2
     same_cause_fast_escalation_threshold: int = 2
 
@@ -174,7 +171,6 @@ def parse_route(path: Path) -> RouteInfo:
     created_at = text_at(tree, "/p:pxml/p:meta/p:created_at")
     selected_path = text_at(tree, "/p:pxml/p:payload/p:selected_path")
     planner_flag = text_at(tree, "/p:pxml/p:payload/p:lane_flags/p:planner")
-    reviewer_flag = text_at(tree, "/p:pxml/p:payload/p:lane_flags/p:reviewer")
     verifier_flag = text_at(tree, "/p:pxml/p:payload/p:lane_flags/p:verifier")
     risk_level = text_at(tree, "/p:pxml/p:payload/p:risk_level")
     lock_hash = text_at(tree, "/p:pxml/p:payload/p:acceptance_lock/p:lock_sha256")
@@ -211,7 +207,6 @@ def parse_route(path: Path) -> RouteInfo:
     assert created_at is not None
     assert selected_path is not None
     assert planner_flag is not None
-    assert reviewer_flag is not None
     assert verifier_flag is not None
     assert risk_level is not None
     assert lock_hash is not None
@@ -226,7 +221,6 @@ def parse_route(path: Path) -> RouteInfo:
         created_at=created_at,
         selected_path=selected_path,
         planner_lane=planner_flag == "true",
-        reviewer_lane=reviewer_flag == "true",
         verifier_lane=verifier_flag == "true",
         risk_level=risk_level,
         acceptance_lock_sha256=lock_hash,
@@ -325,7 +319,6 @@ def find_artifact_by_doc_id(runtime_root: Path, doc_id: str) -> Optional[Path]:
         runtime_root / "packets" / "manager_route",
         runtime_root / "packets" / "execution_packet",
         runtime_root / "sidecars" / "planner",
-        runtime_root / "sidecars" / "reviewer",
         runtime_root / "verification" / "results",
     ]
     target_name = f"{doc_id}.pxml"
@@ -458,8 +451,6 @@ def load_retry_policy(path: Path) -> RetryPolicy:
         attempts = int(attempts_text)
         if "verifier" in applies_l:
             policy.verifier_max_attempts = attempts
-        elif "reviewer" in applies_l:
-            policy.reviewer_max_attempts = attempts
         elif "implementer" in applies_l:
             policy.implementer_max_attempts = attempts
     return policy
@@ -729,81 +720,6 @@ def build_plan_sidecar(
     return output_path
 
 
-def build_review_sidecar(
-    runtime_root: Path,
-    route: RouteInfo,
-    packet: PacketInfo,
-    validator_path: Path,
-    decision: str,
-    validate_artifacts: bool,
-) -> Path:
-    sequence = next_sidecar_sequence(runtime_root, route.task_id)
-    doc_id = make_doc_id("review_sidecar", route.task_id, sequence)
-    created_at = now_iso()
-
-    if decision not in {"approve", "revise", "escalate"}:
-        raise ValueError(f"Invalid reviewer decision: {decision}")
-    blocking_count = 1 if decision == "escalate" else 0
-    severity = "blocker" if decision == "escalate" else "minor"
-
-    root = etree.Element(q("pxml"), nsmap=NSMAP)
-    meta = etree.SubElement(root, q("meta"))
-    etree.SubElement(meta, q("doc_id")).text = doc_id
-    etree.SubElement(meta, q("doc_class")).text = "review_sidecar"
-    etree.SubElement(meta, q("schema_version")).text = "1.0.0"
-    etree.SubElement(meta, q("task_id")).text = route.task_id
-    etree.SubElement(meta, q("run_id")).text = route.run_id
-    etree.SubElement(meta, q("sequence")).text = str(sequence)
-    etree.SubElement(meta, q("writer_agent")).text = "reviewer"
-    etree.SubElement(meta, q("created_at")).text = created_at
-
-    refs = etree.SubElement(root, q("refs"))
-    packet_ref = etree.SubElement(refs, q("ref"))
-    etree.SubElement(packet_ref, q("doc_id")).text = packet.doc_id
-    etree.SubElement(packet_ref, q("doc_class")).text = "execution_packet"
-    etree.SubElement(packet_ref, q("relation")).text = "review_target"
-
-    payload = etree.SubElement(root, q("payload"))
-    target_refs = etree.SubElement(payload, q("review_target_refs"))
-    target_ref = etree.SubElement(target_refs, q("ref"))
-    etree.SubElement(target_ref, q("doc_id")).text = packet.doc_id
-    etree.SubElement(target_ref, q("doc_class")).text = "execution_packet"
-    etree.SubElement(target_ref, q("relation")).text = "primary_target"
-
-    findings = etree.SubElement(payload, q("findings"))
-    finding = etree.SubElement(findings, q("finding"))
-    etree.SubElement(finding, q("finding_id")).text = f"finding_{sequence:04d}"
-    etree.SubElement(finding, q("severity")).text = severity
-    if decision == "approve":
-        message = (
-            "Packet scope and acceptance lineage are consistent for implementation."
-        )
-    elif decision == "revise":
-        message = "Revision requested: add stronger evidence refs before approval."
-    else:
-        message = (
-            "Escalation requested: blocker risk remains unresolved for current scope."
-        )
-    etree.SubElement(finding, q("message")).text = message
-
-    etree.SubElement(payload, q("decision")).text = decision
-    etree.SubElement(payload, q("blocking_count")).text = str(blocking_count)
-    etree.SubElement(
-        payload, q("acceptance_lock_sha256")
-    ).text = packet.acceptance_lock_hash
-
-    integrity = etree.SubElement(root, q("integrity"))
-    content_hash = compute_content_hash(meta, refs, payload)
-    etree.SubElement(integrity, q("content_sha256")).text = content_hash
-    etree.SubElement(integrity, q("parent_sha256")).text = packet.content_sha256
-
-    output_path = runtime_root / "sidecars" / "reviewer" / f"{doc_id}.pxml"
-    write_xml(etree.ElementTree(root), output_path)
-    if validate_artifacts:
-        run_validator(validator_path, output_path, [route.path, packet.path])
-    return output_path
-
-
 def latest_verification_result_for_task(
     runtime_root: Path, task_id: str
 ) -> Optional[Path]:
@@ -828,7 +744,6 @@ def write_coordination_record(
     route: RouteInfo,
     packet: PacketInfo,
     planner_path: Optional[Path],
-    reviewer_path: Optional[Path],
     verification_path: Optional[Path],
     status: str,
     note: str,
@@ -846,7 +761,6 @@ def write_coordination_record(
         "status": status,
         "note": note,
         "planner_artifact": str(planner_path) if planner_path else None,
-        "reviewer_artifact": str(reviewer_path) if reviewer_path else None,
         "verification_artifact": str(verification_path) if verification_path else None,
     }
     file_path.write_text(
@@ -942,18 +856,6 @@ def parse_args() -> argparse.Namespace:
         help="Escalation policy artifact path.",
     )
     parser.add_argument(
-        "--review-decision",
-        choices=["approve", "revise", "escalate"],
-        default="approve",
-        help="Decision for auto-generated reviewer stub artifact.",
-    )
-    parser.add_argument(
-        "--review-decision-after-retry",
-        choices=["approve", "revise", "escalate"],
-        default="approve",
-        help="Decision used on reviewer retry attempts.",
-    )
-    parser.add_argument(
         "--dry-run-verifier",
         action="store_true",
         help="Pass --dry-run to verification_runner.",
@@ -998,7 +900,6 @@ def resolve_route_packet(
 def ensure_runtime_scaffold(runtime_root: Path) -> None:
     dirs = [
         runtime_root / "sidecars" / "planner",
-        runtime_root / "sidecars" / "reviewer",
         runtime_root / "sidecars" / "verifier",
         runtime_root / "verification" / "results",
         runtime_root / "verification" / "logs",
@@ -1053,8 +954,8 @@ def main() -> int:
             f"ERROR: unsupported selected_path {route.selected_path}", file=sys.stderr
         )
         return 2
-    actual_flags = (route.planner_lane, route.reviewer_lane, route.verifier_lane)
-    if actual_flags != expected_flags:
+    actual_flags = (route.planner_lane, route.verifier_lane)
+    if actual_flags not in expected_flags:
         print("ERROR: manager_route lane flags mismatch selected_path", file=sys.stderr)
         return 2
 
@@ -1096,7 +997,6 @@ def main() -> int:
     ensure_trace_core_events(runtime_root, trace_script, route, packet)
 
     planner_artifact: Optional[Path] = None
-    reviewer_artifact: Optional[Path] = None
     verification_artifact: Optional[Path] = None
 
     # Planner lane
@@ -1161,168 +1061,12 @@ def main() -> int:
                 route,
                 packet,
                 planner_artifact,
-                reviewer_artifact,
                 verification_artifact,
                 status="failed",
                 note="planner lane failed",
             )
             print(f"ERROR: planner lane failed: {exc}", file=sys.stderr)
             return 1
-
-    # Reviewer lane
-    if route.reviewer_lane:
-        decision = args.review_decision
-        for attempt in range(1, retry_policy.reviewer_max_attempts + 1):
-            try:
-                reviewer_artifact = build_review_sidecar(
-                    runtime_root=runtime_root,
-                    route=route,
-                    packet=packet,
-                    validator_path=validator_path,
-                    decision=decision,
-                    validate_artifacts=not args.skip_validate,
-                )
-            except Exception as exc:
-                reason = "review_sidecar_generation_failed"
-                append_retry_index(
-                    runtime_root, route.task_id, "reviewer", reason, attempt
-                )
-                if attempt >= retry_policy.reviewer_max_attempts:
-                    append_escalation_index(
-                        runtime_root, route.task_id, "reviewer", reason, attempt
-                    )
-                    append_trace_event(
-                        trace_script=trace_script,
-                        runtime_root=runtime_root,
-                        task_id=route.task_id,
-                        event_type="escalation",
-                        actor="manager",
-                        message=f"Reviewer sidecar generation failed: {exc}",
-                        artifact_files=[route.path, packet.path],
-                        reason_code=reason,
-                        attempt=attempt,
-                        lineage_lock_sha256=packet.acceptance_lock_hash,
-                    )
-                    if escalation_policy.stop_after_escalation:
-                        append_trace_event(
-                            trace_script=trace_script,
-                            runtime_root=runtime_root,
-                            task_id=route.task_id,
-                            event_type="stop",
-                            actor="manager",
-                            message="Coordinator stopped after reviewer generation failure.",
-                            artifact_files=[route.path, packet.path],
-                            reason_code=reason,
-                            attempt=attempt,
-                            lineage_lock_sha256=packet.acceptance_lock_hash,
-                        )
-                    write_coordination_record(
-                        runtime_root,
-                        route.task_id,
-                        route,
-                        packet,
-                        planner_artifact,
-                        reviewer_artifact,
-                        verification_artifact,
-                        status="failed",
-                        note="reviewer lane failed",
-                    )
-                    print(f"ERROR: reviewer lane failed: {exc}", file=sys.stderr)
-                    return 1
-                decision = args.review_decision_after_retry
-                continue
-
-            decision_text = text_at(
-                etree.parse(str(reviewer_artifact)), "/p:pxml/p:payload/p:decision"
-            )
-            blocking_text = text_at(
-                etree.parse(str(reviewer_artifact)),
-                "/p:pxml/p:payload/p:blocking_count",
-            )
-            blocking_count = (
-                int(blocking_text) if blocking_text and blocking_text.isdigit() else 0
-            )
-
-            if decision_text == "approve" and blocking_count == 0:
-                assert reviewer_artifact is not None
-                review_refs: List[Path] = [reviewer_artifact]
-                if planner_artifact is not None:
-                    review_refs.append(planner_artifact)
-                append_trace_event(
-                    trace_script=trace_script,
-                    runtime_root=runtime_root,
-                    task_id=route.task_id,
-                    event_type="review_done",
-                    actor="reviewer",
-                    message="Reviewer completed artifact with approve decision.",
-                    artifact_files=review_refs,
-                    lineage_lock_sha256=packet.acceptance_lock_hash,
-                )
-                break
-
-            reason = "reviewer_decision_requires_escalation"
-            append_retry_index(runtime_root, route.task_id, "reviewer", reason, attempt)
-            if (
-                decision_text == "revise"
-                and attempt < retry_policy.reviewer_max_attempts
-            ):
-                assert reviewer_artifact is not None
-                append_trace_event(
-                    trace_script=trace_script,
-                    runtime_root=runtime_root,
-                    task_id=route.task_id,
-                    event_type="escalation",
-                    actor="manager",
-                    message="Reviewer returned revise; retrying according to retry policy.",
-                    artifact_files=[reviewer_artifact],
-                    reason_code="reviewer_revise",
-                    attempt=attempt,
-                    lineage_lock_sha256=packet.acceptance_lock_hash,
-                )
-                decision = args.review_decision_after_retry
-                continue
-
-            append_escalation_index(
-                runtime_root, route.task_id, "reviewer", reason, attempt
-            )
-            assert reviewer_artifact is not None
-            append_trace_event(
-                trace_script=trace_script,
-                runtime_root=runtime_root,
-                task_id=route.task_id,
-                event_type="escalation",
-                actor="manager",
-                message=f"Reviewer decision={decision_text} blocking_count={blocking_count} triggered escalation.",
-                artifact_files=[reviewer_artifact],
-                reason_code=reason,
-                attempt=attempt,
-                lineage_lock_sha256=packet.acceptance_lock_hash,
-            )
-            if escalation_policy.stop_after_escalation:
-                append_trace_event(
-                    trace_script=trace_script,
-                    runtime_root=runtime_root,
-                    task_id=route.task_id,
-                    event_type="stop",
-                    actor="manager",
-                    message="Coordinator stopped after reviewer escalation.",
-                    artifact_files=[reviewer_artifact],
-                    reason_code=reason,
-                    attempt=attempt,
-                    lineage_lock_sha256=packet.acceptance_lock_hash,
-                )
-                write_coordination_record(
-                    runtime_root,
-                    route.task_id,
-                    route,
-                    packet,
-                    planner_artifact,
-                    reviewer_artifact,
-                    verification_artifact,
-                    status="failed",
-                    note="reviewer escalated",
-                )
-                return 1
 
     # Verifier lane
     if route.verifier_lane:
@@ -1341,8 +1085,6 @@ def main() -> int:
                 "--verify-phase",
                 "lane",
             ]
-            if reviewer_artifact is not None:
-                cmd.extend(["--review-sidecar", str(reviewer_artifact)])
             if args.dry_run_verifier:
                 cmd.append("--dry-run")
 
@@ -1400,7 +1142,6 @@ def main() -> int:
                     route,
                     packet,
                     planner_artifact,
-                    reviewer_artifact,
                     verification_artifact,
                     status="failed",
                     note="verifier runner failure",
@@ -1420,8 +1161,6 @@ def main() -> int:
 
             if not args.skip_validate:
                 context = [route.path, packet.path]
-                if reviewer_artifact is not None:
-                    context.append(reviewer_artifact)
                 run_validator(validator_path, verification_artifact, context)
 
             result_lock = parse_verification_lock(verification_artifact)
@@ -1461,7 +1200,6 @@ def main() -> int:
                     route,
                     packet,
                     planner_artifact,
-                    reviewer_artifact,
                     verification_artifact,
                     status="failed",
                     note="verification lineage mismatch",
@@ -1524,7 +1262,6 @@ def main() -> int:
                 route,
                 packet,
                 planner_artifact,
-                reviewer_artifact,
                 verification_artifact,
                 status="failed",
                 note=f"verifier verdict={verdict}",
@@ -1537,7 +1274,6 @@ def main() -> int:
         route,
         packet,
         planner_artifact,
-        reviewer_artifact,
         verification_artifact,
         status="completed",
         note="coordinator completed conditional lane orchestration",
@@ -1546,7 +1282,6 @@ def main() -> int:
     print(f"Coordinator completed task {route.task_id}")
     print(f"selected_path={route.selected_path}")
     print(f"planner_artifact={planner_artifact}")
-    print(f"reviewer_artifact={reviewer_artifact}")
     print(f"verification_artifact={verification_artifact}")
     return 0
 

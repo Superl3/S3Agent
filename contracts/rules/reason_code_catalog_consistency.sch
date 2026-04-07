@@ -19,7 +19,6 @@
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='verifier']) &gt;= 1">E1142_REASON_CODE_CATEGORY_REQUIRED: reason_code_catalog must include verifier category entries.</sch:assert>
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='coordinator']) &gt;= 1">E1143_REASON_CODE_CATEGORY_REQUIRED: reason_code_catalog must include coordinator category entries.</sch:assert>
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='planner']) &gt;= 1">E1144_REASON_CODE_CATEGORY_REQUIRED: reason_code_catalog must include planner category entries.</sch:assert>
-      <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='reviewer']) &gt;= 1">E1145_REASON_CODE_CATEGORY_REQUIRED: reason_code_catalog must include reviewer category entries.</sch:assert>
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='system']) &gt;= 1">E1146_REASON_CODE_CATEGORY_REQUIRED: reason_code_catalog must include system category entries.</sch:assert>
     </sch:rule>
 
@@ -29,7 +28,6 @@
                         or (normalize-space(p:category)='implementer' and starts-with(normalize-space(p:code), 'implementer_'))
                         or (normalize-space(p:category)='verifier' and starts-with(normalize-space(p:code), 'verifier_'))
                         or (normalize-space(p:category)='planner' and starts-with(normalize-space(p:code), 'planner_'))
-                        or (normalize-space(p:category)='reviewer' and (starts-with(normalize-space(p:code), 'reviewer_') or starts-with(normalize-space(p:code), 'review_')))
                         or (normalize-space(p:category)='coordinator' and (starts-with(normalize-space(p:code), 'coordinator_') or normalize-space(p:code)='acceptance_lineage_mismatch' or normalize-space(p:code)='verification_runner_error' or normalize-space(p:code)='verification_lineage_mismatch'))
                         or (normalize-space(p:category)='system' and starts-with(normalize-space(p:code), 'system_'))">E1148_REASON_CODE_PREFIX_CATEGORY_MISMATCH: reason code prefix/category mapping is invalid.</sch:assert>
       <sch:assert test="not(normalize-space(p:default_classification)='blocker') or normalize-space(p:affects_gate_default)='true'">E1149_REASON_CODE_BLOCKER_GATE_REQUIRED: blocker default_classification must set affects_gate_default=true.</sch:assert>

@@ -1340,7 +1340,7 @@ def main() -> int:
     if not {
         key
         for key in lane_counter
-        if key in {"planner_pre", "reviewer_post", "verifier_post", "full_lane"}
+        if key in {"planner_pre", "verifier_post", "full_lane"}
     }:
         coverage_blockers.append("lane_coverage_missing:conditional_sidecar")
     if not has_ready_render_case:

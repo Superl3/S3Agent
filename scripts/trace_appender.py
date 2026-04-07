@@ -43,7 +43,6 @@ EVENT_TYPES = {
     "patch_applied",
     "blocked",
     "retry_failed",
-    "review_done",
     "verify_done",
     "explore_start",
     "explore_done",
@@ -409,7 +408,6 @@ def parse_args() -> argparse.Namespace:
             "manager",
             "implementer",
             "planner",
-            "reviewer",
             "verifier",
             "explorer",
             "system",
@@ -439,7 +437,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--lineage-lock-sha256",
         default=None,
-        help="Optional acceptance lineage lock hash for review_done/verify_done.",
+        help="Optional acceptance lineage lock hash for verify_done or lineage-checked events.",
     )
     parser.add_argument(
         "--verify-phase",

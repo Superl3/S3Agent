@@ -37,7 +37,6 @@ FLOW_DOC_CLASSES = {
     "execution_packet",
     "exploration_request",
     "plan_sidecar",
-    "review_sidecar",
     "implementer_result",
     "verification_result",
     "exploration_result",
@@ -151,7 +150,6 @@ def collect_task_artifacts(runtime_root: Path, task_id: str) -> List[Artifact]:
         runtime_root / "exploration" / "results",
         runtime_root / "implementer" / "results",
         runtime_root / "sidecars" / "planner",
-        runtime_root / "sidecars" / "reviewer",
         runtime_root / "sidecars" / "verifier",
         runtime_root / "verification" / "results",
         runtime_root / "traces" / "by_task",
@@ -515,7 +513,6 @@ def main() -> int:
     implementer = latest_by_class(artifacts, "implementer_result")
     trace = latest_by_class(artifacts, "execution_trace")
     planner = latest_by_class(artifacts, "plan_sidecar")
-    reviewer = latest_by_class(artifacts, "review_sidecar")
     verification = latest_by_class(artifacts, "verification_result")
     exploration = latest_by_class(artifacts, "exploration_result")
     status_report = latest_by_class(artifacts, "task_status_report")
@@ -668,10 +665,6 @@ def main() -> int:
     if selected_path in {"planner_pre", "full_lane"} and planner is None:
         inconclusive.append(
             "Route requires planner sidecar but no plan_sidecar artifact was found."
-        )
-    if selected_path in {"reviewer_post", "full_lane"} and reviewer is None:
-        inconclusive.append(
-            "Route requires reviewer sidecar but no review_sidecar artifact was found."
         )
     if selected_path in {"verifier_post", "full_lane"} and verification is None:
         inconclusive.append(
@@ -1145,10 +1138,6 @@ def main() -> int:
             hard_failures.append("execution_trace missing route event.")
         if "packet_issued" not in event_set:
             hard_failures.append("execution_trace missing packet_issued event.")
-        if reviewer is not None and "review_done" not in event_set:
-            inconclusive.append(
-                "review_sidecar exists but execution_trace has no review_done event."
-            )
         if verification is not None and "verify_done" not in event_set:
             inconclusive.append(
                 "verification_result exists but execution_trace has no verify_done event."
@@ -1334,18 +1323,6 @@ def main() -> int:
                 ):
                     hard_failures.append(
                         "retry_failed event lineage_lock_sha256 does not match execution_packet lock.",
-                    )
-            if event.event_type == "review_done":
-                if "review_sidecar" not in event.ref_doc_classes:
-                    hard_failures.append(
-                        "review_done event must reference review_sidecar artifact."
-                    )
-                if (
-                    packet_declared_lock
-                    and event.lineage_lock_sha256 != packet_declared_lock
-                ):
-                    hard_failures.append(
-                        "review_done event lineage_lock_sha256 does not match execution_packet lock.",
                     )
             if event.event_type == "verify_done":
                 if "verification_result" not in event.ref_doc_classes:

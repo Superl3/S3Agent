@@ -222,37 +222,6 @@
       </reason>
 
       <reason>
-        <code>review_sidecar_generation_failed</code>
-        <category>reviewer</category>
-        <severity>major</severity>
-        <description>Reviewer sidecar artifact generation failed.</description>
-        <default_classification>warning</default_classification>
-        <affects_gate_default>true</affects_gate_default>
-        <recommended_operator_action>Fix reviewer generation failure and rerun reviewer lane.</recommended_operator_action>
-        <source_layer>orchestration_coordinator</source_layer>
-      </reason>
-      <reason>
-        <code>reviewer_decision_requires_escalation</code>
-        <category>reviewer</category>
-        <severity>major</severity>
-        <description>Reviewer decision remained non-approvable and required escalation.</description>
-        <default_classification>warning</default_classification>
-        <affects_gate_default>true</affects_gate_default>
-        <recommended_operator_action>Address reviewer findings or escalate for packet correction.</recommended_operator_action>
-        <source_layer>orchestration_coordinator</source_layer>
-      </reason>
-      <reason>
-        <code>reviewer_revise</code>
-        <category>reviewer</category>
-        <severity>minor</severity>
-        <description>Reviewer requested revision on the current lane attempt.</description>
-        <default_classification>warning</default_classification>
-        <affects_gate_default>false</affects_gate_default>
-        <recommended_operator_action>Apply reviewer revisions and rerun reviewer lane.</recommended_operator_action>
-        <source_layer>orchestration_coordinator</source_layer>
-      </reason>
-
-      <reason>
         <code>system_runtime_error</code>
         <category>system</category>
         <severity>major</severity>

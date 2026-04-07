@@ -55,7 +55,7 @@
       <item>Do not redefine scope acceptance routing or final approval authority; these remain locked by manager_route execution_packet and manager operator decisions.</item>
       <item>Do not change manager_route.acceptance_lock.lock_sha256 linkage derived from execution_packet checks.</item>
       <item>Do not change packet in_scope out_of_scope expected_files or stop conditions.</item>
-      <item>Do not perform planner reviewer or verifier responsibilities, including planning review verification verdicts or final readiness approval.</item>
+      <item>Do not perform planner or verifier responsibilities, including planning, verification verdicts, or final readiness approval.</item>
       <item>Do not call ECC dormant registry assets directly from execution flow.</item>
       <item>Do not modify or delete prior execution_trace events.</item>
       <item>Do not declare completion from build-only evidence when runtime interaction behavior was requested.</item>

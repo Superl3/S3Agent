@@ -13,7 +13,6 @@
       <xs:enumeration value="planning"/>
       <xs:enumeration value="exploring"/>
       <xs:enumeration value="implementing"/>
-      <xs:enumeration value="reviewing"/>
       <xs:enumeration value="verifying"/>
       <xs:enumeration value="escalated"/>
       <xs:enumeration value="stopped"/>
@@ -90,7 +89,6 @@
       <xs:element name="latest_packet_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_exploration_result_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_implementer_result_ref" type="ReferenceItemType" minOccurs="0"/>
-      <xs:element name="latest_review_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_verification_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="latest_trace_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="acceptance_lock_sha256" type="Sha256Type" minOccurs="0"/>

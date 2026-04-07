@@ -173,9 +173,6 @@ def latest_map(
         "plan_sidecar": latest_for_task(
             runtime_root / "sidecars" / "planner", "plan_sidecar", task_id
         ),
-        "review_sidecar": latest_for_task(
-            runtime_root / "sidecars" / "reviewer", "review_sidecar", task_id
-        ),
         "implementer_result": latest_for_task(
             runtime_root / "implementer" / "results", "implementer_result", task_id
         ),
@@ -260,7 +257,6 @@ def determine_phase_status(
     has_packet: bool,
     has_exploration: bool,
     has_planner: bool,
-    has_reviewer: bool,
     write_intent: bool,
     execution_shape: Optional[str],
     exploration_completion: Optional[str],
@@ -315,8 +311,6 @@ def determine_phase_status(
     if verification_verdict == "inconclusive":
         return "verifying", "inconclusive"
 
-    if has_reviewer:
-        return "reviewing", "running"
     if has_planner:
         return "planning", "running"
     if has_packet:
@@ -649,10 +643,10 @@ def build_status_report(
     refs_map: Dict[str, Optional[ArtifactRefInfo]],
     taxonomy_codes: set[str],
 ) -> Tuple[etree._ElementTree, str, str]:
+    refs_map = dict(refs_map)
     route_info = refs_map["manager_route"]
     packet_info = refs_map["execution_packet"]
     planner_info = refs_map["plan_sidecar"]
-    reviewer_info = refs_map["review_sidecar"]
     exploration_info = refs_map["exploration_result"]
     implementer_info = refs_map["implementer_result"]
     verification_info = refs_map["verification_result"]
@@ -786,7 +780,6 @@ def build_status_report(
         has_packet=packet_info is not None,
         has_exploration=exploration_info is not None,
         has_planner=planner_info is not None,
-        has_reviewer=reviewer_info is not None,
         write_intent=write_intent,
         execution_shape=execution_shape,
         exploration_completion=exploration_completion,
@@ -853,7 +846,6 @@ def build_status_report(
         ("execution_packet", "latest_packet"),
         ("exploration_result", "latest_exploration_result"),
         ("implementer_result", "latest_implementer_result"),
-        ("review_sidecar", "latest_review"),
         ("verification_result", "latest_verification"),
         ("execution_trace", "latest_trace"),
     ]:
@@ -890,7 +882,6 @@ def build_status_report(
         implementer_info,
         "latest_implementer_result",
     )
-    append_payload_ref(payload, "latest_review_ref", reviewer_info, "latest_review")
     append_payload_ref(
         payload,
         "latest_verification_ref",

@@ -531,7 +531,6 @@ def build_verification_result(
     verdict_reason: str,
     logs_ref: Optional[str],
     environment_fingerprint: str,
-    review_sidecar_ref: Optional[Tuple[str, str]],
     extra_refs: Sequence[Tuple[str, str, str]],
     acceptance_lock_sha256: str,
     verify_phase: Optional[str],
@@ -554,11 +553,6 @@ def build_verification_result(
     etree.SubElement(packet_ref, q("doc_id")).text = packet.doc_id
     etree.SubElement(packet_ref, q("doc_class")).text = "execution_packet"
     etree.SubElement(packet_ref, q("relation")).text = "verification_target"
-    if review_sidecar_ref is not None:
-        review_ref = etree.SubElement(refs, q("ref"))
-        etree.SubElement(review_ref, q("doc_id")).text = review_sidecar_ref[0]
-        etree.SubElement(review_ref, q("doc_class")).text = review_sidecar_ref[1]
-        etree.SubElement(review_ref, q("relation")).text = "review_context"
     for ref_doc_id, ref_doc_class, ref_relation in extra_refs:
         extra_ref = etree.SubElement(refs, q("ref"))
         etree.SubElement(extra_ref, q("doc_id")).text = ref_doc_id
@@ -689,12 +683,6 @@ def parse_args() -> argparse.Namespace:
         "--packet", required=True, type=Path, help="Execution packet path."
     )
     parser.add_argument(
-        "--review-sidecar",
-        type=Path,
-        default=None,
-        help="Optional review_sidecar context artifact path.",
-    )
-    parser.add_argument(
         "--runtime-root",
         type=Path,
         default=None,
@@ -822,12 +810,6 @@ def main() -> int:
         print(f"ERROR: execution_packet not found: {packet_path}", file=sys.stderr)
         return 2
 
-    if args.review_sidecar is not None and not args.review_sidecar.resolve().exists():
-        print(
-            f"ERROR: review_sidecar not found: {args.review_sidecar}", file=sys.stderr
-        )
-        return 2
-
     try:
         packet = parse_packet(packet_path)
     except Exception as exc:
@@ -895,16 +877,7 @@ def main() -> int:
     environment_fingerprint = f"python={platform.python_version()};platform={platform.platform()};dry_run={str(args.dry_run).lower()}"
     doc_id = make_result_doc_id(packet.task_id, packet.sequence)
 
-    review_ref: Optional[Tuple[str, str]] = None
     context_files: List[Path] = [packet_path]
-    if args.review_sidecar is not None:
-        review_path = args.review_sidecar.resolve()
-        review_tree = etree.parse(str(review_path))
-        review_doc_id = text_at(review_tree, "/p:pxml/p:meta/p:doc_id")
-        review_doc_class = text_at(review_tree, "/p:pxml/p:meta/p:doc_class")
-        if review_doc_id and review_doc_class:
-            review_ref = (review_doc_id, review_doc_class)
-        context_files.append(review_path)
 
     logs_ref = shared_log_refs[-1] if shared_log_refs else None
     extra_refs, refresh_context_files, refresh_notes = maybe_request_context_refresh(
@@ -931,7 +904,6 @@ def main() -> int:
         verdict_reason=verdict_reason,
         logs_ref=logs_ref,
         environment_fingerprint=environment_fingerprint,
-        review_sidecar_ref=review_ref,
         extra_refs=extra_refs,
         acceptance_lock_sha256=packet.acceptance_lock_hash,
         verify_phase=args.verify_phase,

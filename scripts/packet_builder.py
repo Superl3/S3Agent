@@ -41,11 +41,10 @@ NSMAP = {None: NS}
 XPATH_NS = {"p": NS}
 
 LANE_FLAGS = {
-    "direct": (False, False, False),
-    "planner_pre": (True, False, False),
-    "reviewer_post": (False, True, False),
-    "verifier_post": (False, False, True),
-    "full_lane": (True, True, True),
+    "direct": (False, False),
+    "planner_pre": (True, False),
+    "verifier_post": (False, True),
+    "full_lane": (True, True),
 }
 
 AMBIGUOUS_MARKERS = (
@@ -262,12 +261,15 @@ def select_route(
 
     if risk_hint == "critical":
         return "full_lane", "Critical risk task uses full lane."
+    if risk_hint == "high" and (ambiguous or verify_need):
+        return (
+            "full_lane",
+            "High risk task with ambiguity or verification need uses full lane.",
+        )
     if ambiguous:
         return "planner_pre", "Ambiguity markers detected in intake text."
-    if risk_hint == "high" and verify_need:
-        return "full_lane", "High risk with explicit verification need uses full lane."
     if risk_hint == "high":
-        return "reviewer_post", "High risk task requests reviewer post-lane."
+        return "verifier_post", "High risk task routes to verifier-backed path."
     if verify_need:
         return "verifier_post", "Verification requirement detected from intake text."
     return "direct", "Clear low-complexity intake defaults to direct path."
@@ -697,7 +699,7 @@ def build_manager_route(
     lock_hash: str,
     prior_exploration: Optional[PriorExplorationInfo],
 ) -> Tuple[etree._ElementTree, str]:
-    planner_flag, reviewer_flag, verifier_flag = LANE_FLAGS[selected_path]
+    planner_flag, verifier_flag = LANE_FLAGS[selected_path]
 
     root = etree.Element(q("pxml"), nsmap=NSMAP)
     meta = etree.SubElement(root, q("meta"))
@@ -728,9 +730,6 @@ def build_manager_route(
     lane_flags = etree.SubElement(payload, q("lane_flags"))
     etree.SubElement(lane_flags, q("planner")).text = (
         "true" if planner_flag else "false"
-    )
-    etree.SubElement(lane_flags, q("reviewer")).text = (
-        "true" if reviewer_flag else "false"
     )
     etree.SubElement(lane_flags, q("verifier")).text = (
         "true" if verifier_flag else "false"
@@ -1151,12 +1150,8 @@ def main() -> int:
         planner_decision.execution_shape == "single_packet_with_sidecars"
         and selected_path == "direct"
     ):
-        selected_path = (
-            "reviewer_post" if intake.risk_hint == "high" else "verifier_post"
-        )
-        route_reason = (
-            "Single bounded packet needs sidecar evidence; non-direct lane selected."
-        )
+        selected_path = "verifier_post"
+        route_reason = "Single bounded packet needs sidecar evidence; verifier-backed lane selected."
 
     write_intent = planner_decision.write_intent and detect_write_intent(
         request_text=intake.request_text,

@@ -10,17 +10,12 @@
       <sch:assert test="count(.//p:patch_constraints)=0">E631_PLAN_PATCH_AUTHORITY: plan_sidecar must not include patch authority fields.</sch:assert>
     </sch:rule>
 
-    <sch:rule context="p:pxml[p:meta/p:doc_class='review_sidecar']">
-      <sch:assert test="p:meta/p:writer_agent='reviewer'">E632_REVIEW_WRITER_AGENT: review_sidecar writer_agent must be reviewer.</sch:assert>
-      <sch:assert test="count(.//p:patch_constraints)=0">E633_REVIEW_PATCH_AUTHORITY: review_sidecar must not include patch authority fields.</sch:assert>
-    </sch:rule>
-
     <sch:rule context="p:pxml[p:meta/p:doc_class='verification_result']">
       <sch:assert test="p:meta/p:writer_agent='verifier'">E634_VERIFY_WRITER_AGENT: verification_result writer_agent must be verifier.</sch:assert>
       <sch:assert test="count(.//p:patch_constraints)=0">E635_VERIFY_PATCH_AUTHORITY: verification_result must not include patch authority fields.</sch:assert>
     </sch:rule>
 
-    <sch:rule context="p:pxml[p:meta/p:doc_class='plan_sidecar' or p:meta/p:doc_class='review_sidecar' or p:meta/p:doc_class='verification_result']">
+    <sch:rule context="p:pxml[p:meta/p:doc_class='plan_sidecar' or p:meta/p:doc_class='verification_result']">
       <sch:assert test="count(p:refs/p:ref[p:doc_class='hooks_registry' or p:doc_class='skills_registry' or p:doc_class='mcp_registry']) = 0">E636_SIDECAR_ECC_RUNTIME_REF_FORBIDDEN: sidecar runtime artifacts must not reference ECC registries for execution control.</sch:assert>
     </sch:rule>
   </sch:pattern>

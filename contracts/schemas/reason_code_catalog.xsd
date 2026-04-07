@@ -19,7 +19,6 @@
       <xs:enumeration value="verifier"/>
       <xs:enumeration value="coordinator"/>
       <xs:enumeration value="planner"/>
-      <xs:enumeration value="reviewer"/>
       <xs:enumeration value="system"/>
     </xs:restriction>
   </xs:simpleType>

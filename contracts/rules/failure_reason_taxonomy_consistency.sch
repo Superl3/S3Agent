@@ -10,7 +10,6 @@
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='implementer']) &gt;= 1">E782_FAILURE_TAXONOMY_CATEGORY_REQUIRED: implementer category is required.</sch:assert>
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='verifier']) &gt;= 1">E783_FAILURE_TAXONOMY_CATEGORY_REQUIRED: verifier category is required.</sch:assert>
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='coordinator']) &gt;= 1">E784_FAILURE_TAXONOMY_CATEGORY_REQUIRED: coordinator category is required.</sch:assert>
-      <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='reviewer']) &gt;= 1">E785_FAILURE_TAXONOMY_CATEGORY_REQUIRED: reviewer category is required.</sch:assert>
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='planner']) &gt;= 1">E786_FAILURE_TAXONOMY_CATEGORY_REQUIRED: planner category is required.</sch:assert>
       <sch:assert test="count(p:payload/p:reasons/p:reason[p:category='system']) &gt;= 1">E787_FAILURE_TAXONOMY_CATEGORY_REQUIRED: system category is required.</sch:assert>
     </sch:rule>

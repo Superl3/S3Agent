@@ -434,9 +434,6 @@ def main() -> int:
             "--verify-phase",
             "post_implement",
         ]
-        review_path = latest_task_artifact(runtime_root, task_id, "review_sidecar")
-        if review_path is not None:
-            verify_cmd.extend(["--review-sidecar", str(review_path)])
         if args.skip_validate:
             verify_cmd.append("--skip-validate")
         verify_proc = run_command(verify_cmd, "verification_runner")

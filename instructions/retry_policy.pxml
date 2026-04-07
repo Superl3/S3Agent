@@ -34,18 +34,6 @@
       </rule>
       <rule>
         <policy_id>RETRY-POL-002</policy_id>
-        <retry_rule_id>retry_reviewer_revise</retry_rule_id>
-        <applies_to>
-          <item>reviewer</item>
-          <item>decision_revise</item>
-        </applies_to>
-        <retry_condition>review_decision_is_revise</retry_condition>
-        <max_attempts>2</max_attempts>
-        <reset_condition>decision_changes_to_approve</reset_condition>
-        <next_effect>escalate</next_effect>
-      </rule>
-      <rule>
-        <policy_id>RETRY-POL-003</policy_id>
         <retry_rule_id>retry_verifier_inconclusive</retry_rule_id>
         <applies_to>
           <item>verifier</item>

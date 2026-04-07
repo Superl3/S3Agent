@@ -10,7 +10,6 @@
       <xs:enumeration value="manager_route"/>
       <xs:enumeration value="execution_packet"/>
       <xs:enumeration value="plan_sidecar"/>
-      <xs:enumeration value="review_sidecar"/>
       <xs:enumeration value="implementer_result"/>
       <xs:enumeration value="verification_result"/>
       <xs:enumeration value="exploration_request"/>
@@ -42,7 +41,6 @@
       <xs:enumeration value="manager_contract"/>
       <xs:enumeration value="implementer_contract"/>
       <xs:enumeration value="planner_contract"/>
-      <xs:enumeration value="reviewer_contract"/>
       <xs:enumeration value="verifier_contract"/>
       <xs:enumeration value="routing_policy"/>
       <xs:enumeration value="execution_policy"/>
@@ -64,7 +62,6 @@
       <xs:enumeration value="manager"/>
       <xs:enumeration value="implementer"/>
       <xs:enumeration value="planner"/>
-      <xs:enumeration value="reviewer"/>
       <xs:enumeration value="verifier"/>
       <xs:enumeration value="explorer"/>
       <xs:enumeration value="system"/>
@@ -92,7 +89,6 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="direct"/>
       <xs:enumeration value="planner_pre"/>
-      <xs:enumeration value="reviewer_post"/>
       <xs:enumeration value="verifier_post"/>
       <xs:enumeration value="full_lane"/>
     </xs:restriction>
@@ -211,14 +207,6 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="ReviewDecisionType">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="approve"/>
-      <xs:enumeration value="revise"/>
-      <xs:enumeration value="escalate"/>
-    </xs:restriction>
-  </xs:simpleType>
-
   <xs:simpleType name="FindingSeverityType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="info"/>
@@ -262,7 +250,6 @@
       <xs:enumeration value="patch_applied"/>
       <xs:enumeration value="blocked"/>
       <xs:enumeration value="retry_failed"/>
-      <xs:enumeration value="review_done"/>
       <xs:enumeration value="verify_done"/>
       <xs:enumeration value="explore_start"/>
       <xs:enumeration value="explore_done"/>

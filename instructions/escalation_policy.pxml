@@ -24,7 +24,6 @@
     <human_escalation_condition>
       <item>Same failure reason appears beyond repeated_failure_threshold.</item>
       <item>Verifier remains inconclusive after configured retries.</item>
-      <item>Reviewer returns blocker findings at or above blocker_threshold.</item>
     </human_escalation_condition>
     <stop_after_escalation>true</stop_after_escalation>
     <rules>
@@ -58,7 +57,6 @@
         <escalation_rule_id>esc_sidecar_unavailable</escalation_rule_id>
         <applies_to>
           <item>planner_pre</item>
-          <item>reviewer_post</item>
           <item>full_lane</item>
         </applies_to>
         <trigger_condition>sidecar_artifact_generation_failed</trigger_condition>

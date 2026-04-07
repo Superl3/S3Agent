@@ -27,7 +27,6 @@ class ScenarioSpec:
     expected_write_intent: bool
     expected_exit_code: int
     expected_impl_status: Optional[str]
-    expect_reviewer_call: bool
     expect_verifier_lane_call: bool
     expect_implementer_calls: int
     seed_files: tuple[str, ...]
@@ -172,7 +171,6 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             expected_write_intent=True,
             expected_exit_code=0,
             expected_impl_status="applied",
-            expect_reviewer_call=False,
             expect_verifier_lane_call=False,
             expect_implementer_calls=1,
             seed_files=(),
@@ -189,25 +187,23 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             expected_write_intent=True,
             expected_exit_code=0,
             expected_impl_status="applied",
-            expect_reviewer_call=False,
             expect_verifier_lane_call=False,
             expect_implementer_calls=1,
             seed_files=("src/refactor_target.py",),
             max_duration_sec=22.0,
         ),
         ScenarioSpec(
-            name="reviewer_post_high_risk",
-            task_id="task_smoke_reviewer_post_001",
+            name="verifier_post_high_risk",
+            task_id="task_smoke_verifier_post_high_001",
             task_type="bugfix",
             risk_hint="high",
-            request_text="Patch high risk lock boundary with reviewer signoff.",
-            requested_outcome="Apply localized patch after reviewer lane.",
-            expected_selected_path="reviewer_post",
+            request_text="Patch high risk lock boundary with deterministic evidence.",
+            requested_outcome="Apply localized patch after verifier-backed gating.",
+            expected_selected_path="verifier_post",
             expected_write_intent=True,
             expected_exit_code=0,
             expected_impl_status="applied",
-            expect_reviewer_call=True,
-            expect_verifier_lane_call=False,
+            expect_verifier_lane_call=True,
             expect_implementer_calls=1,
             seed_files=("src/target_bugfix.py",),
             max_duration_sec=24.0,
@@ -223,7 +219,6 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             expected_write_intent=True,
             expected_exit_code=0,
             expected_impl_status="applied",
-            expect_reviewer_call=False,
             expect_verifier_lane_call=True,
             expect_implementer_calls=1,
             seed_files=("src/target_bugfix.py",),
@@ -235,12 +230,11 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             task_type="refactor",
             risk_hint="critical",
             request_text="Critical auth boundary update with strict controls.",
-            requested_outcome="Planner reviewer and verifier lanes all execute.",
+            requested_outcome="Planner and verifier lanes all execute.",
             expected_selected_path="full_lane",
             expected_write_intent=True,
             expected_exit_code=0,
             expected_impl_status="applied",
-            expect_reviewer_call=True,
             expect_verifier_lane_call=True,
             expect_implementer_calls=1,
             seed_files=("src/refactor_target.py",),
@@ -257,7 +251,6 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             expected_write_intent=False,
             expected_exit_code=0,
             expected_impl_status=None,
-            expect_reviewer_call=False,
             expect_verifier_lane_call=False,
             expect_implementer_calls=0,
             seed_files=(),
@@ -306,6 +299,11 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
 
         selected_path = _text(route_tree, "/p:pxml/p:payload/p:selected_path")
         assert selected_path == spec.expected_selected_path
+        lane_flag_nodes = route_tree.xpath(
+            "/p:pxml/p:payload/p:lane_flags/*",
+            namespaces=NS,
+        )
+        assert len(lane_flag_nodes) == 2
 
         write_intent_text = _text(packet_tree, "/p:pxml/p:payload/p:write_intent")
         write_intent = (
@@ -336,9 +334,6 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             _count_events(events, "implement_start", actor="implementer")
             == spec.expect_implementer_calls
         )
-        assert _count_events(events, "review_done", actor="reviewer") == (
-            1 if spec.expect_reviewer_call else 0
-        )
         assert _count_events(
             events,
             "verify_done",
@@ -359,12 +354,24 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
         )
         assert _count_events(events, "escalation") == 0
 
+        verification_path = _latest_artifact(
+            runtime_root, spec.task_id, "verification_result"
+        )
+        if spec.expect_verifier_lane_call:
+            assert verification_path.exists(), (
+                f"missing verification_result for {spec.name}"
+            )
+        else:
+            assert not verification_path.exists(), (
+                f"unexpected verification_result for {spec.name}"
+            )
+
     direct_time = durations["direct_feature_apply"]
     explore_time = durations["explore_only_read_only"]
     full_lane_time = durations["full_lane_critical"]
 
     assert explore_time <= (direct_time * 2.0 + 2.0)
-    assert full_lane_time <= (direct_time * 4.0 + 5.0)
+    assert full_lane_time <= (direct_time * 6.0 + 6.0)
 
 
 def test_blocked_retry_failed_transition_and_call_counts(
@@ -387,7 +394,6 @@ def test_blocked_retry_failed_transition_and_call_counts(
         expected_write_intent=True,
         expected_exit_code=1,
         expected_impl_status="blocked",
-        expect_reviewer_call=False,
         expect_verifier_lane_call=False,
         expect_implementer_calls=1,
         seed_files=(),
@@ -422,7 +428,6 @@ def test_blocked_retry_failed_transition_and_call_counts(
     assert _count_events(first_events, "implement_start", actor="implementer") == 1
     assert _count_events(first_events, "blocked", actor="implementer") == 1
     assert _count_events(first_events, "retry_failed", actor="implementer") == 0
-    assert _count_events(first_events, "review_done", actor="reviewer") == 0
     assert (
         _count_events(
             first_events,
@@ -465,7 +470,6 @@ def test_blocked_retry_failed_transition_and_call_counts(
     assert _count_events(second_events, "retry_failed", actor="implementer") == 1
     assert _count_events(second_events, "escalation") >= 1
     assert _count_events(second_events, "stop") >= 1
-    assert _count_events(second_events, "review_done", actor="reviewer") == 0
     assert (
         _count_events(
             second_events,

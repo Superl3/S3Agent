@@ -138,7 +138,6 @@ def gather_task_artifacts(runtime_root: Path, task_id: str) -> List[Artifact]:
         runtime_root / "exploration" / "results",
         runtime_root / "implementer" / "results",
         runtime_root / "sidecars" / "planner",
-        runtime_root / "sidecars" / "reviewer",
         runtime_root / "sidecars" / "verifier",
         runtime_root / "verification" / "results",
         runtime_root / "traces" / "by_task",

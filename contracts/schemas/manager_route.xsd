@@ -15,7 +15,6 @@
   <xs:complexType name="LaneFlagsType">
     <xs:sequence>
       <xs:element name="planner" type="xs:boolean"/>
-      <xs:element name="reviewer" type="xs:boolean"/>
       <xs:element name="verifier" type="xs:boolean"/>
     </xs:sequence>
   </xs:complexType>
