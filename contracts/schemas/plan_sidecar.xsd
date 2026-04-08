@@ -28,6 +28,13 @@
 
   <xs:complexType name="PlanSidecarPayloadType">
     <xs:sequence>
+      <xs:element name="packet_doc_id" type="DocIdType"/>
+      <xs:element name="packet_sha256" type="Sha256Type"/>
+      <xs:element name="baseline_doc_id" type="DocIdType" minOccurs="0"/>
+      <xs:element name="packet_generation" type="xs:nonNegativeInteger"/>
+      <xs:element name="context_generation" type="xs:nonNegativeInteger"/>
+      <xs:element name="context_producer" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="context_mode" type="NonEmptyStringType" minOccurs="0"/>
       <xs:element name="ambiguities" type="StringListType"/>
       <xs:element name="assumptions" type="StringListType"/>
       <xs:element name="proposed_steps" type="StringListType"/>

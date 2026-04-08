@@ -25,6 +25,12 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from runtime_bootstrap import bootstrap_runtime
+from context_contract import (
+    compute_context_lock_sha256,
+    load_task_index,
+    resolve_baseline_bundle,
+    write_task_index,
+)
 
 try:
     from lxml import etree
@@ -684,6 +690,10 @@ class PriorExplorationInfo:
     completion_state: str
     exploration_scope: Optional[str]
     actionability: Optional[str]
+    context_producer: Optional[str]
+    context_mode: Optional[str]
+    usability_state: Optional[str]
+    confidence: Optional[str]
     key_findings: List[str]
     open_questions: List[str]
     evidence_paths: List[str]
@@ -774,6 +784,9 @@ def build_manager_route(
     route_reason: str,
     lock_hash: str,
     prior_exploration: Optional[PriorExplorationInfo],
+    packet_doc_id: str,
+    packet_generation: int,
+    context_generation: int,
 ) -> Tuple[etree._ElementTree, str]:
     planner_flag, verifier_flag = LANE_FLAGS[selected_path]
 
@@ -812,6 +825,20 @@ def build_manager_route(
     )
     etree.SubElement(payload, q("route_reason")).text = route_reason
     etree.SubElement(payload, q("risk_level")).text = intake.risk_hint
+    etree.SubElement(payload, q("packet_doc_id")).text = packet_doc_id
+    if prior_exploration is not None:
+        etree.SubElement(payload, q("baseline_doc_id")).text = prior_exploration.doc_id
+    etree.SubElement(payload, q("packet_generation")).text = str(packet_generation)
+    etree.SubElement(payload, q("context_generation")).text = str(context_generation)
+    if prior_exploration is not None:
+        if prior_exploration.context_producer:
+            etree.SubElement(
+                payload, q("context_producer")
+            ).text = prior_exploration.context_producer
+        if prior_exploration.context_mode:
+            etree.SubElement(
+                payload, q("context_mode")
+            ).text = prior_exploration.context_mode
 
     lock = etree.SubElement(payload, q("acceptance_lock"))
     etree.SubElement(
@@ -848,6 +875,8 @@ def build_execution_packet(
     completion_state: str,
     observation_first: bool,
     prior_exploration: Optional[PriorExplorationInfo],
+    packet_generation: int,
+    context_generation: int,
 ) -> Tuple[etree._ElementTree, str]:
     in_scope, out_scope, expected_files, localization_targets = default_scope(
         intake.task_type
@@ -873,7 +902,7 @@ def build_execution_packet(
         exploration_ref = etree.SubElement(refs, q("ref"))
         etree.SubElement(exploration_ref, q("doc_id")).text = prior_exploration.doc_id
         etree.SubElement(exploration_ref, q("doc_class")).text = "exploration_result"
-        etree.SubElement(exploration_ref, q("relation")).text = "prior_exploration"
+        etree.SubElement(exploration_ref, q("relation")).text = "baseline_context"
 
     payload = etree.SubElement(root, q("payload"))
     summary = f"{intake.task_type} task via {selected_path}: {intake.request_text}"
@@ -978,6 +1007,49 @@ def build_execution_packet(
             localization_targets = ["src/target_bugfix.py:target_function"]
         build_string_list(payload, "localization_targets", localization_targets)
 
+    context_policy = etree.SubElement(payload, q("context_policy"))
+    baseline_required = write_intent
+    etree.SubElement(context_policy, q("baseline_required")).text = (
+        "true" if baseline_required else "false"
+    )
+    if prior_exploration is not None:
+        etree.SubElement(
+            context_policy, q("baseline_doc_id")
+        ).text = prior_exploration.doc_id
+        etree.SubElement(
+            context_policy, q("baseline_sha256")
+        ).text = prior_exploration.content_sha256
+        etree.SubElement(context_policy, q("baseline_scope")).text = "baseline"
+        context_lock = compute_context_lock_sha256(
+            baseline_doc_id=prior_exploration.doc_id,
+            baseline_sha256=prior_exploration.content_sha256,
+            context_generation=context_generation,
+            producer=prior_exploration.context_producer or "contextscout_runner",
+            mode=prior_exploration.context_mode or "baseline_provisioning",
+        )
+        etree.SubElement(context_policy, q("context_lock_sha256")).text = context_lock
+    etree.SubElement(context_policy, q("packet_generation")).text = str(
+        packet_generation
+    )
+    etree.SubElement(context_policy, q("context_generation")).text = str(
+        context_generation
+    )
+    if prior_exploration is not None:
+        etree.SubElement(context_policy, q("context_producer")).text = (
+            prior_exploration.context_producer or "contextscout_runner"
+        )
+        etree.SubElement(context_policy, q("context_mode")).text = (
+            prior_exploration.context_mode or "baseline_provisioning"
+        )
+        if prior_exploration.usability_state:
+            etree.SubElement(
+                context_policy, q("baseline_usability_state")
+            ).text = prior_exploration.usability_state
+        if prior_exploration.confidence:
+            etree.SubElement(
+                context_policy, q("baseline_confidence")
+            ).text = prior_exploration.confidence
+
     if prior_exploration is not None:
         exploration_notes_ref = etree.SubElement(payload, q("exploration_notes_ref"))
         etree.SubElement(
@@ -986,9 +1058,7 @@ def build_execution_packet(
         etree.SubElement(
             exploration_notes_ref, q("doc_class")
         ).text = "exploration_result"
-        etree.SubElement(
-            exploration_notes_ref, q("relation")
-        ).text = "prior_exploration"
+        etree.SubElement(exploration_notes_ref, q("relation")).text = "baseline_context"
 
     integrity = etree.SubElement(root, q("integrity"))
     content_hash = compute_content_hash(meta, refs, payload)
@@ -1019,6 +1089,23 @@ def discover_pxml_files(path: Path) -> List[Path]:
 def load_prior_exploration(
     runtime_root: Path, task_id: str
 ) -> Optional[PriorExplorationInfo]:
+    baseline_bundle = resolve_baseline_bundle(runtime_root, task_id=task_id)
+    if baseline_bundle is not None:
+        return PriorExplorationInfo(
+            path=baseline_bundle.path,
+            doc_id=baseline_bundle.doc_id,
+            content_sha256=baseline_bundle.content_sha256,
+            completion_state="completed_and_verified",
+            exploration_scope=baseline_bundle.exploration_scope,
+            actionability=baseline_bundle.actionability,
+            context_producer=baseline_bundle.context_producer,
+            context_mode=baseline_bundle.context_mode,
+            usability_state=baseline_bundle.usability_state,
+            confidence=baseline_bundle.confidence,
+            key_findings=baseline_bundle.key_findings,
+            open_questions=baseline_bundle.open_questions,
+            evidence_paths=baseline_bundle.evidence_paths,
+        )
     candidates: List[Tuple[int, str, Path]] = []
     for artifact_path in discover_pxml_files(runtime_root / "exploration" / "results"):
         try:
@@ -1079,11 +1166,31 @@ def load_prior_exploration(
             completion_state=completion_state,
             exploration_scope=exploration_scope,
             actionability=actionability,
+            context_producer=text_at(tree, "/p:pxml/p:payload/p:context_producer"),
+            context_mode=text_at(tree, "/p:pxml/p:payload/p:context_mode"),
+            usability_state=text_at(tree, "/p:pxml/p:payload/p:usability_state"),
+            confidence=text_at(tree, "/p:pxml/p:payload/p:confidence"),
             key_findings=key_findings,
             open_questions=open_questions,
             evidence_paths=evidence_paths,
         )
     return None
+
+
+def next_generations(
+    runtime_root: Path,
+    task_id: str,
+    prior_exploration: Optional[PriorExplorationInfo],
+) -> Tuple[int, int]:
+    task_index = load_task_index(runtime_root, task_id)
+    packet_generation = int(task_index.get("current_packet_generation") or 0) + 1
+    previous_context_generation = int(task_index.get("current_context_generation") or 0)
+    previous_baseline_doc_id = task_index.get("current_manager_baseline_doc_id")
+    if prior_exploration is None:
+        return packet_generation, previous_context_generation
+    if previous_baseline_doc_id == prior_exploration.doc_id:
+        return packet_generation, previous_context_generation or 1
+    return packet_generation, previous_context_generation + 1 or 1
 
 
 def write_xml(tree: etree._ElementTree, path: Path) -> None:
@@ -1098,6 +1205,9 @@ def update_indexes(
     route_path: Path,
     packet_doc_id: str,
     packet_path: Path,
+    packet_generation: int,
+    context_generation: int,
+    baseline_doc_id: Optional[str],
 ) -> None:
     tasks_dir = runtime_root / "index" / "tasks"
     artifacts_dir = runtime_root / "index" / "artifacts"
@@ -1116,11 +1226,12 @@ def update_indexes(
     task_index["task_id"] = task_id
     task_index["latest_manager_route"] = str(route_path.relative_to(runtime_root))
     task_index["latest_execution_packet"] = str(packet_path.relative_to(runtime_root))
+    task_index["current_packet_generation"] = packet_generation
+    task_index["current_context_generation"] = context_generation
+    if baseline_doc_id is not None:
+        task_index["current_manager_baseline_doc_id"] = baseline_doc_id
     task_index["updated_at"] = now_utc_iso()
-    task_index_path.write_text(
-        json.dumps(task_index, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    write_task_index(runtime_root, task_id, task_index)
 
     route_index = {
         "doc_id": route_doc_id,
@@ -1259,6 +1370,15 @@ def main() -> int:
             route_reason
             + " Prior exploration_result is available and should inform manager scoping."
         )
+        if write_intent and prior_exploration.usability_state in {"weak", "empty"}:
+            if selected_path == "direct":
+                selected_path = "planner_pre"
+                matched_rule = "baseline_context_non_usable_requires_planner_pre"
+                route_reason = f"[rule:{matched_rule}] Baseline context is not fully usable, so planner review is required before implementation."
+            elif selected_path == "verifier_post":
+                selected_path = "full_lane"
+                matched_rule = "baseline_context_non_usable_requires_full_lane"
+                route_reason = f"[rule:{matched_rule}] Baseline context is not fully usable, so planner and verifier lanes both remain active."
 
     behavior_required = any(
         item.get("proof_category") == "behavioral"
@@ -1284,6 +1404,9 @@ def main() -> int:
     packet_doc_id = make_doc_id("execution_packet", intake.task_id, packet_sequence)
     route_created_at = intake.created_at + timedelta(seconds=1)
     packet_created_at = intake.created_at + timedelta(seconds=2)
+    packet_generation, context_generation = next_generations(
+        runtime_root, intake.task_id, prior_exploration
+    )
 
     route_tree, route_hash = build_manager_route(
         intake=intake,
@@ -1296,6 +1419,9 @@ def main() -> int:
         route_reason=route_reason,
         lock_hash=lock_hash,
         prior_exploration=prior_exploration,
+        packet_doc_id=packet_doc_id,
+        packet_generation=packet_generation,
+        context_generation=context_generation,
     )
     packet_tree, _packet_hash = build_execution_packet(
         intake=intake,
@@ -1317,6 +1443,8 @@ def main() -> int:
         completion_state=planner_decision.completion_state,
         observation_first=planner_decision.observation_first,
         prior_exploration=prior_exploration,
+        packet_generation=packet_generation,
+        context_generation=context_generation,
     )
 
     route_path = runtime_root / "packets" / "manager_route" / f"{route_doc_id}.pxml"
@@ -1371,6 +1499,11 @@ def main() -> int:
         route_path=route_path,
         packet_doc_id=packet_doc_id,
         packet_path=packet_path,
+        packet_generation=packet_generation,
+        context_generation=context_generation,
+        baseline_doc_id=(
+            prior_exploration.doc_id if prior_exploration is not None else None
+        ),
     )
 
     print(f"Generated manager_route: {route_path}")

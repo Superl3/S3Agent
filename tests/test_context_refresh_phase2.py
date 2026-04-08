@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -447,3 +448,80 @@ def test_harness_validator_collects_context_refresh_request_artifacts(
         validator_path, artifacts
     )
     assert valid, output
+
+
+def test_implementer_records_baseline_context_access_and_ref(
+    tmp_path: Path, run_python
+) -> None:
+    task_id = "task_phase2_impl_access_001"
+    runtime_root = tmp_path / "runtime"
+    workspace_root = tmp_path / "workspace"
+    intake_path = tmp_path / "intake" / f"{task_id}.pxml"
+    (workspace_root / "src").mkdir(parents=True, exist_ok=True)
+    (workspace_root / "src" / "target_bugfix.py").write_text(
+        "def target_function():\n    return 'ok'\n", encoding="utf-8"
+    )
+
+    _write_task_intake(
+        intake_path,
+        task_id,
+        request_text="Fix auth bug in existing target file.",
+        outcome="Apply bugfix patch safely.",
+        task_type="bugfix",
+    )
+    build_result = run_python(
+        "scripts/packet_builder.py",
+        "--intake",
+        intake_path,
+        "--runtime-root",
+        runtime_root,
+        "--skip-validate",
+    )
+    assert build_result.returncode == 0, build_result.stdout + build_result.stderr
+
+    packet_tree = etree.parse(str(_latest(runtime_root, task_id, "execution_packet")))
+    packet_doc_id = _text(packet_tree, "/p:pxml/p:meta/p:doc_id")
+    assert packet_doc_id is not None
+    _seed_exploration_result(
+        runtime_root,
+        task_id=task_id,
+        packet_doc_id=packet_doc_id,
+        doc_id="doc_exploration_seed_access_0001",
+        actionability="manager_reusable",
+    )
+    rebuild = run_python(
+        "scripts/packet_builder.py",
+        "--intake",
+        intake_path,
+        "--runtime-root",
+        runtime_root,
+        "--skip-validate",
+    )
+    assert rebuild.returncode == 0, rebuild.stdout + rebuild.stderr
+
+    impl = run_python(
+        "scripts/implementer_runner.py",
+        "--packet",
+        _latest(runtime_root, task_id, "execution_packet"),
+        "--runtime-root",
+        runtime_root,
+        "--workspace-root",
+        workspace_root,
+        "--skip-validate",
+    )
+    assert impl.returncode == 0, impl.stdout + impl.stderr
+
+    impl_tree = etree.parse(str(_latest(runtime_root, task_id, "implementer_result")))
+    ref_relations = _items(impl_tree, "/p:pxml/p:refs/p:ref/p:relation/text()")
+    assert "baseline_context" in ref_relations
+
+    access_log = runtime_root / "context_access" / "by_task" / f"{task_id}.jsonl"
+    assert access_log.exists()
+    entries = [
+        json.loads(line)
+        for line in access_log.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    access_types = {entry.get("access_type") for entry in entries}
+    assert "baseline_hit" in access_types
+    assert "operational_read" in access_types

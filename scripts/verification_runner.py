@@ -23,6 +23,12 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from runtime_bootstrap import bootstrap_runtime
+from context_contract import (
+    append_context_access_log,
+    compute_context_lock_sha256,
+    parse_context_policy,
+    resolve_baseline_bundle,
+)
 
 try:
     from lxml import etree
@@ -79,7 +85,14 @@ class PacketInfo:
     checks: List[AcceptanceCheck]
     intended_behaviors: List[str]
     required_proofs: Dict[str, bool]
+    baseline_required: bool
     baseline_exploration_doc_id: Optional[str]
+    baseline_exploration_sha256: Optional[str]
+    context_lock_sha256: Optional[str]
+    packet_generation: int
+    context_generation: int
+    context_producer: Optional[str]
+    context_mode: Optional[str]
 
 
 def q(tag: str) -> str:
@@ -244,9 +257,7 @@ def parse_packet(path: Path) -> PacketInfo:
             "execution_packet acceptance_lock_hash does not match normalized acceptance_checks"
         )
 
-    baseline_exploration_doc_id = text_at(
-        tree, "/p:pxml/p:payload/p:exploration_notes_ref/p:doc_id"
-    )
+    context_policy = parse_context_policy(tree)
 
     return PacketInfo(
         path=path,
@@ -260,7 +271,14 @@ def parse_packet(path: Path) -> PacketInfo:
         checks=checks,
         intended_behaviors=intended_behaviors,
         required_proofs=required_proofs,
-        baseline_exploration_doc_id=baseline_exploration_doc_id,
+        baseline_required=context_policy.baseline_required,
+        baseline_exploration_doc_id=context_policy.baseline_doc_id,
+        baseline_exploration_sha256=context_policy.baseline_sha256,
+        context_lock_sha256=context_policy.context_lock_sha256,
+        packet_generation=context_policy.packet_generation,
+        context_generation=context_policy.context_generation,
+        context_producer=context_policy.context_producer,
+        context_mode=context_policy.context_mode,
     )
 
 
@@ -274,6 +292,47 @@ def compute_content_hash(
     material.append(copy.deepcopy(payload))
     c14n = etree.tostring(material, method="c14n", exclusive=True, with_comments=False)
     return sha256_hex(c14n)
+
+
+def load_required_baseline_context(packet: PacketInfo, runtime_root: Path):
+    if not packet.baseline_required and not packet.baseline_exploration_doc_id:
+        return None
+    if not packet.baseline_exploration_doc_id:
+        raise RuntimeError(
+            "execution_packet requires baseline context but baseline_doc_id is missing"
+        )
+    bundle = resolve_baseline_bundle(
+        runtime_root,
+        task_id=packet.task_id,
+        baseline_doc_id=packet.baseline_exploration_doc_id,
+    )
+    if bundle is None:
+        raise RuntimeError("execution_packet baseline_doc_id could not be resolved")
+    if (
+        packet.baseline_exploration_sha256
+        and bundle.content_sha256 != packet.baseline_exploration_sha256
+    ):
+        raise RuntimeError(
+            "execution_packet baseline_sha256 does not match resolved baseline exploration_result"
+        )
+    expected_lock = None
+    if packet.baseline_exploration_sha256:
+        expected_lock = compute_context_lock_sha256(
+            baseline_doc_id=bundle.doc_id,
+            baseline_sha256=bundle.content_sha256,
+            context_generation=packet.context_generation,
+            producer=packet.context_producer or "contextscout_runner",
+            mode=packet.context_mode or "baseline_provisioning",
+        )
+    if (
+        packet.context_lock_sha256
+        and expected_lock
+        and packet.context_lock_sha256 != expected_lock
+    ):
+        raise RuntimeError(
+            "execution_packet context_lock_sha256 does not match resolved baseline contract"
+        )
+    return bundle
 
 
 def eval_pass_condition(pass_condition: str, returncode: int) -> bool:
@@ -560,6 +619,22 @@ def build_verification_result(
         etree.SubElement(extra_ref, q("relation")).text = ref_relation
 
     payload = etree.SubElement(root, q("payload"))
+    etree.SubElement(payload, q("packet_doc_id")).text = packet.doc_id
+    etree.SubElement(payload, q("packet_sha256")).text = packet.content_sha256
+    if packet.baseline_exploration_doc_id is not None:
+        etree.SubElement(
+            payload, q("baseline_doc_id")
+        ).text = packet.baseline_exploration_doc_id
+    etree.SubElement(payload, q("packet_generation")).text = str(
+        packet.packet_generation
+    )
+    etree.SubElement(payload, q("context_generation")).text = str(
+        packet.context_generation
+    )
+    if packet.context_producer:
+        etree.SubElement(payload, q("context_producer")).text = packet.context_producer
+    if packet.context_mode:
+        etree.SubElement(payload, q("context_mode")).text = packet.context_mode
     tests_run = etree.SubElement(payload, q("tests_run"))
     for test in tests:
         test_node = etree.SubElement(tests_run, q("test"))
@@ -816,6 +891,26 @@ def main() -> int:
         print(f"ERROR: failed to parse execution_packet: {exc}", file=sys.stderr)
         return 2
 
+    try:
+        baseline_bundle = load_required_baseline_context(packet, runtime_root)
+    except RuntimeError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    if baseline_bundle is not None:
+        append_context_access_log(
+            runtime_root=runtime_root,
+            task_id=packet.task_id,
+            actor="verifier",
+            access_type="baseline_hit",
+            reason="eager-load pinned baseline context before verification",
+            packet_doc_id=packet.doc_id,
+            baseline_doc_id=baseline_bundle.doc_id,
+            packet_generation=packet.packet_generation,
+            context_generation=packet.context_generation,
+            file_path=str(baseline_bundle.path),
+        )
+
     results_dir = runtime_root / "verification" / "results"
     logs_dir = runtime_root / "verification" / "logs"
     ensure_dir(results_dir)
@@ -878,9 +973,15 @@ def main() -> int:
     doc_id = make_result_doc_id(packet.task_id, packet.sequence)
 
     context_files: List[Path] = [packet_path]
+    extra_refs: List[Tuple[str, str, str]] = []
+    if baseline_bundle is not None:
+        extra_refs.append(
+            (baseline_bundle.doc_id, "exploration_result", "baseline_context")
+        )
+        context_files.append(baseline_bundle.path)
 
     logs_ref = shared_log_refs[-1] if shared_log_refs else None
-    extra_refs, refresh_context_files, refresh_notes = maybe_request_context_refresh(
+    refresh_refs, refresh_context_files, refresh_notes = maybe_request_context_refresh(
         repo_root=repo_root,
         packet=packet,
         verdict=verdict,
@@ -891,6 +992,7 @@ def main() -> int:
     )
     if refresh_notes:
         verdict_reason = verdict_reason + " " + " ".join(refresh_notes)
+    extra_refs.extend(refresh_refs)
     context_files.extend(refresh_context_files)
     result_tree = build_verification_result(
         packet=packet,

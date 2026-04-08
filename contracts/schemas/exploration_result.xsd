@@ -46,12 +46,16 @@
 
   <xs:complexType name="ExplorationResultPayloadType">
     <xs:sequence>
-      <xs:element name="packet_ref" type="ReferenceItemType"/>
+      <xs:element name="packet_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="task_id" type="TaskIdType"/>
       <xs:element name="exploration_kind" type="ExplorationKindType"/>
       <xs:element name="exploration_scope" type="ExplorationScopeType" minOccurs="0"/>
       <xs:element name="actionability" type="ExplorationActionabilityType" minOccurs="0"/>
       <xs:element name="target_root" type="NonEmptyStringType"/>
+      <xs:element name="context_producer" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="context_mode" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="search_scope" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="budget_used" type="NonEmptyStringType" minOccurs="0"/>
       <xs:element name="providers" type="ExplorationProvidersType"/>
       <xs:element name="focus_questions" type="StringListType"/>
       <xs:element name="key_findings" type="StringListType"/>
@@ -59,6 +63,12 @@
       <xs:element name="open_questions" type="StringListType" minOccurs="0"/>
       <xs:element name="recommended_next_actions" type="StringListType"/>
       <xs:element name="cache_refs" type="StringListType" minOccurs="0"/>
+      <xs:element name="candidate_files" type="PathListType" minOccurs="0"/>
+      <xs:element name="target_files" type="PathListType" minOccurs="0"/>
+      <xs:element name="usability_state" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="confidence" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="evidence_count" type="xs:nonNegativeInteger" minOccurs="0"/>
+      <xs:element name="open_questions_count" type="xs:nonNegativeInteger" minOccurs="0"/>
       <xs:element name="completion_state" type="CompletionStateType"/>
       <xs:element name="blocked_reason" type="NonEmptyStringType" minOccurs="0"/>
       <xs:element name="escalation_requested" type="xs:boolean"/>

@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from runtime_bootstrap import bootstrap_runtime
+from context_contract import resolve_baseline_bundle
+from packet_builder import build_routing_signals, choose_execution_shape, read_intake
 
 try:
     from lxml import etree
@@ -248,6 +250,7 @@ def main() -> int:
     intake_path = args.intake.resolve()
 
     packet_builder = repo_root / "scripts" / "packet_builder.py"
+    contextscout = repo_root / "scripts" / "contextscout_runner.py"
     coordinator = repo_root / "scripts" / "orchestration_coordinator.py"
     implementer = repo_root / "scripts" / "implementer_runner.py"
     explorer = repo_root / "scripts" / "explorer_runner.py"
@@ -255,6 +258,7 @@ def main() -> int:
     status_report = repo_root / "scripts" / "task_status_report.py"
     cleanup = repo_root / "scripts" / "cleanup_task_runtime.py"
     harness = repo_root / "scripts" / "harness_validator.py"
+    trace_script = repo_root / "scripts" / "trace_appender.py"
 
     if not intake_path.exists():
         print(f"ERROR: intake file not found: {intake_path}", file=sys.stderr)
@@ -288,6 +292,46 @@ def main() -> int:
         if cleanup_proc.returncode != 0:
             return cleanup_proc.returncode
 
+    try:
+        preflight_intake = read_intake(intake_path)
+        preflight_policy = choose_execution_shape(
+            preflight_intake,
+            build_routing_signals(preflight_intake),
+        )
+        preflight_write_intent = preflight_policy.write_intent
+    except Exception as exc:
+        print(f"ERROR: failed to compute preflight policy: {exc}", file=sys.stderr)
+        return 2
+
+    if preflight_write_intent:
+        scout_cmd = [
+            sys.executable,
+            str(contextscout),
+            "--intake",
+            str(intake_path),
+            "--runtime-root",
+            str(runtime_root),
+            "--workspace-root",
+            str(workspace_root),
+        ]
+        if args.skip_validate:
+            scout_cmd.append("--skip-validate")
+        scout_proc = run_command(scout_cmd, "contextscout_runner")
+        if scout_proc.returncode != 0:
+            return scout_proc.returncode
+        baseline_bundle = resolve_baseline_bundle(runtime_root, task_id=task_id)
+        if baseline_bundle is None:
+            print(
+                "ERROR: baseline exploration_result missing after contextscout_runner",
+                file=sys.stderr,
+            )
+            return 1
+        if baseline_bundle.usability_state == "empty":
+            print(
+                "[task_executor] baseline_context usability_state=empty; continuing with packet-pinned contract and downstream lane biasing",
+                file=sys.stderr,
+            )
+
     packet_cmd = [
         sys.executable,
         str(packet_builder),
@@ -301,6 +345,36 @@ def main() -> int:
     packet_proc = run_command(packet_cmd, "packet_builder")
     if packet_proc.returncode != 0:
         return packet_proc.returncode
+
+    packet_path = latest_task_artifact(runtime_root, task_id, "execution_packet")
+    if packet_path is None:
+        print("ERROR: execution_packet missing after packet builder", file=sys.stderr)
+        return 1
+    if trace_script.exists():
+        trace_cmd = [
+            sys.executable,
+            str(trace_script),
+            "--task-id",
+            task_id,
+            "--event-type",
+            "packet_finalized",
+            "--actor",
+            "manager",
+            "--message",
+            "Final execution packet was issued after baseline context pinning.",
+            "--runtime-root",
+            str(runtime_root),
+            "--artifact-file",
+            str(packet_path),
+        ]
+        trace_proc = subprocess.run(
+            trace_cmd, check=False, capture_output=True, text=True
+        )
+        if trace_proc.returncode != 0:
+            print(
+                trace_proc.stderr.strip() or trace_proc.stdout.strip(), file=sys.stderr
+            )
+            return 1
 
     coord_cmd = [
         sys.executable,
@@ -317,11 +391,6 @@ def main() -> int:
     coord_proc = run_command(coord_cmd, "coordinator")
     if coord_proc.returncode != 0:
         return coord_proc.returncode
-
-    packet_path = latest_task_artifact(runtime_root, task_id, "execution_packet")
-    if packet_path is None:
-        print("ERROR: execution_packet missing after packet builder", file=sys.stderr)
-        return 1
 
     try:
         write_intent = packet_write_intent(packet_path)

@@ -70,6 +70,13 @@
 
   <xs:complexType name="VerificationResultPayloadType">
     <xs:sequence>
+      <xs:element name="packet_doc_id" type="DocIdType" minOccurs="0"/>
+      <xs:element name="packet_sha256" type="Sha256Type" minOccurs="0"/>
+      <xs:element name="baseline_doc_id" type="DocIdType" minOccurs="0"/>
+      <xs:element name="packet_generation" type="xs:nonNegativeInteger" minOccurs="0"/>
+      <xs:element name="context_generation" type="xs:nonNegativeInteger" minOccurs="0"/>
+      <xs:element name="context_producer" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="context_mode" type="NonEmptyStringType" minOccurs="0"/>
       <xs:element name="tests_run" type="VerificationTestsRunType"/>
       <xs:element name="outcomes" type="VerificationOutcomesType"/>
       <xs:element name="proof_coverage" type="ProofCoverageType" minOccurs="0"/>

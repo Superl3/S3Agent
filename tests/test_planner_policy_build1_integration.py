@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from lxml import etree
@@ -86,6 +87,8 @@ def _write_exploration_result(
     findings: list[str],
     open_questions: list[str],
     evidence_paths: list[str],
+    exploration_scope: str = "baseline",
+    actionability: str = "manager_reusable",
 ) -> None:
     root = etree.Element(q("pxml"), nsmap={None: NS_URI})
 
@@ -112,7 +115,15 @@ def _write_exploration_result(
     etree.SubElement(packet_ref, q("relation")).text = "exploration_target"
     etree.SubElement(payload, q("task_id")).text = task_id
     etree.SubElement(payload, q("exploration_kind")).text = "investigation"
+    etree.SubElement(payload, q("exploration_scope")).text = exploration_scope
+    etree.SubElement(payload, q("actionability")).text = actionability
     etree.SubElement(payload, q("target_root")).text = "C:/tmp/workspace"
+    etree.SubElement(payload, q("context_producer")).text = "test_seed"
+    etree.SubElement(payload, q("context_mode")).text = (
+        "focused_refresh"
+        if exploration_scope == "focused_refresh"
+        else "baseline_provisioning"
+    )
     providers = etree.SubElement(payload, q("providers"))
     provider = etree.SubElement(providers, q("provider"))
     etree.SubElement(provider, q("name")).text = "text_search"
@@ -136,6 +147,16 @@ def _write_exploration_result(
             etree.SubElement(open_node, q("item")).text = item
     next_actions = etree.SubElement(payload, q("recommended_next_actions"))
     etree.SubElement(next_actions, q("item")).text = "Inspect seeded evidence first."
+    candidate_files = etree.SubElement(payload, q("candidate_files"))
+    for item in evidence_paths:
+        etree.SubElement(candidate_files, q("item")).text = item
+    target_files = etree.SubElement(payload, q("target_files"))
+    for item in evidence_paths:
+        etree.SubElement(target_files, q("item")).text = item
+    etree.SubElement(payload, q("usability_state")).text = "usable"
+    etree.SubElement(payload, q("confidence")).text = "high"
+    etree.SubElement(payload, q("evidence_count")).text = str(len(evidence_paths))
+    etree.SubElement(payload, q("open_questions_count")).text = str(len(open_questions))
     etree.SubElement(payload, q("completion_state")).text = "completed_and_verified"
     etree.SubElement(payload, q("escalation_requested")).text = "false"
     notes = etree.SubElement(payload, q("notes"))
@@ -160,6 +181,30 @@ def _write_exploration_result(
         xml_declaration=True,
         pretty_print=True,
     )
+    if exploration_scope == "baseline":
+        etree.ElementTree(root).write(
+            str(latest_dir / f"{task_id}_baseline_exploration_result.pxml"),
+            encoding="UTF-8",
+            xml_declaration=True,
+            pretty_print=True,
+        )
+        index_path = runtime_root / "index" / "tasks" / f"{task_id}.json"
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        index_payload = {"task_id": task_id, "current_manager_baseline_doc_id": doc_id}
+        index_payload["latest_baseline_exploration_result"] = (
+            f"exploration/results/{doc_id}.pxml"
+        )
+        index_path.write_text(
+            json.dumps(index_payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    elif exploration_scope == "focused_refresh":
+        etree.ElementTree(root).write(
+            str(latest_dir / f"{task_id}_focused_exploration_result.pxml"),
+            encoding="UTF-8",
+            xml_declaration=True,
+            pretty_print=True,
+        )
 
 
 def _run_packet_builder(
@@ -720,3 +765,51 @@ def test_prior_exploration_result_informs_packet_and_planner_sidecar(
     )
     assert any("src/auth/router.py" in item for item in steps)
     assert any("state ownership" in item.lower() for item in open_questions)
+
+
+def test_planner_sidecar_uses_packet_pinned_baseline_not_latest_focused_alias(
+    tmp_path: Path, run_python
+) -> None:
+    task_id = "task_packet_pinned_planner_001"
+    intake = tmp_path / "intake" / f"{task_id}.pxml"
+    runtime_root = tmp_path / "runtime"
+
+    _write_exploration_result(
+        runtime_root,
+        task_id=task_id,
+        doc_id="doc_exploration_seed_baseline_0001",
+        findings=["Baseline says src/auth/router.py owns routing."],
+        open_questions=["Confirm auth store ownership."],
+        evidence_paths=["src/auth/router.py"],
+        exploration_scope="baseline",
+    )
+    _write_task_intake(
+        intake,
+        task_id=task_id,
+        task_type="feature",
+        risk_hint="medium",
+        request_text="Unclear auth routing boundary needs planning.",
+        requested_outcome="Implement bounded auth routing improvement.",
+    )
+    _run_packet_builder(run_python, intake_path=intake, runtime_root=runtime_root)
+
+    _write_exploration_result(
+        runtime_root,
+        task_id=task_id,
+        doc_id="doc_exploration_focused_0002",
+        findings=["Focused alias says src/other/file.py is latest."],
+        open_questions=[],
+        evidence_paths=["src/other/file.py"],
+        exploration_scope="focused_refresh",
+        actionability="advisory_only",
+    )
+
+    _run_coordinator(run_python, task_id=task_id, runtime_root=runtime_root)
+    planner_tree = etree.parse(str(_latest_sidecar(runtime_root, "planner")))
+    assert (
+        _text(planner_tree, "/p:pxml/p:payload/p:baseline_doc_id")
+        == "doc_exploration_seed_baseline_0001"
+    )
+    planner_ref_ids = _items(planner_tree, "/p:pxml/p:refs/p:ref/p:doc_id/text()")
+    assert "doc_exploration_seed_baseline_0001" in planner_ref_ids
+    assert "doc_exploration_focused_0002" not in planner_ref_ids

@@ -304,6 +304,8 @@ class RepoScoutResult:
     exploration_scope: str
     actionability: str
     target_root: str
+    context_producer: str
+    context_mode: str
     providers: List[ProviderUsage]
     focus_questions: List[str]
     key_findings: List[str]
@@ -311,6 +313,14 @@ class RepoScoutResult:
     open_questions: List[str]
     recommended_next_actions: List[str]
     cache_refs: List[str]
+    candidate_files: List[str]
+    target_files: List[str]
+    search_scope: str
+    budget_used: str
+    usability_state: str
+    confidence: str
+    evidence_count: int
+    open_questions_count: int
     completion_state: str
     blocked_reason: Optional[str]
     escalation_requested: bool
@@ -1511,11 +1521,56 @@ def run_repo_scout(
         + [text_provider.notes, serena_provider.notes, context7_provider.notes]
     )
 
+    candidate_files = []
+    seen_candidate_paths: set[str] = set()
+    for item in evidence_items:
+        if item.path in seen_candidate_paths:
+            continue
+        seen_candidate_paths.add(item.path)
+        candidate_files.append(item.path)
+    target_files = normalize_items(list(scout_localization) + list(normalized_hints))
+    target_files = [
+        item.split(":", 1)[0] if ":" in item else item for item in target_files
+    ]
+    target_files = normalize_items(target_files)
+    evidence_count = len(evidence_items)
+    open_questions_count = len(open_questions)
+    if evidence_count > 0 and open_questions_count == 0:
+        usability_state = "usable"
+        confidence = "high"
+    elif evidence_count > 0:
+        usability_state = "weak"
+        confidence = "medium"
+    else:
+        usability_state = "empty"
+        confidence = "low"
+    search_scope = (
+        f"execution_shape={execution_shape};localization_targets={len(localization_targets)};"
+        f"target_hints={len(normalized_hints)}"
+    )
+    provider_budget = [
+        provider.name
+        for provider in [serena_provider, text_provider, context7_provider]
+        if provider.used
+    ]
+    budget_used = (
+        "providers="
+        + ",".join(provider_budget)
+        + ";text_search_file_cap=1400;max_evidence=12"
+    )
+    context_mode = (
+        "focused_refresh"
+        if exploration_scope == "focused_refresh"
+        else "baseline_provisioning"
+    )
+
     return RepoScoutResult(
         exploration_kind=exploration_kind,
         exploration_scope=exploration_scope,
         actionability=actionability,
         target_root=str(workspace_root),
+        context_producer="repo_scout",
+        context_mode=context_mode,
         providers=[serena_provider, text_provider, context7_provider],
         focus_questions=focus_questions,
         key_findings=findings,
@@ -1523,6 +1578,14 @@ def run_repo_scout(
         open_questions=open_questions,
         recommended_next_actions=recommended_next_actions,
         cache_refs=cache_refs,
+        candidate_files=candidate_files,
+        target_files=target_files,
+        search_scope=search_scope,
+        budget_used=budget_used,
+        usability_state=usability_state,
+        confidence=confidence,
+        evidence_count=evidence_count,
+        open_questions_count=open_questions_count,
         completion_state=completion_state,
         blocked_reason=None,
         escalation_requested=False,

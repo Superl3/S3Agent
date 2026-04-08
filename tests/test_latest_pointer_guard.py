@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from lxml import etree
+
 
 def _write_feature_intake(path: Path, task_id: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -108,6 +110,100 @@ def _write_verification_packet(path: Path, task_id: str) -> None:
 </pxml>
 """,
         encoding="utf-8",
+    )
+
+
+def _seed_baseline_exploration_result(
+    runtime_root: Path, *, task_id: str, packet_doc_id: str, doc_id: str
+) -> None:
+    result_path = runtime_root / "exploration" / "results" / f"{doc_id}.pxml"
+    result_path.parent.mkdir(parents=True, exist_ok=True)
+    content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<pxml xmlns="urn:pxml:v1">
+  <meta>
+    <doc_id>{doc_id}</doc_id>
+    <doc_class>exploration_result</doc_class>
+    <schema_version>1.0.0</schema_version>
+    <task_id>{task_id}</task_id>
+    <run_id>run_{task_id[5:]}</run_id>
+    <sequence>4</sequence>
+    <writer_agent>explorer</writer_agent>
+    <created_at>2026-03-23T00:00:04Z</created_at>
+  </meta>
+  <refs>
+    <ref>
+      <doc_id>{packet_doc_id}</doc_id>
+      <doc_class>execution_packet</doc_class>
+      <relation>exploration_target</relation>
+    </ref>
+  </refs>
+  <payload>
+    <packet_ref>
+      <doc_id>{packet_doc_id}</doc_id>
+      <doc_class>execution_packet</doc_class>
+      <relation>exploration_target</relation>
+    </packet_ref>
+    <task_id>{task_id}</task_id>
+    <exploration_kind>investigation</exploration_kind>
+    <exploration_scope>baseline</exploration_scope>
+    <actionability>manager_reusable</actionability>
+    <target_root>C:/tmp/workspace</target_root>
+    <context_producer>test_seed</context_producer>
+    <context_mode>baseline_provisioning</context_mode>
+    <providers>
+      <provider>
+        <name>text_search</name>
+        <used>true</used>
+        <success>true</success>
+        <notes>seeded baseline</notes>
+      </provider>
+    </providers>
+    <focus_questions>
+      <item>Which file is relevant?</item>
+    </focus_questions>
+    <key_findings>
+      <item>Relevant file: src/new_feature_module.py</item>
+    </key_findings>
+    <evidence_items>
+      <evidence>
+        <source_provider>text_search</source_provider>
+        <path>src/new_feature_module.py</path>
+        <summary>seeded evidence</summary>
+      </evidence>
+    </evidence_items>
+    <recommended_next_actions>
+      <item>Inspect seeded evidence.</item>
+    </recommended_next_actions>
+    <candidate_files>
+      <item>src/new_feature_module.py</item>
+    </candidate_files>
+    <target_files>
+      <item>src/new_feature_module.py</item>
+    </target_files>
+    <usability_state>usable</usability_state>
+    <confidence>high</confidence>
+    <evidence_count>1</evidence_count>
+    <open_questions_count>0</open_questions_count>
+    <completion_state>completed_and_verified</completion_state>
+    <escalation_requested>false</escalation_requested>
+    <notes>
+      <item>seeded baseline</item>
+    </notes>
+  </payload>
+  <integrity>
+    <content_sha256>{"3" * 64}</content_sha256>
+    <parent_sha256>{"4" * 64}</parent_sha256>
+  </integrity>
+</pxml>
+"""
+    result_path.write_text(content, encoding="utf-8")
+    latest_dir = runtime_root / "latest"
+    latest_dir.mkdir(parents=True, exist_ok=True)
+    (latest_dir / f"{task_id}_exploration_result.pxml").write_text(
+        content, encoding="utf-8"
+    )
+    (latest_dir / f"{task_id}_baseline_exploration_result.pxml").write_text(
+        content, encoding="utf-8"
     )
 
 
@@ -324,6 +420,27 @@ def test_implementer_validation_failure_does_not_promote_latest(
         "--skip-validate",
     )
     assert build.returncode == 0, build.stdout + build.stderr
+    packet_tree = etree.parse(
+        str(runtime_root / "latest" / f"{task_id}_execution_packet.pxml")
+    )
+    packet_doc_id = packet_tree.xpath(
+        "string(/p:pxml/p:meta/p:doc_id)", namespaces={"p": "urn:pxml:v1"}
+    )
+    _seed_baseline_exploration_result(
+        runtime_root,
+        task_id=task_id,
+        packet_doc_id=packet_doc_id,
+        doc_id="doc_exploration_seed_latest_guard_0001",
+    )
+    rebuild = run_python(
+        "scripts/packet_builder.py",
+        "--intake",
+        intake_path,
+        "--runtime-root",
+        runtime_root,
+        "--skip-validate",
+    )
+    assert rebuild.returncode == 0, rebuild.stdout + rebuild.stderr
 
     task_index_path = _seed_latest_guard(
         runtime_root,

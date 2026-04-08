@@ -26,6 +26,7 @@ except ModuleNotFoundError:
     raise SystemExit(3)
 
 from repo_scout import RepoScoutResult, run_repo_scout
+from context_contract import load_exploration_bundle, promote_exploration_result
 
 
 NS = "urn:pxml:v1"
@@ -330,38 +331,18 @@ def write_xml(tree: etree._ElementTree, path: Path) -> None:
 
 
 def update_indexes(
-    runtime_root: Path, task_id: str, doc_id: str, result_path: Path
+    runtime_root: Path,
+    task_id: str,
+    doc_id: str,
+    result_path: Path,
+    exploration_scope: str,
 ) -> None:
-    tasks_dir = runtime_root / "index" / "tasks"
-    artifacts_dir = runtime_root / "index" / "artifacts"
-    ensure_dir(tasks_dir)
-    ensure_dir(artifacts_dir)
-
-    task_index_path = tasks_dir / f"{sanitize(task_id)}.json"
-    current: Dict[str, object] = {}
-    if task_index_path.exists():
-        try:
-            current = json.loads(task_index_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            current = {}
-
-    current["task_id"] = task_id
-    current["latest_exploration_result"] = str(result_path.relative_to(runtime_root))
-    current["updated_at"] = now_iso()
-    task_index_path.write_text(
-        json.dumps(current, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-
-    artifact_index = {
-        "doc_id": doc_id,
-        "doc_class": "exploration_result",
-        "task_id": task_id,
-        "path": str(result_path.relative_to(runtime_root)),
-        "updated_at": now_iso(),
-    }
-    (artifacts_dir / f"{doc_id}.json").write_text(
-        json.dumps(artifact_index, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+    promote_exploration_result(
+        runtime_root=runtime_root,
+        task_id=task_id,
+        doc_id=doc_id,
+        result_path=result_path,
+        exploration_scope=exploration_scope,
     )
 
 
@@ -482,6 +463,12 @@ def build_exploration_result(
     etree.SubElement(payload, q("exploration_scope")).text = scout.exploration_scope
     etree.SubElement(payload, q("actionability")).text = scout.actionability
     etree.SubElement(payload, q("target_root")).text = scout.target_root
+    etree.SubElement(payload, q("context_producer")).text = "explorer_runner"
+    etree.SubElement(payload, q("context_mode")).text = (
+        "focused_refresh" if request_info is not None else "read_only_exploration"
+    )
+    etree.SubElement(payload, q("search_scope")).text = scout.search_scope
+    etree.SubElement(payload, q("budget_used")).text = scout.budget_used
 
     providers_node = etree.SubElement(payload, q("providers"))
     for provider in scout.providers:
@@ -529,6 +516,23 @@ def build_exploration_result(
         cache_node = etree.SubElement(payload, q("cache_refs"))
         for item in scout.cache_refs:
             etree.SubElement(cache_node, q("item")).text = item
+
+    if scout.candidate_files:
+        candidate_files = etree.SubElement(payload, q("candidate_files"))
+        for item in scout.candidate_files:
+            etree.SubElement(candidate_files, q("item")).text = item
+
+    if scout.target_files:
+        target_files = etree.SubElement(payload, q("target_files"))
+        for item in scout.target_files:
+            etree.SubElement(target_files, q("item")).text = item
+
+    etree.SubElement(payload, q("usability_state")).text = scout.usability_state
+    etree.SubElement(payload, q("confidence")).text = scout.confidence
+    etree.SubElement(payload, q("evidence_count")).text = str(scout.evidence_count)
+    etree.SubElement(payload, q("open_questions_count")).text = str(
+        scout.open_questions_count
+    )
 
     etree.SubElement(payload, q("completion_state")).text = scout.completion_state
     if scout.blocked_reason:
@@ -711,6 +715,41 @@ def main() -> int:
                 else False
             ),
         )
+        if request_info is not None and parent_exploration is not None:
+            parent_bundle = load_exploration_bundle(parent_exploration.path)
+            parent_findings = set(parent_bundle.key_findings)
+            parent_evidence = set(parent_bundle.evidence_paths)
+            parent_questions = set(parent_bundle.open_questions)
+            scout.key_findings = [
+                item for item in scout.key_findings if item not in parent_findings
+            ]
+            scout.evidence_items = [
+                item
+                for item in scout.evidence_items
+                if item.path not in parent_evidence
+            ]
+            scout.open_questions = [
+                item for item in scout.open_questions if item not in parent_questions
+            ]
+            scout.candidate_files = [
+                item
+                for item in scout.candidate_files
+                if item not in parent_bundle.candidate_files
+                and item not in parent_evidence
+            ]
+            scout.evidence_count = len(scout.evidence_items)
+            scout.open_questions_count = len(scout.open_questions)
+            if scout.evidence_count == 0 and scout.open_questions_count == 0:
+                scout.usability_state = "empty"
+                scout.confidence = "low"
+                scout.actionability = "advisory_only"
+                scout.recommended_next_actions.insert(
+                    0,
+                    "Focused refresh produced no net-new delta beyond the pinned baseline context.",
+                )
+            elif scout.evidence_count == 0:
+                scout.usability_state = "weak"
+                scout.confidence = "low"
     except Exception as exc:
         try:
             append_trace_event(
@@ -778,12 +817,13 @@ def main() -> int:
     else:
         write_xml(result_tree, result_path)
 
-    latest_path = (
-        runtime_root / "latest" / f"{sanitize(packet.task_id)}_exploration_result.pxml"
+    update_indexes(
+        runtime_root,
+        packet.task_id,
+        doc_id,
+        result_path,
+        scout.exploration_scope,
     )
-    ensure_dir(latest_path.parent)
-    shutil.copy2(publish_source, latest_path)
-    update_indexes(runtime_root, packet.task_id, doc_id, result_path)
 
     try:
         append_trace_event(

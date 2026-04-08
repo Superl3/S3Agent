@@ -82,6 +82,22 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="ContextPolicyType">
+    <xs:sequence>
+      <xs:element name="baseline_required" type="xs:boolean"/>
+      <xs:element name="baseline_doc_id" type="DocIdType" minOccurs="0"/>
+      <xs:element name="baseline_sha256" type="Sha256Type" minOccurs="0"/>
+      <xs:element name="baseline_scope" type="ExplorationScopeType" minOccurs="0"/>
+      <xs:element name="context_lock_sha256" type="Sha256Type" minOccurs="0"/>
+      <xs:element name="packet_generation" type="xs:nonNegativeInteger"/>
+      <xs:element name="context_generation" type="xs:nonNegativeInteger"/>
+      <xs:element name="context_producer" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="context_mode" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="baseline_usability_state" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="baseline_confidence" type="NonEmptyStringType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="ExecutionPacketPayloadType">
     <xs:sequence>
       <xs:element name="task_summary" type="NonEmptyStringType"/>
@@ -102,6 +118,7 @@
       <xs:element name="escalation_triggers" type="StringListType"/>
       <xs:element name="stop_conditions" type="StringListType"/>
       <xs:element name="localization_targets" type="PathListType" minOccurs="0"/>
+      <xs:element name="context_policy" type="ContextPolicyType" minOccurs="0"/>
       <xs:element name="planner_notes_ref" type="ReferenceItemType" minOccurs="0"/>
       <xs:element name="exploration_notes_ref" type="ReferenceItemType" minOccurs="0"/>
     </xs:sequence>

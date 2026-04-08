@@ -245,7 +245,10 @@
   <xs:simpleType name="TraceEventType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="route"/>
+      <xs:enumeration value="baseline_context_start"/>
+      <xs:enumeration value="baseline_context_done"/>
       <xs:enumeration value="packet_issued"/>
+      <xs:enumeration value="packet_finalized"/>
       <xs:enumeration value="implement_start"/>
       <xs:enumeration value="patch_applied"/>
       <xs:enumeration value="blocked"/>

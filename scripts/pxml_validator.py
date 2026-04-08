@@ -274,7 +274,7 @@ def semantic_checks(
     elif doc.doc_class == "execution_packet":
         issues.extend(_semantic_execution_packet(doc, refs, context_index, strict_refs))
     elif doc.doc_class == "plan_sidecar":
-        issues.extend(_semantic_plan_sidecar(doc, refs))
+        issues.extend(_semantic_plan_sidecar(doc, refs, context_index))
     elif doc.doc_class == "implementer_result":
         issues.extend(_semantic_implementer_result(doc, refs, context_index))
     elif doc.doc_class == "verification_result":
@@ -498,6 +498,44 @@ def _semantic_execution_packet(
             ValidationIssue(
                 code="E703_PACKET_EXPLORATION_REF_CLASS_REQUIRED",
                 message="exploration_notes_ref doc_class must be exploration_result when present.",
+            )
+        )
+
+    baseline_required = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:context_policy/p:baseline_required"
+    )
+    baseline_doc_id = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:context_policy/p:baseline_doc_id"
+    )
+    exploration_ref_doc_id = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:exploration_notes_ref/p:doc_id"
+    )
+    exploration_refs = [item for item in refs if item[1] == "exploration_result"]
+    if baseline_required == "true" and not baseline_doc_id:
+        issues.append(
+            ValidationIssue(
+                code="E704_PACKET_BASELINE_DOC_REQUIRED",
+                message="baseline_required execution_packet must include context_policy baseline_doc_id.",
+            )
+        )
+    if (
+        baseline_doc_id
+        and exploration_ref_doc_id
+        and baseline_doc_id != exploration_ref_doc_id
+    ):
+        issues.append(
+            ValidationIssue(
+                code="E705_PACKET_BASELINE_REF_MISMATCH",
+                message="context_policy baseline_doc_id must match exploration_notes_ref doc_id when both are present.",
+            )
+        )
+    if baseline_doc_id and not any(
+        item[0] == baseline_doc_id for item in exploration_refs
+    ):
+        issues.append(
+            ValidationIssue(
+                code="E706_PACKET_BASELINE_TOP_REF_REQUIRED",
+                message="execution_packet baseline_doc_id must also appear in refs as exploration_result.",
             )
         )
 
@@ -878,9 +916,34 @@ def _semantic_exploration_result(
         )
 
     packet_refs = [item for item in refs if item[1] == "execution_packet"]
+    intake_refs = [item for item in refs if item[1] == "task_intake"]
     request_refs = [item for item in refs if item[2] == "request"]
     parent_refs = [item for item in refs if item[2] == "parent_exploration"]
-    if len(packet_refs) != 1:
+    exploration_scope = xpath_text(doc.tree, "/p:pxml/p:payload/p:exploration_scope")
+    if exploration_scope == "focused_refresh":
+        if len(packet_refs) != 1:
+            issues.append(
+                ValidationIssue(
+                    code="E791_EXPLORATION_RESULT_PACKET_REF_REQUIRED",
+                    message="focused exploration_result must reference exactly one execution_packet artifact.",
+                )
+            )
+    elif exploration_scope == "baseline":
+        if len(packet_refs) > 1:
+            issues.append(
+                ValidationIssue(
+                    code="E791_EXPLORATION_RESULT_PACKET_REF_REQUIRED",
+                    message="baseline exploration_result may reference at most one execution_packet artifact.",
+                )
+            )
+        if len(packet_refs) == 0 and len(intake_refs) != 1:
+            issues.append(
+                ValidationIssue(
+                    code="E803_EXPLORATION_RESULT_BASELINE_SOURCE_REQUIRED",
+                    message="baseline exploration_result without packet_ref must reference exactly one task_intake artifact.",
+                )
+            )
+    elif len(packet_refs) != 1:
         issues.append(
             ValidationIssue(
                 code="E791_EXPLORATION_RESULT_PACKET_REF_REQUIRED",
@@ -892,7 +955,7 @@ def _semantic_exploration_result(
     payload_packet_class = xpath_text(
         doc.tree, "/p:pxml/p:payload/p:packet_ref/p:doc_class"
     )
-    if payload_packet_class != "execution_packet":
+    if payload_packet_class is not None and payload_packet_class != "execution_packet":
         issues.append(
             ValidationIssue(
                 code="E792_EXPLORATION_RESULT_PACKET_REF_CLASS_REQUIRED",
@@ -906,8 +969,6 @@ def _semantic_exploration_result(
                 message="exploration_result payload packet_ref must match top-level execution_packet ref.",
             )
         )
-
-    exploration_scope = xpath_text(doc.tree, "/p:pxml/p:payload/p:exploration_scope")
     actionability = xpath_text(doc.tree, "/p:pxml/p:payload/p:actionability")
     if exploration_scope == "focused_refresh" and len(request_refs) != 1:
         issues.append(
@@ -3969,6 +4030,19 @@ def _semantic_implementer_result(
         doc.tree, "/p:pxml/p:payload/p:packet_ref/p:doc_class"
     )
     payload_task_id = xpath_text(doc.tree, "/p:pxml/p:payload/p:task_id")
+    payload_packet_doc_id_field = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:packet_doc_id"
+    )
+    payload_packet_sha = xpath_text(doc.tree, "/p:pxml/p:payload/p:packet_sha256")
+    payload_baseline_doc_id = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:baseline_doc_id"
+    )
+    payload_packet_generation = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:packet_generation"
+    )
+    payload_context_generation = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:context_generation"
+    )
     meta_task_id = xpath_text(doc.tree, "/p:pxml/p:meta/p:task_id")
     patch_mode_used = xpath_text(doc.tree, "/p:pxml/p:payload/p:patch_mode_used")
     status = xpath_text(doc.tree, "/p:pxml/p:payload/p:result_status")
@@ -4070,8 +4144,26 @@ def _semantic_implementer_result(
     if packet_doc is None or packet_doc.tree is None:
         return issues
 
+    if payload_packet_doc_id_field and payload_packet_doc_id_field != packet_refs[0][0]:
+        issues.append(
+            ValidationIssue(
+                code="E760_IMPL_PACKET_DOC_MISMATCH",
+                message="implementer_result payload packet_doc_id must match refs execution_packet doc_id.",
+            )
+        )
+
     packet_patch_mode = xpath_text(
         packet_doc.tree, "/p:pxml/p:payload/p:patch_constraints/p:patch_mode"
+    )
+    packet_sha = xpath_text(packet_doc.tree, "/p:pxml/p:integrity/p:content_sha256")
+    packet_baseline_doc_id = xpath_text(
+        packet_doc.tree, "/p:pxml/p:payload/p:context_policy/p:baseline_doc_id"
+    )
+    packet_generation = xpath_text(
+        packet_doc.tree, "/p:pxml/p:payload/p:context_policy/p:packet_generation"
+    )
+    context_generation = xpath_text(
+        packet_doc.tree, "/p:pxml/p:payload/p:context_policy/p:context_generation"
     )
     if patch_mode_used is not None and packet_patch_mode is not None:
         if patch_mode_used != packet_patch_mode:
@@ -4081,6 +4173,34 @@ def _semantic_implementer_result(
                     message="implementer_result patch_mode_used must match execution_packet patch_constraints.patch_mode.",
                 )
             )
+    if packet_sha and payload_packet_sha and packet_sha != payload_packet_sha:
+        issues.append(
+            ValidationIssue(
+                code="E761_IMPL_PACKET_SHA_MISMATCH",
+                message="implementer_result payload packet_sha256 must match execution_packet integrity content_sha256.",
+            )
+        )
+    if packet_baseline_doc_id != payload_baseline_doc_id:
+        issues.append(
+            ValidationIssue(
+                code="E762_IMPL_BASELINE_DOC_MISMATCH",
+                message="implementer_result payload baseline_doc_id must match execution_packet context_policy baseline_doc_id.",
+            )
+        )
+    if packet_generation != payload_packet_generation:
+        issues.append(
+            ValidationIssue(
+                code="E763_IMPL_PACKET_GENERATION_MISMATCH",
+                message="implementer_result packet_generation must match execution_packet context_policy packet_generation.",
+            )
+        )
+    if context_generation != payload_context_generation:
+        issues.append(
+            ValidationIssue(
+                code="E764_IMPL_CONTEXT_GENERATION_MISMATCH",
+                message="implementer_result context_generation must match execution_packet context_policy context_generation.",
+            )
+        )
 
     expected_nodes = packet_doc.tree.xpath(
         "/p:pxml/p:payload/p:expected_files/p:file", namespaces=NS
@@ -4489,13 +4609,16 @@ def _semantic_execution_trace(doc: ParsedDoc) -> List[ValidationIssue]:
 
 
 def _semantic_plan_sidecar(
-    doc: ParsedDoc, refs: List[Tuple[str, Optional[str], Optional[str]]]
+    doc: ParsedDoc,
+    refs: List[Tuple[str, Optional[str], Optional[str]]],
+    context_index: Dict[str, ParsedDoc],
 ) -> List[ValidationIssue]:
     assert doc.tree is not None
     issues: List[ValidationIssue] = []
 
     intake_refs = [item for item in refs if item[1] == "task_intake"]
     route_refs = [item for item in refs if item[1] == "manager_route"]
+    packet_refs = [item for item in refs if item[1] == "execution_packet"]
     exploration_refs = [item for item in refs if item[1] == "exploration_result"]
     if len(intake_refs) != 1:
         issues.append(
@@ -4509,6 +4632,13 @@ def _semantic_plan_sidecar(
             ValidationIssue(
                 code="E621_PLAN_REF_MANAGER_ROUTE",
                 message="plan_sidecar must reference exactly one manager_route artifact.",
+            )
+        )
+    if len(packet_refs) != 1:
+        issues.append(
+            ValidationIssue(
+                code="E625_PLAN_REF_PACKET_REQUIRED",
+                message="plan_sidecar must reference exactly one execution_packet artifact.",
             )
         )
     if len(exploration_refs) > 1:
@@ -4540,6 +4670,71 @@ def _semantic_plan_sidecar(
             )
         )
 
+    payload_packet_doc_id = xpath_text(doc.tree, "/p:pxml/p:payload/p:packet_doc_id")
+    payload_packet_sha = xpath_text(doc.tree, "/p:pxml/p:payload/p:packet_sha256")
+    payload_baseline_doc_id = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:baseline_doc_id"
+    )
+    payload_packet_generation = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:packet_generation"
+    )
+    payload_context_generation = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:context_generation"
+    )
+    if packet_refs:
+        packet_doc_id = packet_refs[0][0]
+        if payload_packet_doc_id != packet_doc_id:
+            issues.append(
+                ValidationIssue(
+                    code="E626_PLAN_PACKET_DOC_REQUIRED",
+                    message="plan_sidecar payload packet_doc_id must match refs execution_packet doc_id.",
+                )
+            )
+        packet_doc = context_index.get(packet_doc_id)
+        if packet_doc is not None and packet_doc.tree is not None:
+            packet_sha = xpath_text(
+                packet_doc.tree, "/p:pxml/p:integrity/p:content_sha256"
+            )
+            packet_baseline_doc_id = xpath_text(
+                packet_doc.tree, "/p:pxml/p:payload/p:context_policy/p:baseline_doc_id"
+            )
+            packet_generation = xpath_text(
+                packet_doc.tree,
+                "/p:pxml/p:payload/p:context_policy/p:packet_generation",
+            )
+            context_generation = xpath_text(
+                packet_doc.tree,
+                "/p:pxml/p:payload/p:context_policy/p:context_generation",
+            )
+            if packet_sha and payload_packet_sha and packet_sha != payload_packet_sha:
+                issues.append(
+                    ValidationIssue(
+                        code="E627_PLAN_PACKET_SHA_MISMATCH",
+                        message="plan_sidecar payload packet_sha256 must match execution_packet integrity content_sha256.",
+                    )
+                )
+            if packet_baseline_doc_id != payload_baseline_doc_id:
+                issues.append(
+                    ValidationIssue(
+                        code="E628_PLAN_BASELINE_DOC_MISMATCH",
+                        message="plan_sidecar payload baseline_doc_id must match execution_packet context_policy baseline_doc_id.",
+                    )
+                )
+            if packet_generation != payload_packet_generation:
+                issues.append(
+                    ValidationIssue(
+                        code="E629_PLAN_PACKET_GENERATION_MISMATCH",
+                        message="plan_sidecar packet_generation must match execution_packet context_policy packet_generation.",
+                    )
+                )
+            if context_generation != payload_context_generation:
+                issues.append(
+                    ValidationIssue(
+                        code="E630_PLAN_CONTEXT_GENERATION_MISMATCH",
+                        message="plan_sidecar context_generation must match execution_packet context_policy context_generation.",
+                    )
+                )
+
     return issues
 
 
@@ -4561,6 +4756,17 @@ def _semantic_verification_result(
         )
 
     verify_phase = xpath_text(doc.tree, "/p:pxml/p:payload/p:verify_phase")
+    payload_packet_doc_id = xpath_text(doc.tree, "/p:pxml/p:payload/p:packet_doc_id")
+    payload_packet_sha = xpath_text(doc.tree, "/p:pxml/p:payload/p:packet_sha256")
+    payload_baseline_doc_id = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:baseline_doc_id"
+    )
+    payload_packet_generation = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:packet_generation"
+    )
+    payload_context_generation = xpath_text(
+        doc.tree, "/p:pxml/p:payload/p:context_generation"
+    )
     if verify_phase and verify_phase not in {
         "lane",
         "post_implement",
@@ -4590,8 +4796,29 @@ def _semantic_verification_result(
     if len(packet_refs) == 1:
         packet_doc = context_index.get(packet_refs[0][0])
         if packet_doc is not None and packet_doc.tree is not None:
+            if payload_packet_doc_id and payload_packet_doc_id != packet_refs[0][0]:
+                issues.append(
+                    ValidationIssue(
+                        code="E631_VERIFY_PACKET_DOC_MISMATCH",
+                        message="verification_result payload packet_doc_id must match refs execution_packet doc_id.",
+                    )
+                )
             packet_lock_hash = xpath_text(
                 packet_doc.tree, "/p:pxml/p:payload/p:acceptance_lock_hash"
+            )
+            packet_sha = xpath_text(
+                packet_doc.tree, "/p:pxml/p:integrity/p:content_sha256"
+            )
+            packet_baseline_doc_id = xpath_text(
+                packet_doc.tree, "/p:pxml/p:payload/p:context_policy/p:baseline_doc_id"
+            )
+            packet_generation = xpath_text(
+                packet_doc.tree,
+                "/p:pxml/p:payload/p:context_policy/p:packet_generation",
+            )
+            context_generation = xpath_text(
+                packet_doc.tree,
+                "/p:pxml/p:payload/p:context_policy/p:context_generation",
             )
             if (
                 packet_lock_hash is not None
@@ -4602,6 +4829,34 @@ def _semantic_verification_result(
                     ValidationIssue(
                         code="E706_VERIFICATION_LINEAGE_MISMATCH",
                         message="verification_result acceptance_lock_sha256 must match execution_packet acceptance_lock_hash.",
+                    )
+                )
+            if packet_sha and payload_packet_sha and packet_sha != payload_packet_sha:
+                issues.append(
+                    ValidationIssue(
+                        code="E632_VERIFY_PACKET_SHA_MISMATCH",
+                        message="verification_result payload packet_sha256 must match execution_packet integrity content_sha256.",
+                    )
+                )
+            if packet_baseline_doc_id != payload_baseline_doc_id:
+                issues.append(
+                    ValidationIssue(
+                        code="E633_VERIFY_BASELINE_DOC_MISMATCH",
+                        message="verification_result payload baseline_doc_id must match execution_packet context_policy baseline_doc_id.",
+                    )
+                )
+            if packet_generation != payload_packet_generation:
+                issues.append(
+                    ValidationIssue(
+                        code="E634_VERIFY_PACKET_GENERATION_MISMATCH",
+                        message="verification_result packet_generation must match execution_packet context_policy packet_generation.",
+                    )
+                )
+            if context_generation != payload_context_generation:
+                issues.append(
+                    ValidationIssue(
+                        code="E635_VERIFY_CONTEXT_GENERATION_MISMATCH",
+                        message="verification_result context_generation must match execution_packet context_policy context_generation.",
                     )
                 )
 

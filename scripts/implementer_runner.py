@@ -22,6 +22,12 @@ from pathlib import Path, PurePosixPath
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from runtime_bootstrap import bootstrap_runtime
+from context_contract import (
+    append_context_access_log,
+    compute_context_lock_sha256,
+    parse_context_policy,
+    resolve_baseline_bundle,
+)
 
 try:
     from lxml import etree
@@ -97,7 +103,14 @@ class PacketInfo:
     proof_requirements: List[ProofRequirement]
     requirement_targets: List[RequirementTarget]
     completion_state: Optional[str]
+    baseline_required: bool
     baseline_exploration_doc_id: Optional[str]
+    baseline_exploration_sha256: Optional[str]
+    context_lock_sha256: Optional[str]
+    packet_generation: int
+    context_generation: int
+    context_producer: Optional[str]
+    context_mode: Optional[str]
     localization_targets: List[str]
 
 
@@ -385,9 +398,7 @@ def parse_packet(path: Path) -> PacketInfo:
     write_intent = True
     if write_intent_text is not None:
         write_intent = write_intent_text.lower() == "true"
-    baseline_exploration_doc_id = text_at(
-        tree, "/p:pxml/p:payload/p:exploration_notes_ref/p:doc_id"
-    )
+    context_policy = parse_context_policy(tree)
     localization_targets = [
         item.strip() for item in localization_nodes if item and item.strip()
     ]
@@ -413,7 +424,14 @@ def parse_packet(path: Path) -> PacketInfo:
         proof_requirements=proof_requirements,
         requirement_targets=requirement_targets,
         completion_state=packet_completion_state,
-        baseline_exploration_doc_id=baseline_exploration_doc_id,
+        baseline_required=context_policy.baseline_required,
+        baseline_exploration_doc_id=context_policy.baseline_doc_id,
+        baseline_exploration_sha256=context_policy.baseline_sha256,
+        context_lock_sha256=context_policy.context_lock_sha256,
+        packet_generation=context_policy.packet_generation,
+        context_generation=context_policy.context_generation,
+        context_producer=context_policy.context_producer,
+        context_mode=context_policy.context_mode,
         localization_targets=localization_targets,
     )
 
@@ -456,6 +474,47 @@ def load_escalation_policy(path: Path) -> EscalationPolicyConfig:
     if stop_after is not None:
         config.stop_after_escalation = stop_after.lower() == "true"
     return config
+
+
+def load_required_baseline_context(packet: PacketInfo, runtime_root: Path):
+    if not packet.baseline_required and not packet.baseline_exploration_doc_id:
+        return None
+    if not packet.baseline_exploration_doc_id:
+        raise RuntimeError(
+            "execution_packet requires baseline context but baseline_doc_id is missing"
+        )
+    bundle = resolve_baseline_bundle(
+        runtime_root,
+        task_id=packet.task_id,
+        baseline_doc_id=packet.baseline_exploration_doc_id,
+    )
+    if bundle is None:
+        raise RuntimeError("execution_packet baseline_doc_id could not be resolved")
+    if (
+        packet.baseline_exploration_sha256
+        and bundle.content_sha256 != packet.baseline_exploration_sha256
+    ):
+        raise RuntimeError(
+            "execution_packet baseline_sha256 does not match resolved baseline exploration_result"
+        )
+    expected_lock = None
+    if packet.baseline_exploration_sha256:
+        expected_lock = compute_context_lock_sha256(
+            baseline_doc_id=bundle.doc_id,
+            baseline_sha256=bundle.content_sha256,
+            context_generation=packet.context_generation,
+            producer=packet.context_producer or "contextscout_runner",
+            mode=packet.context_mode or "baseline_provisioning",
+        )
+    if (
+        packet.context_lock_sha256
+        and expected_lock
+        and packet.context_lock_sha256 != expected_lock
+    ):
+        raise RuntimeError(
+            "execution_packet context_lock_sha256 does not match resolved baseline contract"
+        )
+    return bundle
 
 
 def make_result_doc_id(task_id: str, packet_sequence: int, retry_count: int) -> str:
@@ -686,6 +745,18 @@ def execute_packet(
             changes_made = True
             continue
 
+        append_context_access_log(
+            runtime_root=runtime_root,
+            task_id=packet.task_id,
+            actor="implementer",
+            access_type="operational_read",
+            reason="materialize modify target before patch application",
+            packet_doc_id=packet.doc_id,
+            baseline_doc_id=packet.baseline_exploration_doc_id,
+            packet_generation=packet.packet_generation,
+            context_generation=packet.context_generation,
+            file_path=rel_path,
+        )
         existing_text = target_path.read_text(encoding="utf-8", errors="ignore")
         if marker in existing_text:
             notes.append(f"patch marker already present: {rel_path}")
@@ -845,6 +916,22 @@ def build_implementer_result(
     etree.SubElement(payload_packet_ref, q("relation")).text = "implementation_target"
 
     etree.SubElement(payload, q("task_id")).text = packet.task_id
+    etree.SubElement(payload, q("packet_doc_id")).text = packet.doc_id
+    etree.SubElement(payload, q("packet_sha256")).text = packet.content_sha256
+    if packet.baseline_exploration_doc_id is not None:
+        etree.SubElement(
+            payload, q("baseline_doc_id")
+        ).text = packet.baseline_exploration_doc_id
+    etree.SubElement(payload, q("packet_generation")).text = str(
+        packet.packet_generation
+    )
+    etree.SubElement(payload, q("context_generation")).text = str(
+        packet.context_generation
+    )
+    if packet.context_producer:
+        etree.SubElement(payload, q("context_producer")).text = packet.context_producer
+    if packet.context_mode:
+        etree.SubElement(payload, q("context_mode")).text = packet.context_mode
 
     modified_node = etree.SubElement(payload, q("modified_files"))
     for file_path in result.modified_files:
@@ -1169,6 +1256,26 @@ def main() -> int:
         print(f"ERROR: failed to parse execution_packet: {exc}", file=sys.stderr)
         return 2
 
+    try:
+        baseline_bundle = load_required_baseline_context(packet, runtime_root)
+    except RuntimeError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    if baseline_bundle is not None:
+        append_context_access_log(
+            runtime_root=runtime_root,
+            task_id=packet.task_id,
+            actor="implementer",
+            access_type="baseline_hit",
+            reason="eager-load pinned baseline context before implementation",
+            packet_doc_id=packet.doc_id,
+            baseline_doc_id=baseline_bundle.doc_id,
+            packet_generation=packet.packet_generation,
+            context_generation=packet.context_generation,
+            file_path=str(baseline_bundle.path),
+        )
+
     ensure_dir(runtime_root / "implementer" / "results")
     ensure_dir(runtime_root / "implementer" / "logs")
     ensure_dir(runtime_root / "index" / "failures")
@@ -1193,6 +1300,11 @@ def main() -> int:
         runtime_root=runtime_root,
         retry_policy=retry_policy,
     )
+    if baseline_bundle is not None:
+        result.context_refs.append(
+            (baseline_bundle.doc_id, "exploration_result", "baseline_context")
+        )
+        result.context_files.append(baseline_bundle.path)
     result = maybe_request_context_refresh(
         repo_root=repo_root,
         packet=packet,

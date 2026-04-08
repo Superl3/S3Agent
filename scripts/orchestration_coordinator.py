@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from runtime_bootstrap import bootstrap_runtime
+from context_contract import parse_context_policy, resolve_baseline_bundle
 
 try:
     from lxml import etree
@@ -72,6 +73,11 @@ class PacketInfo:
     created_at: str
     acceptance_lock_hash: str
     content_sha256: str
+    baseline_exploration_doc_id: Optional[str]
+    packet_generation: int
+    context_generation: int
+    context_producer: Optional[str]
+    context_mode: Optional[str]
 
 
 @dataclass
@@ -264,6 +270,7 @@ def parse_packet(path: Path) -> PacketInfo:
     assert created_at is not None
     assert lock_hash is not None
     assert content_sha is not None
+    context_policy = parse_context_policy(tree)
 
     return PacketInfo(
         path=path,
@@ -274,6 +281,11 @@ def parse_packet(path: Path) -> PacketInfo:
         created_at=created_at,
         acceptance_lock_hash=lock_hash,
         content_sha256=content_sha,
+        baseline_exploration_doc_id=context_policy.baseline_doc_id,
+        packet_generation=context_policy.packet_generation,
+        context_generation=context_policy.context_generation,
+        context_producer=context_policy.context_producer,
+        context_mode=context_policy.context_mode,
     )
 
 
@@ -379,6 +391,29 @@ def latest_exploration_for_task(
         key_findings=key_findings,
         open_questions=open_questions,
         evidence_paths=evidence_paths,
+    )
+
+
+def resolve_packet_pinned_baseline(
+    runtime_root: Path, packet: PacketInfo
+) -> Optional[ExplorationInfo]:
+    if not packet.baseline_exploration_doc_id:
+        return None
+    bundle = resolve_baseline_bundle(
+        runtime_root,
+        task_id=packet.task_id,
+        baseline_doc_id=packet.baseline_exploration_doc_id,
+    )
+    if bundle is None:
+        return None
+    return ExplorationInfo(
+        path=bundle.path,
+        doc_id=bundle.doc_id,
+        task_id=bundle.task_id,
+        completion_state="completed_and_verified",
+        key_findings=bundle.key_findings,
+        open_questions=bundle.open_questions,
+        evidence_paths=bundle.evidence_paths,
     )
 
 
@@ -631,7 +666,11 @@ def build_plan_sidecar(
     sequence = next_sidecar_sequence(runtime_root, route.task_id)
     doc_id = make_doc_id("plan_sidecar", route.task_id, sequence)
     created_at = now_iso()
-    prior_exploration = latest_exploration_for_task(runtime_root, route.task_id)
+    prior_exploration = resolve_packet_pinned_baseline(runtime_root, packet)
+    if packet.baseline_exploration_doc_id and prior_exploration is None:
+        raise RuntimeError(
+            "execution_packet baseline_doc_id was pinned but the artifact could not be resolved"
+        )
 
     root = etree.Element(q("pxml"), nsmap=NSMAP)
     meta = etree.SubElement(root, q("meta"))
@@ -653,6 +692,10 @@ def build_plan_sidecar(
     etree.SubElement(ref_route, q("doc_id")).text = route.doc_id
     etree.SubElement(ref_route, q("doc_class")).text = "manager_route"
     etree.SubElement(ref_route, q("relation")).text = "route"
+    ref_packet = etree.SubElement(refs, q("ref"))
+    etree.SubElement(ref_packet, q("doc_id")).text = packet.doc_id
+    etree.SubElement(ref_packet, q("doc_class")).text = "execution_packet"
+    etree.SubElement(ref_packet, q("relation")).text = "packet_context"
     if prior_exploration is not None:
         ref_exploration = etree.SubElement(refs, q("ref"))
         etree.SubElement(ref_exploration, q("doc_id")).text = prior_exploration.doc_id
@@ -660,6 +703,20 @@ def build_plan_sidecar(
         etree.SubElement(ref_exploration, q("relation")).text = "prior_exploration"
 
     payload = etree.SubElement(root, q("payload"))
+    etree.SubElement(payload, q("packet_doc_id")).text = packet.doc_id
+    etree.SubElement(payload, q("packet_sha256")).text = packet.content_sha256
+    if prior_exploration is not None:
+        etree.SubElement(payload, q("baseline_doc_id")).text = prior_exploration.doc_id
+    etree.SubElement(payload, q("packet_generation")).text = str(
+        packet.packet_generation
+    )
+    etree.SubElement(payload, q("context_generation")).text = str(
+        packet.context_generation
+    )
+    if packet.context_producer:
+        etree.SubElement(payload, q("context_producer")).text = packet.context_producer
+    if packet.context_mode:
+        etree.SubElement(payload, q("context_mode")).text = packet.context_mode
     ambiguities = etree.SubElement(payload, q("ambiguities"))
     if prior_exploration is not None and prior_exploration.open_questions:
         for item in prior_exploration.open_questions[:3]:
@@ -757,6 +814,9 @@ def write_coordination_record(
         "task_id": task_id,
         "route_doc_id": route.doc_id,
         "packet_doc_id": packet.doc_id,
+        "baseline_doc_id": packet.baseline_exploration_doc_id,
+        "packet_generation": packet.packet_generation,
+        "context_generation": packet.context_generation,
         "selected_path": route.selected_path,
         "status": status,
         "note": note,

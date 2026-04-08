@@ -32,6 +32,33 @@
         <optional_metadata_fields/>
       </event>
       <event>
+        <event_type>baseline_context_start</event_type>
+        <semantic_meaning>Baseline context provisioning started before the final execution_packet was issued.</semantic_meaning>
+        <ordering_expectation>Occurs after intake is accepted and before baseline_context_done for write-intent flows.</ordering_expectation>
+        <required_artifact_refs>
+          <item>task_intake</item>
+        </required_artifact_refs>
+        <optional_metadata_fields/>
+      </event>
+      <event>
+        <event_type>baseline_context_done</event_type>
+        <semantic_meaning>Baseline context provisioning emitted or reused an exploration_result for write-intent flows.</semantic_meaning>
+        <ordering_expectation>Occurs after baseline_context_start and before packet_finalized.</ordering_expectation>
+        <required_artifact_refs>
+          <item>exploration_result</item>
+        </required_artifact_refs>
+        <optional_metadata_fields/>
+      </event>
+      <event>
+        <event_type>packet_finalized</event_type>
+        <semantic_meaning>Final execution packet was issued after baseline context was pinned into context_policy.</semantic_meaning>
+        <ordering_expectation>Occurs after baseline_context_done and before packet_issued for write-intent flows.</ordering_expectation>
+        <required_artifact_refs>
+          <item>execution_packet</item>
+        </required_artifact_refs>
+        <optional_metadata_fields/>
+      </event>
+      <event>
         <event_type>packet_issued</event_type>
         <semantic_meaning>Execution packet was issued and accepted as implementer target.</semantic_meaning>
         <ordering_expectation>Must occur after route and before implement_start.</ordering_expectation>

@@ -167,7 +167,7 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             risk_hint="medium",
             request_text="Add a small profile helper with bounded scope.",
             requested_outcome="Apply one direct feature patch.",
-            expected_selected_path="direct",
+            expected_selected_path="planner_pre",
             expected_write_intent=True,
             expected_exit_code=0,
             expected_impl_status="applied",
@@ -320,16 +320,28 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
             )
         else:
             assert impl_path.exists(), f"missing implementer_result for {spec.name}"
-            assert not exploration_path.exists(), (
-                f"unexpected exploration_result for {spec.name}"
+            assert exploration_path.exists(), (
+                f"missing baseline exploration_result for {spec.name}"
             )
             impl_tree = etree.parse(str(impl_path))
             impl_status = _text(impl_tree, "/p:pxml/p:payload/p:result_status")
             assert impl_status == spec.expected_impl_status
+            assert (
+                _text(
+                    packet_tree, "/p:pxml/p:payload/p:context_policy/p:baseline_doc_id"
+                )
+                is not None
+            )
+            exploration_tree = etree.parse(str(exploration_path))
+            assert (
+                _text(exploration_tree, "/p:pxml/p:payload/p:exploration_scope")
+                == "baseline"
+            )
 
         events = _trace_events(trace_path)
         assert _count_events(events, "route") == 1
         assert _count_events(events, "packet_issued") == 1
+        assert _count_events(events, "packet_finalized", actor="manager") == 1
         assert (
             _count_events(events, "implement_start", actor="implementer")
             == spec.expect_implementer_calls
@@ -345,6 +357,12 @@ def test_task_executor_smoke_matrix_io_and_call_appropriateness(
         )
         assert _count_events(events, "explore_done", actor="explorer") == (
             0 if spec.expected_write_intent else 1
+        )
+        assert _count_events(events, "baseline_context_start", actor="explorer") == (
+            1 if spec.expected_write_intent else 0
+        )
+        assert _count_events(events, "baseline_context_done", actor="explorer") == (
+            1 if spec.expected_write_intent else 0
         )
 
         expected_patch_applied = 1 if spec.expected_impl_status == "applied" else 0

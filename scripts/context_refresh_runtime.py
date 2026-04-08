@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
+from context_contract import append_context_access_log, parse_context_policy
+
 try:
     from lxml import etree
 except ModuleNotFoundError as exc:  # pragma: no cover
@@ -232,7 +234,9 @@ def run_manager_mediated_refresh(
             notes=[f"Focused context refresh failed: {detail}"],
         )
 
-    result_path = latest_task_artifact(runtime_root, task_id, "exploration_result")
+    result_path = latest_task_artifact(
+        runtime_root, task_id, "focused_exploration_result"
+    )
     if result_path is None:
         request_ref = artifact_ref(request_path)
         return ContextRefreshOutcome(
@@ -250,10 +254,23 @@ def run_manager_mediated_refresh(
     actionability = text_at(result_tree, "/p:pxml/p:payload/p:actionability")
     request_ref = artifact_ref(request_path)
     result_ref = artifact_ref(result_path)
+    packet_tree = etree.parse(str(packet_path))
+    context_policy = parse_context_policy(packet_tree)
     if actionability:
         notes.append(
             f"Focused context refresh completed with actionability={actionability}."
         )
+    append_context_access_log(
+        runtime_root=runtime_root,
+        task_id=task_id,
+        actor=requester_agent,
+        access_type="focused_refresh",
+        reason=reason_code,
+        packet_doc_id=packet_path.stem,
+        baseline_doc_id=baseline_exploration_doc_id,
+        packet_generation=context_policy.packet_generation,
+        context_generation=context_policy.context_generation,
+    )
     return ContextRefreshOutcome(
         request_path=request_path,
         result_path=result_path,

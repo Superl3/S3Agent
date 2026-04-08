@@ -38,7 +38,10 @@ XPATH_NS = {"p": NS}
 
 EVENT_TYPES = {
     "route",
+    "baseline_context_start",
+    "baseline_context_done",
     "packet_issued",
+    "packet_finalized",
     "implement_start",
     "patch_applied",
     "blocked",

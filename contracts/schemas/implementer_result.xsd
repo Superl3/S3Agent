@@ -53,6 +53,13 @@
     <xs:sequence>
       <xs:element name="packet_ref" type="ReferenceItemType"/>
       <xs:element name="task_id" type="TaskIdType"/>
+      <xs:element name="packet_doc_id" type="DocIdType" minOccurs="0"/>
+      <xs:element name="packet_sha256" type="Sha256Type" minOccurs="0"/>
+      <xs:element name="baseline_doc_id" type="DocIdType" minOccurs="0"/>
+      <xs:element name="packet_generation" type="xs:nonNegativeInteger" minOccurs="0"/>
+      <xs:element name="context_generation" type="xs:nonNegativeInteger" minOccurs="0"/>
+      <xs:element name="context_producer" type="NonEmptyStringType" minOccurs="0"/>
+      <xs:element name="context_mode" type="NonEmptyStringType" minOccurs="0"/>
       <xs:element name="modified_files" type="ImplementationFileListType"/>
       <xs:element name="created_files" type="ImplementationFileListType"/>
       <xs:element name="patch_mode_used" type="PatchModeType"/>
