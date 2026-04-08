@@ -26,6 +26,7 @@ from runtime_bootstrap import bootstrap_runtime
 from context_contract import (
     append_context_access_log,
     compute_context_lock_sha256,
+    consume_focused_refresh_budget,
     parse_context_policy,
     resolve_baseline_bundle,
 )
@@ -821,6 +822,36 @@ def maybe_request_context_refresh(
     proof_gaps = [item for item in unverified_areas if item.startswith("proof.")]
     if not blocked_checks and not proof_gaps:
         return [], [], []
+
+    allowed, used_attempts, max_attempts = consume_focused_refresh_budget(
+        runtime_root=runtime_root,
+        task_id=packet.task_id,
+        actor="verifier",
+        packet_doc_id=packet.doc_id,
+        packet_generation=packet.packet_generation,
+        context_generation=packet.context_generation,
+        max_attempts=1,
+    )
+    if not allowed:
+        append_context_access_log(
+            runtime_root=runtime_root,
+            task_id=packet.task_id,
+            actor="verifier",
+            access_type="focused_refresh_budget_exhausted",
+            reason="verifier_inconclusive",
+            packet_doc_id=packet.doc_id,
+            baseline_doc_id=packet.baseline_exploration_doc_id,
+            packet_generation=packet.packet_generation,
+            context_generation=packet.context_generation,
+        )
+        return (
+            [],
+            [],
+            [
+                "Focused context refresh skipped: auto-refresh budget exhausted "
+                f"(actor=verifier, attempts={used_attempts}/{max_attempts})."
+            ],
+        )
 
     if any(item.startswith("proof.behavioral") for item in proof_gaps):
         request_kind = "repro_context"

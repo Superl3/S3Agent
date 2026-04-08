@@ -436,3 +436,43 @@ def append_context_access_log(
         entry["file_path"] = file_path
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(entry, sort_keys=True) + "\n")
+
+
+def focused_refresh_budget_key(
+    *,
+    actor: str,
+    packet_doc_id: str,
+    packet_generation: int,
+    context_generation: int,
+) -> str:
+    return f"{actor}|{packet_doc_id}|pg={packet_generation}|cg={context_generation}"
+
+
+def consume_focused_refresh_budget(
+    *,
+    runtime_root: Path,
+    task_id: str,
+    actor: str,
+    packet_doc_id: str,
+    packet_generation: int,
+    context_generation: int,
+    max_attempts: int = 1,
+) -> tuple[bool, int, int]:
+    task_index = load_task_index(runtime_root, task_id)
+    bucket = task_index.get("focused_refresh_budget")
+    if not isinstance(bucket, dict):
+        bucket = {}
+    key = focused_refresh_budget_key(
+        actor=actor,
+        packet_doc_id=packet_doc_id,
+        packet_generation=packet_generation,
+        context_generation=context_generation,
+    )
+    raw_count = bucket.get(key)
+    count = int(raw_count) if isinstance(raw_count, int) else 0
+    if count >= max_attempts:
+        return False, count, max_attempts
+    bucket[key] = count + 1
+    task_index["focused_refresh_budget"] = bucket
+    write_task_index(runtime_root, task_id, task_index)
+    return True, count + 1, max_attempts

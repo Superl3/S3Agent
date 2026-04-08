@@ -17,6 +17,16 @@ def test_active_harness_config_excludes_reviewer_agent(repo_root) -> None:
         )
 
 
+def test_subagents_default_to_global_deny_permissions(repo_root) -> None:
+    config_text = (repo_root / "opencode.jsonc").read_text(encoding="utf-8")
+    for agent_name in ("implementer", "planner", "verifier"):
+        pattern = (
+            rf'"{agent_name}"\s*:\s*\{{[\s\S]*?'
+            rf'"permission"\s*:\s*\{{[\s\S]*?"\*"\s*:\s*"deny"'
+        )
+        assert re.search(pattern, config_text), agent_name
+
+
 def test_route_path_enum_excludes_reviewer_post(repo_root) -> None:
     enum_text = (repo_root / "contracts" / "pxml" / "common_enums.xsd").read_text(
         encoding="utf-8"

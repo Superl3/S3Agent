@@ -98,6 +98,24 @@ def _latest(runtime_root: Path, task_id: str, suffix: str) -> Path:
     return runtime_root / "latest" / f"{task_id}_{suffix}.pxml"
 
 
+def _request_files_for_task(runtime_root: Path, task_id: str) -> list[Path]:
+    request_dir = runtime_root / "exploration" / "requests"
+    if not request_dir.exists():
+        return []
+    files: list[Path] = []
+    for path in request_dir.glob("*.pxml"):
+        if not path.is_file():
+            continue
+        try:
+            tree = etree.parse(str(path))
+        except etree.XMLSyntaxError:
+            continue
+        if _text(tree, "/p:pxml/p:meta/p:task_id") == task_id:
+            files.append(path)
+    files.sort()
+    return files
+
+
 def _seed_exploration_result(
     runtime_root: Path,
     *,
@@ -371,6 +389,31 @@ def test_verifier_inconclusive_creates_context_refresh(
     ref_classes = _items(verify_tree, "/p:pxml/p:refs/p:ref/p:doc_class/text()")
     assert "exploration_request" in ref_classes
     assert "exploration_result" in ref_classes
+
+    first_requests = _request_files_for_task(runtime_root, task_id)
+    assert len(first_requests) == 1
+
+    second_verify = run_python(
+        "scripts/verification_runner.py",
+        "--packet",
+        packet_path,
+        "--runtime-root",
+        runtime_root,
+        "--workspace-root",
+        workspace_root,
+        "--dry-run",
+        "--skip-validate",
+    )
+    assert second_verify.returncode == 0, second_verify.stdout + second_verify.stderr
+    second_requests = _request_files_for_task(runtime_root, task_id)
+    assert len(second_requests) == 1
+
+    second_tree = etree.parse(
+        str(_latest(runtime_root, task_id, "verification_result"))
+    )
+    verdict_reason = _text(second_tree, "/p:pxml/p:payload/p:verdict_reason")
+    assert verdict_reason is not None
+    assert "budget exhausted" in verdict_reason.lower()
 
 
 def test_harness_validator_collects_context_refresh_request_artifacts(

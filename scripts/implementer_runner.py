@@ -25,6 +25,7 @@ from runtime_bootstrap import bootstrap_runtime
 from context_contract import (
     append_context_access_log,
     compute_context_lock_sha256,
+    consume_focused_refresh_budget,
     parse_context_policy,
     resolve_baseline_bundle,
 )
@@ -1106,7 +1107,36 @@ def maybe_request_context_refresh(
     runtime_root: Path,
     skip_validate: bool,
 ) -> RunResult:
+    if result.status != "blocked":
+        return result
     if result.blocked_reason != "implementer_modify_target_missing":
+        return result
+    allowed, used_attempts, max_attempts = consume_focused_refresh_budget(
+        runtime_root=runtime_root,
+        task_id=packet.task_id,
+        actor="implementer",
+        packet_doc_id=packet.doc_id,
+        packet_generation=packet.packet_generation,
+        context_generation=packet.context_generation,
+        max_attempts=1,
+    )
+    if not allowed:
+        message = (
+            "Focused context refresh skipped: auto-refresh budget exhausted "
+            f"(actor=implementer, attempts={used_attempts}/{max_attempts})."
+        )
+        result.notes.append(message)
+        append_context_access_log(
+            runtime_root=runtime_root,
+            task_id=packet.task_id,
+            actor="implementer",
+            access_type="focused_refresh_budget_exhausted",
+            reason=result.blocked_reason,
+            packet_doc_id=packet.doc_id,
+            baseline_doc_id=packet.baseline_exploration_doc_id,
+            packet_generation=packet.packet_generation,
+            context_generation=packet.context_generation,
+        )
         return result
     focus_questions = [
         "Which existing file or symbol owns the intended modify target?",

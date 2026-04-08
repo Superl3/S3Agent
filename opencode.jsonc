@@ -30,6 +30,7 @@
       "description": "Single-writer implementer",
       "prompt": "{file:./agents/implementer/contract.pxml}",
       "permission": {
+        "*": "deny",
         "task": {
           "*": "deny"
         }
@@ -41,6 +42,7 @@
       "description": "Conditional planner sidecar",
       "prompt": "{file:./agents/sidecars/planner/contract.pxml}",
       "permission": {
+        "*": "deny",
         "task": {
           "*": "deny"
         }
@@ -52,6 +54,7 @@
       "description": "Conditional verifier sidecar",
       "prompt": "{file:./agents/sidecars/verifier/contract.pxml}",
       "permission": {
+        "*": "deny",
         "task": {
           "*": "deny"
         }
