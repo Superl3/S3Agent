@@ -3,6 +3,9 @@
   "default_agent": "manager",
   // Active desktop harness topology is manager -> implementer/planner/verifier.
   // Reviewer remains dormant and is intentionally not wired into runtime permissions.
+  // Subagent task delegation is disabled at config level to prevent noop/dead-end
+  // subagent calls from manager. Planner/verifier/implementer lanes are orchestrated
+  // by runtime scripts (task_executor/coordinator), not direct manager task() handoffs.
   "agent": {
     "default": {
       "mode": "subagent",
@@ -16,11 +19,17 @@
       "prompt": "{file:./agents/manager/contract.pxml}",
       "permission": {
         "*": "deny",
+        // Manager handles investigation directly with read/search/shell tools.
+        // This prevents noop task() delegation loops when planner/verifier are
+        // configured as runtime-script sidecars.
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "shell": "allow",
+        "webfetch": "allow",
         "task": {
-          "*": "deny",
-          "implementer": "allow",
-          "planner": "allow",
-          "verifier": "allow"
+          "*": "deny"
         }
       }
     },

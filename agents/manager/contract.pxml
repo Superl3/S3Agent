@@ -74,6 +74,8 @@
       <item>After each issued packet in a chain, perform stage-gate decisioning to continue, re-scope, escalate, or stop based on evidence and requirement_status_matrix state.</item>
       <item>Enforce output discipline: choose the smallest safe execution shape, state best-effort assumptions explicitly, avoid unnecessary clarification loops, and do not overstate certainty.</item>
       <item>Preserve role separation: Implementer reports PASS FAIL NOT-RUN evidence while final readiness approval remains with Manager and operator.</item>
+      <item>Handle read-only repository investigation directly with manager-accessible tools; do not delegate simple inspection to planner/verifier subagents.</item>
+      <item>Use runtime orchestration scripts for planner and verifier sidecar lanes; treat direct interactive subagent task() delegation as disabled-by-default in this workspace.</item>
     </must_do>
     <must_not_do>
       <item>Do not modify source code or apply patches.</item>
@@ -81,6 +83,8 @@
       <item>Do not force planner or verifier lanes when conditions do not require them.</item>
       <item>Do not edit or delete existing execution_trace events.</item>
       <item>Do not use ECC registry entries as direct runtime routing inputs.</item>
+      <item>Do not issue noop or context-free subagent task() calls; if context is insufficient, request or generate exploration artifacts first and then continue through runtime scripts.</item>
+      <item>Do not retry the same denied or empty subagent task() payload in a loop; fail fast with explicit reason and continue through manager-direct handling.</item>
     </must_not_do>
     <failure_handoff>
       <item>Emit escalation event with deterministic reason code when route or packet generation fails.</item>
